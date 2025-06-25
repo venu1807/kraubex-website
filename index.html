@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Kraubex - Your Smart Procurement Assistant</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inria+Serif:wght@300;400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inria+Serif:wght@300;400;700&display=swap" rel="stylesheet"/>
   <style>
     * {
       margin: 0;
@@ -13,20 +13,21 @@
     }
 
     body {
-      font-family: 'Inria Serif', serif;
+      font-family: 'Inria Serif', Georgia, 'Times New Roman', serif;
       background-color: #f5f1e8;
       color: #2c3e50;
       line-height: 1.6;
     }
 
     .container {
-      max-width: 1100px;
+      max-width: 1000px;
       margin: 0 auto;
       padding: 0 20px;
     }
 
-    header, footer {
+    header {
       background: #f5f1e8;
+      padding: 1.5rem 0;
       border-bottom: 1px solid #e0e0e0;
     }
 
@@ -34,23 +35,32 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem 0;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .logo img {
-      height: 40px;
+      height: 60px;
     }
 
     .nav-links {
       display: flex;
-      gap: 30px;
       list-style: none;
+      gap: 30px;
     }
 
     .nav-links a {
       text-decoration: none;
       color: #2c3e50;
-      font-weight: 500;
+      font-weight: 600;
+      font-size: 1.1rem;
       transition: color 0.3s ease;
     }
 
@@ -60,7 +70,8 @@
 
     .nav-actions {
       display: flex;
-      gap: 10px;
+      gap: 15px;
+      align-items: center;
     }
 
     .btn {
@@ -70,8 +81,8 @@
       cursor: pointer;
       font-weight: 500;
       text-decoration: none;
-      font-size: 0.9rem;
       transition: all 0.3s ease;
+      font-size: 0.9rem;
     }
 
     .btn-primary {
@@ -95,19 +106,34 @@
       color: white;
     }
 
+    .btn-orange {
+      background: #c4652d;
+      color: white;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+    }
+
+    .btn-orange:hover {
+      background: #a0521f;
+      transform: translateY(-2px);
+    }
+
     .hero {
       background: #faf8f3;
       border: 3px solid #c4652d;
-      border-radius: 10px;
       margin: 40px auto;
-      padding: 60px 30px;
+      padding: 80px 40px;
       text-align: center;
-      animation: fadeInUp 0.8s ease-out;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      max-width: 1000px;
     }
 
     .hero h1 {
-      font-size: 2.5rem;
-      margin-bottom: 30px;
+      font-size: 2.7rem;
+      font-weight: bold;
+      margin-bottom: 40px;
+      color: #2c3e50;
     }
 
     .hero h1 span {
@@ -120,26 +146,30 @@
 
     .features h2 {
       text-align: center;
-      font-size: 2rem;
+      font-size: 2.2rem;
       color: #c4652d;
+      margin-bottom: 40px;
       text-decoration: underline;
-      margin-bottom: 30px;
     }
 
     .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 25px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 60px;
     }
 
     .feature-card {
       background: #faf8f3;
-      padding: 25px;
+      padding: 30px;
       border-radius: 10px;
-      border: 2px solid #e8dcc0;
       box-shadow: 0 5px 15px rgba(0,0,0,0.1);
       text-align: center;
-      transition: transform 0.3s ease, border 0.3s ease;
+      transition: transform 0.3s ease;
+      border: 2px solid #e8dcc0;
+      width: 300px;
+      flex-grow: 1;
     }
 
     .feature-card:hover {
@@ -153,26 +183,41 @@
       color: #c4652d;
     }
 
+    .feature-card h3 {
+      font-size: 1.4rem;
+      margin-bottom: 15px;
+      color: #2c3e50;
+    }
+
+    .feature-card p {
+      color: #666;
+      line-height: 1.8;
+    }
+
     .cta {
       text-align: center;
       margin: 80px 0;
-      animation: fadeInUp 0.8s ease-out;
     }
 
     .cta h2 {
       font-size: 2rem;
-      margin-bottom: 20px;
       color: #c4652d;
+      margin-bottom: 30px;
     }
 
     footer {
-      border-top: 3px solid #c4652d;
-      padding: 40px 20px;
+      background: #faf8f3;
+      border: 3px solid #c4652d;
+      border-radius: 10px;
+      margin: 40px auto;
+      padding: 50px 20px;
+      max-width: 1000px;
     }
 
     .footer-content {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       flex-wrap: wrap;
       gap: 20px;
     }
@@ -180,162 +225,121 @@
     .footer-left {
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 20px;
     }
 
     .footer-left img {
-      height: 32px;
+      height: 48px;
     }
 
-    .footer-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    input[type="email"] {
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
+    .footer-left p {
       font-size: 1rem;
+      font-weight: 500;
     }
 
-    .btn-orange {
-      background: #c4652d;
-      color: white;
-    }
-
-    .btn-orange:hover {
-      background: #a0521f;
+    .newsletter-form input {
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
     }
 
     .footer-bottom {
       text-align: center;
-      margin-top: 20px;
-      color: #777;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e0e0e0;
+      color: #666;
+      font-size: 1rem;
+      font-weight: 500;
     }
 
     @media (max-width: 768px) {
       .nav-links {
         display: none;
       }
-      nav {
-        flex-direction: column;
-        gap: 10px;
-      }
-      .footer-content {
+
+      .features-grid {
         flex-direction: column;
         align-items: center;
       }
-    }
 
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
+      .footer-content {
+        flex-direction: column;
+        text-align: center;
+      }
     }
   </style>
 </head>
 <body>
   <header>
-    <div class="container">
-      <nav>
-        <div class="logo">
-          <img src="assets/kraubex-logo.png" alt="Kraubex Logo">
-        </div>
-        <ul class="nav-links">
-          <li><a href="#company">Company</a></li>
-          <li><a href="#product">Product</a></li>
-          <li><a href="#solutions">Solutions</a></li>
-          <li><a href="#academy">Academy</a></li>
-          <li><a href="#pricing">Pricing</a></li>
-        </ul>
-        <div class="nav-actions">
-          <a href="#demo" class="btn btn-secondary">Request a demo</a>
-          <a href="#signin" class="btn btn-secondary">Sign in</a>
-          <a href="#signup" class="btn btn-primary">Join Kraubex</a>
-        </div>
-      </nav>
-    </div>
+    <nav>
+      <div class="logo">
+        <img src="assets/kraubex-logo.png" alt="Kraubex Logo"/>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#company">Company</a></li>
+        <li><a href="#product">Product</a></li>
+        <li><a href="#solutions">Solutions</a></li>
+        <li><a href="#academy">Academy</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="#demo" class="btn btn-secondary">Request a demo</a>
+        <a href="#signin" class="btn btn-secondary">Sign in</a>
+        <a href="#signup" class="btn btn-primary">Join Kraubex</a>
+      </div>
+    </nav>
   </header>
 
-  <main class="container">
+  <main>
     <section class="hero">
       <h1>Welcome to <span>Kraubex</span> – Your Smart Procurement Assistant</h1>
-    </section>
 
-    <section class="features">
-      <h2>Features</h2>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">🎯</div>
-          <h3>Supplier Matching & Smart Pricing</h3>
-          <p>AI-powered algorithms match you with the best suppliers based on your requirements, ensuring optimal pricing and quality.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">📈</div>
-          <h3>Spend Analytics & Risk Insights</h3>
-          <p>Track spend trends and identify risks early using real-time dashboards built for decision makers.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">⚙️</div>
-          <h3>Workflow Automation</h3>
-          <p>Streamline approvals, POs, and sourcing processes using rule-based automation.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🔗</div>
-          <h3>ERP Integration</h3>
-          <p>Connect Kraubex with SAP, Microsoft Dynamics, or your custom ERP stack with zero disruption.</p>
+      <div class="features">
+        <h2>Features</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <span class="feature-icon">🎯</span>
+            <h3>Supplier Matching & Smart Pricing</h3>
+            <p>AI-powered algorithms match you with the best suppliers based on your specific requirements, ensuring optimal pricing and quality.</p>
+          </div>
+          <div class="feature-card">
+            <span class="feature-icon">📈</span>
+            <h3>Spend Analytics & Risk Insights</h3>
+            <p>Comprehensive analytics dashboard provides deep insights into spending patterns and identifies potential risks before they impact your business.</p>
+          </div>
+          <div class="feature-card">
+            <span class="feature-icon">⚙️</span>
+            <h3>Workflow Automation</h3>
+            <p>Streamline your procurement processes with intelligent automation that reduces manual work and accelerates decision-making.</p>
+          </div>
+          <div class="feature-card">
+            <span class="feature-icon">🔗</span>
+            <h3>ERP Integration</h3>
+            <p>Seamlessly integrate with your existing ERP systems for a unified procurement experience across your organization.</p>
+          </div>
         </div>
       </div>
-    </section>
 
-    <section class="cta">
-      <h2>Ready to transform your procurement strategy?</h2>
-      <a href="#get-started" class="btn btn-primary">Get into Kraubex</a>
+      <div class="cta">
+        <h2>Ready to transform your company procurement strategy?</h2>
+        <a href="#get-started" class="btn btn-primary">Get into Kraubex</a>
+      </div>
     </section>
   </main>
 
   <footer>
-    <div class="container">
-      <div class="footer-content">
-        <div class="footer-left">
-          <img src="assets/kraubex-logo.png" alt="Kraubex Logo">
-          <p>© 2025 Kraubex GmbH</p>
-        </div>
-        <div class="footer-right">
-          <form class="newsletter-form">
-            <input type="email" placeholder="Enter your email" required>
-            <button class="btn btn-orange" type="submit">Subscribe</button>
-          </form>
-        </div>
+    <div class="footer-content">
+      <div class="footer-left">
+        <img src="assets/kraubex-logo.png" alt="Kraubex Logo"/>
+        <p>© 2024 Kraubex GmbH</p>
       </div>
-      <div class="footer-bottom">
-        Made in Germany with collective intelligence for global MSMEs.
+      <div class="newsletter-form">
+        <input type="E-Mail" placeholder="Enter your email" required />
+        <button class="btn btn-orange">Subscribe</button>
       </div>
     </div>
+    <div class="footer-bottom">All rights reserved.</div>
   </footer>
-
-  <script>
-    // Newsletter form handler
-    document.querySelector('.newsletter-form').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const email = this.querySelector('input[type="email"]').value;
-      if (email) {
-        alert('Thanks for subscribing! Procurement insights are on their way to ' + email);
-        this.reset();
-      }
-    });
-
-    // Smooth scroll
-    document.querySelectorAll('a[href^="#"]').forEach(link => {
-      link.addEventListener('click', function(e) {
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-          e.preventDefault();
-          target.scrollIntoView({ behavior: 'smooth' });
-        }
-      });
-    });
-  </script>
 </body>
 </html>
