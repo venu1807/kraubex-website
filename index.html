@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Kraubex</title>
   <link href="https://fonts.googleapis.com/css2?family=Inria+Serif:wght@300;400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     * {
       margin: 0;
@@ -48,6 +49,7 @@
       text-decoration: none;
       color: #2c3e50;
       font-weight: bold;
+      font-size: 1.3rem; /* ⬅️ Increase this value to your preference */
     }
 
     .nav-links a:hover {
@@ -59,6 +61,7 @@
       padding: 0.5rem 1rem;
       font-weight: bold;
       border-radius: 4px;
+      font-size: 1.2rem; /* ⬅️ Increase this value to your preference */
       text-decoration: none;
       transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
       cursor: pointer;
@@ -84,14 +87,16 @@
     }
 
     .btn-primary:hover {
-      background-color: #fff;
-      color: #2c3e50;
+      background-color: #c4652d;
+      color: #fff;
     }
 
     /* Orange Button (e.g., "Subscribe") */
     .btn-orange {
       background-color: #c4652d;
       color: white;
+      height: 42px;
+      font-size: 1rem;
       padding: 0.5rem 1rem;
       border-radius: 5px;
       margin-left: 0.5rem;
@@ -192,6 +197,15 @@
       padding: 1.5rem;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
+    
+    .feature-card h3 {
+      font-size: 1.1rem;
+    }
+
+    .feature-card p {
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
 
     .feature-icon {
       font-size: 2rem;
@@ -234,8 +248,16 @@
       padding: 0.5rem;
       border-radius: 5px;
       border: 1px solid #ccc;
+      height: 42px; /* match button height */
+      font-size: 1rem;
     }
-
+    
+    .newsletter-form button {
+      height: 42px;
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+    }
+   
     .footer-bottom {
       text-align: center;
       margin-top: 2rem;
@@ -284,27 +306,28 @@
   <main>
     <section class="hero" aria-labelledby="hero-heading">
       <h1 id="hero-heading">Welcome to <span>Kraubex</span> – Your Smart Procurement Assistant</h1>
+      <p>We help micro, small and medium size businesses to procure faster with collective intelligence</p>
 
       <div class="features">
         <h2>Features</h2>
         <div class="features-grid">
           <div class="feature-card">
-            <span class="feature-icon">🔍</span>
+            <span class="feature-icon"><i class="fas fa-search"></i></span>
                 <h3>Supplier Matching & Smart Pricing</h3>
                 <p>AI-powered algorithms match you with the best suppliers based on your specific requirements.</p>
           </div>
           <div class="feature-card">
-            <span class="feature-icon">📊</span>
+            <span class="feature-icon"><i class="fas fa-chart-line"></i></span>
                 <h3>Spend Analytics & Risk Insights</h3>
                 <p>Gain deep insights into spending patterns and spot risks before they hit.</p>
           </div>
           <div class="feature-card">
-            <span class="feature-icon">🤖</span>
+            <span class="feature-icon"><i class="fas fa-robot"></i></span>
                 <h3>Workflow Automation</h3>
                 <p>Automate procurement tasks to reduce manual work and accelerate decisions.</p>
           </div>
           <div class="feature-card">
-            <span class="feature-icon">🔌</span>
+            <span class="feature-icon"><i class="fas fa-plug"></i></span>
                 <h3>ERP Integration</h3>
                 <p>Integrate easily with your ERP for a unified procurement experience.</p>
           </div>
@@ -327,14 +350,18 @@
       </div>
     </section>
   </main>
+  
+  <hr style="border: none; border-top: 4px solid #c4652d; margin: 3rem 2rem 0;" />
 
   <footer>
     <div class="footer-content">
       <div class="footer-left">
         <p>© 2025 Kraubex. All rights reserved.</p>
+        <p>info@kraubex.de | +49 176 73550445 | Bielefeld, Germany</p>
       </div>
       <div class="footer-right">
         <form class="newsletter-form" aria-label="Subscribe to newsletter">
+          <p style="margin-bottom: 0.5rem;">Subscribe for smart procurement insights</p>
           <input type="email" placeholder="Your email address" required />
           <button type="submit" class="btn btn-orange">Subscribe</button>
         </form>
@@ -342,7 +369,7 @@
     </div>
 
     <div class="footer-bottom">
-      <p>Made with collective intelligence in Bielefeld, Germany.</p>
+      <p>Made in Bielefeld, Germany.</p>
     </div>
   </footer>
 
