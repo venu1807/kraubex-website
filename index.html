@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Kraubex - Your Smart Procurement Assistant</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inria+Serif:wght@300;400;700&display=swap" rel="stylesheet"/>
+  <title>Kraubex</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inria+Serif:wght@300;400;700&display=swap" rel="stylesheet" />
   <style>
     * {
       margin: 0;
@@ -15,221 +15,212 @@
     body {
       font-family: 'Inria Serif', Georgia, 'Times New Roman', serif;
       background-color: #f5f1e8;
-      color: #2c3e50;
-      line-height: 1.6;
-	  margin: 20px;           /* Added margin around entire body */
-      box-sizing: border-box; /* Ensure padding and border included in size */
-    }
-
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 0 20px;
-	  box-sizing: border-box;
+      font-weight: bold;
     }
 
     header {
-      background: #f5f1e8;
-      padding: 1.5rem 0;
-      border-bottom: 1px solid #e0e0e0;
+      background-color: #f5f1e8;
+      padding: 1rem 2rem;
+      border-bottom: 5px solid #c4652d;
     }
 
     nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 0 20px;
+      flex-wrap: wrap;
     }
 
-    .logo {
+    .nav-left,
+    .nav-right {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 20px;
     }
-
-    .logo img {
-      height: 60px;
-    }
-	
-	.video-container {
-	  position: relative;
-	  padding-bottom: 56.25%; /* 16:9 aspect ratio */
-	  height: 0;
-	  overflow: hidden;
-	  max-width: 100%;
-	}
-
-	.video-container video {
-	  position: absolute;
-	  top: 0;
-	  left: 0;
-	  width: 100%;
-	  height: 100%;
-	}
 
     .nav-links {
-      display: flex;
       list-style: none;
-      gap: 30px;
+      display: flex;
+      gap: 20px;
     }
 
     .nav-links a {
       text-decoration: none;
       color: #2c3e50;
-      font-weight: 600;
-      font-size: 1.1rem;
-      transition: color 0.3s ease;
+      font-weight: bold;
     }
 
     .nav-links a:hover {
       color: #c4652d;
     }
 
-    .nav-actions {
-      display: flex;
-      gap: 15px;
-      align-items: center;
-    }
-
+    /* Buttons */
     .btn {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: 500;
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      border-radius: 4px;
       text-decoration: none;
-      transition: all 0.3s ease;
-      font-size: 0.9rem;
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+      cursor: pointer;
     }
 
-    .btn-primary {
-      background: #2c3e50;
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: #34495e;
-      transform: translateY(-2px);
-    }
-
+    /* Secondary Button (e.g., "Request a demo", "Sign in") */
     .btn-secondary {
-      background: transparent;
-      color: #2c3e50;
+      background-color: transparent;
       border: 2px solid #2c3e50;
+      color: #2c3e50;
     }
 
     .btn-secondary:hover {
-      background: #2c3e50;
-      color: white;
+      background-color: #2c3e50;
+      color: #fff;
     }
 
+    /* Primary Button (e.g., "Join Kraubex", "Get into Kraubex") */
+    .btn-primary {
+      background-color: #2c3e50;
+      color: #fff;
+      border: 2px solid #2c3e50;
+    }
+
+    .btn-primary:hover {
+      background-color: #fff;
+      color: #2c3e50;
+    }
+
+    /* Orange Button (e.g., "Subscribe") */
     .btn-orange {
-      background: #c4652d;
+      background-color: #c4652d;
       color: white;
-      padding: 8px 16px;
-      font-size: 0.9rem;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      margin-left: 0.5rem;
+      border: 2px solid #c4652d;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     .btn-orange:hover {
-      background: #a0521f;
-      transform: translateY(-2px);
+      background-color: #fff;
+      color: #c4652d;
+    }
+
+    .nav-toggle {
+      display: none;
+      flex-direction: column;
+      cursor: pointer;
+    }
+
+    .nav-toggle span {
+      height: 3px;
+      width: 25px;
+      background: #2c3e50;
+      margin: 4px 0;
+      border-radius: 2px;
+    }
+
+    @media (max-width: 768px) {
+      .nav-left,
+      .nav-right {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+        display: none;
+      }
+
+      .nav-left.active,
+      .nav-right.active {
+        display: flex;
+      }
+
+      .nav-toggle {
+        display: flex;
+        margin-left: auto;
+      }
+
+      nav {
+        align-items: flex-start;
+      }
+    }
+
+    main {
+      padding: 2rem;
+      font-size: 1.2rem;
+    }
+
+    /* Add spacing between sections in main */
+    main > section {
+      margin-bottom: 4rem;
     }
 
     .hero {
-      background: #faf8f3;
-      border: 3px solid #c4652d;
-      padding: 80px 40px;
       text-align: center;
-      border-radius: 10px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      margin-bottom: 4rem;
     }
-
-    .hero h1 {
-      font-size: 2.7rem;
-      font-weight: bold;
-      margin-bottom: 40px;
-      color: #2c3e50;
+    
+    .hero > div {
+     margin-bottom: 4rem;
     }
 
     .hero h1 span {
       color: #c4652d;
     }
 
+    /* Make all h3 orange */
+    h3 {
+      color: #c4652d;
+    }
+
     .features {
-      margin: 60px 0;
+      margin-top: 3rem;
     }
 
     .features h2 {
-      text-align: center;
-      font-size: 2.2rem;
-      color: #c4652d;
-      margin-bottom: 40px;
-      text-decoration: underline;
-    }
-
-    .features-grid {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 30px;
-      margin-bottom: 60px;
-    }
-
-    .feature-card {
-      background: #faf8f3;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-      text-align: center;
-      transition: transform 0.3s ease;
-      border: 2px solid #e8dcc0;
-      width: 300px;
-      flex-grow: 1;
-    }
-
-    .feature-card:hover {
-      transform: translateY(-5px);
-      border-color: #c4652d;
-    }
-
-    .feature-icon {
-      font-size: 2.5rem;
-      margin-bottom: 20px;
-      color: #c4652d;
-    }
-
-    .feature-card h3 {
-      font-size: 1.4rem;
-      margin-bottom: 15px;
+      margin-bottom: 1rem;
       color: #2c3e50;
     }
 
-    .feature-card p {
-      color: #666;
-      line-height: 1.8;
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .feature-card {
+      background: white;
+      border-radius: 10px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .feature-icon {
+      font-size: 2rem;
+      display: block;
+      margin-bottom: 1rem;
+    }
+
+    .video-container video {
+      width: 100%;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
     .cta {
-      text-align: center;
-      margin: 80px 0;
+      margin-top: 3rem;
     }
 
     .cta h2 {
-      font-size: 2rem;
-      color: #c4652d;
-      margin-bottom: 30px;
+      margin-bottom: 1rem;
     }
 
+    /* Footer without box */
     footer {
-      background: #faf8f3;
-      border: 3px solid #c4652d;
-      border-radius: 10px;
-	  margin: 20px auto;  /* margin on all sides */
-      padding: 50px 20px;
-	  max-width: 1000px;
-      box-sizing: border-box;
+      background-color: transparent;
+      border: none;
+      border-radius: 0;
+      margin: 0;
+      padding: 1rem 2rem 2rem 2rem;
+      font-weight: bold;
     }
 
     .footer-content {
@@ -237,122 +228,102 @@
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 20px;
-    }
-
-    .footer-left {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .footer-left img {
-      height: 48px;
-    }
-
-    .footer-left p {
-      font-size: 1rem;
-      font-weight: 500;
     }
 
     .newsletter-form input {
-      padding: 10px;
+      padding: 0.5rem;
       border-radius: 5px;
       border: 1px solid #ccc;
     }
 
     .footer-bottom {
       text-align: center;
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #e0e0e0;
-      color: #666;
-      font-size: 1rem;
-      font-weight: 500;
+      margin-top: 2rem;
+      border-top: 1px solid #ddd;
+      padding-top: 1rem;
+      color: #c4652d;
     }
 
     @media (max-width: 768px) {
-      .nav-links {
-        display: none;
-      }
-
-      .features-grid {
-        flex-direction: column;
-        align-items: center;
-      }
-
       .footer-content {
         flex-direction: column;
         text-align: center;
+        gap: 1rem;
       }
     }
   </style>
 </head>
 <body>
+
   <header>
     <nav>
-      <div class="logo">
-        <img src="assets/kraubex-logo.png" alt="Kraubex Logo"/>
+      <div class="nav-left" id="navLeft">
+        <img src="assets/kraubex-logo.png" alt="Kraubex Logo" height="48" />
+        <ul class="nav-links">
+          <li><a href="#">Company</a></li>
+          <li><a href="#">Product</a></li>
+          <li><a href="#">Academy</a></li>
+          <li><a href="#">Pricing</a></li>
+        </ul>
       </div>
-      <ul class="nav-links">
-        <li><a href="#company">Company</a></li>
-        <li><a href="#product">Product</a></li>
-        <li><a href="#solutions">Solutions</a></li>
-        <li><a href="#academy">Academy</a></li>
-        <li><a href="#pricing">Pricing</a></li>
-      </ul>
-      <div class="nav-actions">
-        <a href="#demo" class="btn btn-secondary">Request a demo</a>
-        <a href="#signin" class="btn btn-secondary">Sign in</a>
-        <a href="#signup" class="btn btn-primary">Join Kraubex</a>
+
+      <div class="nav-toggle" id="navToggle" role="button" aria-label="Toggle navigation" aria-expanded="false" tabindex="0">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+
+      <div class="nav-right" id="navRight">
+        <a href="#" class="btn btn-secondary">Request a demo</a>
+        <a href="#" class="btn btn-secondary">Sign in</a>
+        <a href="#" class="btn btn-primary">Join Kraubex</a>
       </div>
     </nav>
   </header>
 
   <main>
-    <section class="hero">
-      <h1>Welcome to <span>Kraubex</span> – Your Smart Procurement Assistant</h1>
+    <section class="hero" aria-labelledby="hero-heading">
+      <h1 id="hero-heading">Welcome to <span>Kraubex</span> – Your Smart Procurement Assistant</h1>
 
       <div class="features">
         <h2>Features</h2>
         <div class="features-grid">
           <div class="feature-card">
-            <span class="feature-icon">🎯</span>
-            <h3>Supplier Matching & Smart Pricing</h3>
-            <p>AI-powered algorithms match you with the best suppliers based on your specific requirements, ensuring optimal pricing and quality.</p>
+            <span class="feature-icon">🔍</span>
+                <h3>Supplier Matching & Smart Pricing</h3>
+                <p>AI-powered algorithms match you with the best suppliers based on your specific requirements.</p>
           </div>
           <div class="feature-card">
-            <span class="feature-icon">📈</span>
-            <h3>Spend Analytics & Risk Insights</h3>
-            <p>Comprehensive analytics dashboard provides deep insights into spending patterns and identifies potential risks before they impact your business.</p>
+            <span class="feature-icon">📊</span>
+                <h3>Spend Analytics & Risk Insights</h3>
+                <p>Gain deep insights into spending patterns and spot risks before they hit.</p>
           </div>
           <div class="feature-card">
-            <span class="feature-icon">⚙️</span>
-            <h3>Workflow Automation</h3>
-            <p>Streamline your procurement processes with intelligent automation that reduces manual work and accelerates decision-making.</p>
+            <span class="feature-icon">🤖</span>
+                <h3>Workflow Automation</h3>
+                <p>Automate procurement tasks to reduce manual work and accelerate decisions.</p>
           </div>
           <div class="feature-card">
-            <span class="feature-icon">🔗</span>
-            <h3>ERP Integration</h3>
-            <p>Seamlessly integrate with your existing ERP systems for a unified procurement experience across your organization.</p>
+            <span class="feature-icon">🔌</span>
+                <h3>ERP Integration</h3>
+                <p>Integrate easily with your ERP for a unified procurement experience.</p>
           </div>
         </div>
       </div>
-	  
-	  <!-- New Video Section -->
-	  <div class="video-section" style="max-width: 1000px; margin: 0 auto 60px; text-align: center;">
-		  <h2 style="color: #c4652d; margin-bottom: 20px;">Watch Our Kraubex Demo</h2>
-		  <div class="video-container">
-			<video controls>
-			  <source src="assets/videos/kraubex-promo.mp4" type="video/mp4" />
-			  Your browser does not support the video tag.
-			</video>
-		  </div>
-	  </div>
+
+      <div class="video-section" style="max-width: 1000px; margin: 0 auto 60px; text-align: center;">
+        <h2 style="color: #c4652d; margin-bottom: 20px;">Watch Our Kraubex Demo</h2>
+        <div class="video-container">
+          <video controls>
+            <source src="assets/videos/kraubex-promo.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </div>
 
       <div class="cta">
-        <h2>Ready to transform your company procurement strategy?</h2>
-        <a href="#get-started" class="btn btn-primary">Get into Kraubex</a>
+        <h2>Join the Kraubex Community Today</h2>
+        <a href="#" class="btn btn-primary">Get into Kraubex</a>
       </div>
     </section>
   </main>
@@ -360,15 +331,41 @@
   <footer>
     <div class="footer-content">
       <div class="footer-left">
-        <img src="assets/kraubex-logo.png" alt="Kraubex Logo"/>
-        <p>© 2024 Kraubex GmbH</p>
+        <p>© 2025 Kraubex. All rights reserved.</p>
       </div>
-      <div class="newsletter-form">
-        <input type="email" placeholder="Enter your email" required />
-        <button class="btn btn-orange">Subscribe</button>
+      <div class="footer-right">
+        <form class="newsletter-form" aria-label="Subscribe to newsletter">
+          <input type="email" placeholder="Your email address" required />
+          <button type="submit" class="btn btn-orange">Subscribe</button>
+        </form>
       </div>
     </div>
-    <div class="footer-bottom">All rights reserved.</div>
+
+    <div class="footer-bottom">
+      <p>Made with collective intelligence in Bielefeld, Germany.</p>
+    </div>
   </footer>
+
+  <script>
+    // Toggle mobile navigation menu
+    const navToggle = document.getElementById('navToggle');
+    const navLeft = document.getElementById('navLeft');
+    const navRight = document.getElementById('navRight');
+
+    navToggle.addEventListener('click', () => {
+      const expanded = navToggle.getAttribute('aria-expanded') === 'true' || false;
+      navToggle.setAttribute('aria-expanded', !expanded);
+      navLeft.classList.toggle('active');
+      navRight.classList.toggle('active');
+    });
+
+    navToggle.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        navToggle.click();
+      }
+    });
+  </script>
+
 </body>
 </html>
