@@ -1,0 +1,278 @@
+<style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inria Serif', Georgia, 'Times New Roman', serif;
+      background-color: #f5f1e8;
+      font-weight: bold;
+    }
+
+    header {
+      background-color: #f5f1e8;
+      padding: 1rem 2rem;
+      border-bottom: 5px solid #c4652d;
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .nav-left,
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 20px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: #2c3e50;
+      font-weight: bold;
+      font-size: 1.3rem; /* ⬅️ Increase this value to your preference */
+    }
+
+    .nav-links a:hover {
+      color: #c4652d;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      border-radius: 4px;
+      font-size: 1.2rem; /* ⬅️ Increase this value to your preference */
+      text-decoration: none;
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+      cursor: pointer;
+    }
+
+    /* Secondary Button (e.g., "Request a demo", "Sign in") */
+    .btn-secondary {
+      background-color: transparent;
+      border: 2px solid #2c3e50;
+      color: #2c3e50;
+    }
+
+    .btn-secondary:hover {
+      background-color: #2c3e50;
+      color: #fff;
+    }
+
+    /* Primary Button (e.g., "Join Kraubex", "Get into Kraubex") */
+    .btn-primary {
+      background-color: #2c3e50;
+      color: #fff;
+      border: 2px solid #2c3e50;
+    }
+
+    .btn-primary:hover {
+      background-color: #c4652d;
+      color: #fff;
+    }
+
+    /* Orange Button (e.g., "Subscribe") */
+    .btn-orange {
+      background-color: #c4652d;
+      color: white;
+      height: 42px;
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      margin-left: 0.5rem;
+      border: 2px solid #c4652d;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .btn-orange:hover {
+      background-color: #fff;
+      color: #c4652d;
+    }
+
+    .nav-toggle {
+      display: none;
+      flex-direction: column;
+      cursor: pointer;
+    }
+
+    .nav-toggle span {
+      height: 3px;
+      width: 25px;
+      background: #2c3e50;
+      margin: 4px 0;
+      border-radius: 2px;
+    }
+
+    @media (max-width: 768px) {
+      .nav-left,
+      .nav-right {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+        display: none;
+      }
+
+      .nav-left.active,
+      .nav-right.active {
+        display: flex;
+      }
+
+      .nav-toggle {
+        display: flex;
+        margin-left: auto;
+      }
+
+      nav {
+        align-items: flex-start;
+      }
+    }
+
+    main {
+      padding: 2rem;
+      font-size: 1.2rem;
+    }
+
+    /* Add spacing between sections in main */
+    main > section {
+      margin-bottom: 4rem;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .hero > div {
+     margin-bottom: 4rem;
+    }
+
+    .hero h1 span {
+      color: #c4652d;
+    }
+
+    /* Make all h3 orange */
+    h3 {
+      color: #b83e01;
+    }
+
+    .features {
+      margin-top: 3rem;
+    }
+
+    .features h2 {
+      margin-bottom: 1rem;
+      color: #2c3e50;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .feature-card {
+      background: white;
+      border-radius: 10px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .feature-card h3 {
+      font-size: 1.1rem;
+    }
+
+    .feature-card p {
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+
+    .feature-icon {
+      font-size: 2rem;
+      display: block;
+      margin-bottom: 1rem;
+    }
+
+    .video-container {
+      position: relative;
+      width: 100%;
+      max-width: 1000px;   /* keep same width cap as before */
+      margin: 0 auto;
+      aspect-ratio: 16 / 9; /* modern browsers maintain height automatically */
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .video-container iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+    .cta {
+      margin-top: 3rem;
+    }
+
+    .cta h2 {
+      margin-bottom: 1rem;
+    }
+
+    /* Footer without box */
+    footer {
+      background-color: transparent;
+      border: none;
+      border-radius: 0;
+      margin: 0;
+      padding: 1rem 2rem 2rem 2rem;
+      font-weight: bold;
+    }
+
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .newsletter-form input {
+      padding: 0.5rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      height: 42px; /* match button height */
+      font-size: 1rem;
+    }
+
+    .newsletter-form button {
+      height: 42px;
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+    }
+
+    .footer-bottom {
+      text-align: center;
+      margin-top: 2rem;
+      border-top: 1px solid #ddd;
+      padding-top: 1rem;
+      color: #c4652d;
+    }
+
+    @media (max-width: 768px) {
+      .footer-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+      }
+    }
+  </style>
