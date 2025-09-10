@@ -261,7 +261,6 @@ h3 {
   width: 100%;              /* full width of container */
   height: auto;             /* keep aspect ratio */
   display: block;
-  background-color: #ffffff; /* explicitly match container */
   margin-top: 1.5rem;       /* space below heading */
   border-radius: 0px;
 }
