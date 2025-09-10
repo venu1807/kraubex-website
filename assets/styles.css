@@ -249,32 +249,33 @@ h3 {
   max-width: 1000px;
   width: 100%;
   margin: 2rem auto 3rem;
-  border-radius: 12px;
-  overflow: hidden;
-  background-color: #f5f1e8; /* light background */
-  padding: 1rem;             /* general padding inside container */
+  border-radius: 0px;
+  overflow: visible;             /* important: prevents clipping issues */
+  background-color: #f5f1e8;     /* your page background */
+  padding: 2rem 1rem;            /* spacing for heading + SVG */
   box-sizing: border-box;
+  display: block;                 /* avoid flex issues */
 }
 
 .flow-container img {
-  width: 100%;       /* full width of container */
-  height: auto;      /* maintain aspect ratio */
+  width: 100%;              /* full width of container */
+  height: auto;             /* keep aspect ratio */
   display: block;
-  background-color: transparent;
-  margin-top: 1.5rem; /* adds space between heading and SVG */
+  background-color: #f5f1e8; /* explicitly match container */
+  margin-top: 1.5rem;       /* space below heading */
+  border-radius: 0px;
 }
 
 /* Mobile adjustment */
 @media (max-width: 768px) {
   .flow-container {
-    padding: 1.5rem 1rem; /* maintains container height */
+    padding: 2rem 1rem;  /* breathing space for mobile */
   }
 
   .flow-container img {
-    margin-top: 1rem;     /* slightly smaller spacing on mobile */
+    margin-top: 1rem;    /* smaller spacing on small screens */
   }
 }
-
 
 .video-container {
   max-width: 1000px;
