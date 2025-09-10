@@ -251,18 +251,20 @@ h3 {
   max-width: 1000px;
   width: 100%;
   margin: 2rem auto 3rem;
-  border-radius: 0;      /* optional, remove rounded corners if not needed */
-  background-color: transparent; /* ensure transparent */
+  border-radius: 10px;
+  overflow: hidden;
+  background-color: #f5f1e8; /* ⬅️ add this to fix black bg */
 }
 
 .flow-container img {
   width: 100%;
-  height: auto;          /* preserves SVG aspect ratio */
-  object-fit: contain;   /* ensures entire SVG fits without clipping */
+  height: auto;
+  object-fit: contain;      /* ensures full SVG fits */
   display: block;
-  border-radius: 0;      /* remove any border radius */
-  background-color: transparent; /* ensures no black bg inside img element */
+  background-color: #f5f1e8; /* ⬅️ optional for extra safety */
+  border-radius: 12px;
 }
+
 
 .video-container {
   max-width: 1000px;
