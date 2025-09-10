@@ -225,7 +225,7 @@ h3 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem; /* spacing between flow and video */
+  gap: 3rem; /* spacing between flow and video */
   margin: 2rem 0;
   width: 100%;
 }
@@ -243,6 +243,22 @@ h3 {
 .video-container {
   aspect-ratio: 16 / 9;
 }
+.flow-container {
+    max-width: 1000px;
+    width: 100%;
+    margin: 2rem auto 3rem;  /* bottom margin adds space before video */
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.video-container {
+    max-width: 1000px;
+    width: 100%;
+    margin: 0 auto 2rem;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
 
 .flow-container img,
 .video-container iframe {
@@ -309,4 +325,44 @@ footer {
     gap: 1rem;
   }
 }
+
+/* Tooltip / tail tip styling */
+.tooltip {
+  position: relative;
+  cursor: help;
+  border-bottom: 1px dotted #555; /* subtle underline for info */
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: max-content;
+  max-width: 220px;
+  background-color: #f5f1e8;
+  color: #b83e01;
+  text-align: left;
+  border-radius: 5px;
+  padding: 0.5rem;
+  position: absolute;
+  z-index: 10;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 0.85rem;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Mobile-friendly adjustments */
+@media (max-width: 768px) {
+  .tooltip .tooltiptext {
+    max-width: 180px;
+    font-size: 0.8rem;
+  }
+}
+
 </style>
