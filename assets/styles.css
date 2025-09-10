@@ -14,8 +14,16 @@ body {
 header {
   background-color: #f5f1e8;
   padding: 1rem 2rem 2rem 2rem; /* add extra bottom padding */
-  border-bottom: 5px solid #c4652d;
 }
+
+.full-width-line {
+  border: none;
+  height: 5px;
+  background-color: #c4652d;
+  width: 100vw;  /* full viewport width */
+  margin: 0;     /* no extra spacing */
+}
+
 
 /* --- NAVIGATION --- */
 nav {
@@ -238,36 +246,51 @@ h3 {
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-/* Maintain same aspect ratio for both Flow and Video */
-.flow-container,
-.video-container {
-  aspect-ratio: 16 / 9;
-}
+/* Container for both Flow and Video */
 .flow-container {
-    max-width: 1000px;
-    width: 100%;
-    margin: 2rem auto 3rem;  /* bottom margin adds space before video */
-    border-radius: 10px;
-    overflow: hidden;
+  max-width: 1000px;
+  width: 100%;
+  margin: 2rem auto 3rem;
+  border-radius: 12px;
+  overflow: hidden;            /* keep corners clean */
+  background-color: #f5f1e8;   /* same as page background to hide gaps */
 }
 
 .video-container {
-    max-width: 1000px;
-    width: 100%;
-    margin: 0 auto 2rem;
-    border-radius: 10px;
-    overflow: hidden;
+  max-width: 1000px;
+  width: 100%;
+  margin: 2rem auto;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: transparent;
 }
 
+/* Remove aspect-ratio from flow-container for mobile responsiveness */
+.flow-container img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;         /* matches container */
+  object-fit: cover;            /* fills the container completely, avoids black edges */
+}
 
-.flow-container img,
 .video-container iframe {
   width: 100%;
-  height: 100%;       /* fills container while preserving ratio */
-  object-fit: cover;  /* keeps edges clean */
+  aspect-ratio: 16/9;   /* keeps video proportion */
+  height: auto;
+  object-fit: cover;
   display: block;
-  border-radius: 12px; /* match parent container corners */
+  border-radius: 12px;
 }
+
+/* Optional spacing for mobile */
+@media (max-width: 768px) {
+  .flow-container,
+  .video-container {
+    margin: 2rem 1rem;
+  }
+}
+
 
 
 /* --- CTA --- */
