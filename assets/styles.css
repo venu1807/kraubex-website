@@ -251,9 +251,17 @@ h3 {
   max-width: 1000px;
   width: 100%;
   margin: 2rem auto 3rem;
-  border-radius: 12px;
-  overflow: hidden;            /* keep corners clean */
-  background-color: #f5f1e8;   /* same as page background to hide gaps */
+  border-radius: 0;      /* optional, remove rounded corners if not needed */
+  overflow: visible;     /* allow SVG to show fully */
+  background-color: transparent; /* ensure transparent */
+}
+
+.flow-container img {
+  width: 100%;
+  height: auto;          /* preserves SVG aspect ratio */
+  object-fit: contain;   /* ensures entire SVG fits without clipping */
+  display: block;
+  border-radius: 0;      /* remove any border radius */
 }
 
 .video-container {
@@ -266,14 +274,6 @@ h3 {
 }
 
 /* Remove aspect-ratio from flow-container for mobile responsiveness */
-.flow-container img {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 12px;         /* matches container */
-  object-fit: cover;            /* fills the container completely, avoids black edges */
-}
-
 .video-container iframe {
   width: 100%;
   aspect-ratio: 16/9;   /* keeps video proportion */
