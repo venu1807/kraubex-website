@@ -263,6 +263,8 @@ h3 {
   display: block;
   margin-top: 1.5rem;       /* space below heading */
   border-radius: 0px;
+  isolation: isolate;        /* prevents blending issues */
+  mix-blend-mode: normal;    /* stop dim effect */
 }
 
 /* Mobile adjustment */
