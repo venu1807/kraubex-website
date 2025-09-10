@@ -252,7 +252,6 @@ h3 {
   width: 100%;
   margin: 2rem auto 3rem;
   border-radius: 0;      /* optional, remove rounded corners if not needed */
-  overflow: visible;     /* allow SVG to show fully */
   background-color: transparent; /* ensure transparent */
 }
 
@@ -262,6 +261,7 @@ h3 {
   object-fit: contain;   /* ensures entire SVG fits without clipping */
   display: block;
   border-radius: 0;      /* remove any border radius */
+  background-color: transparent; /* ensures no black bg inside img element */
 }
 
 .video-container {
