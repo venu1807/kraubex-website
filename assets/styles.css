@@ -261,7 +261,7 @@ h3 {
   height: auto;
   object-fit: contain;      /* ensures full SVG fits */
   display: block;
-  background-color: #000000; /* ⬅️ optional for extra safety */
+  background-color: #f5f1e8; /* ⬅️ optional for extra safety */
   border-radius: 12px;
 }
 
