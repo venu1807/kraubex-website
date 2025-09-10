@@ -19,7 +19,7 @@ header {
 .full-width-line {
   border: none;
   height: 5px;
-  background-color: #c4652d;
+  background-color: #b83e01;
   width: 100vw;  /* full viewport width */
   margin: 0;     /* no extra spacing */
 }
