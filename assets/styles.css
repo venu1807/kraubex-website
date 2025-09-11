@@ -251,7 +251,7 @@ h3 {
   margin: 2rem auto 3rem;
   border-radius: 0px;
   overflow: visible;             /* important: prevents clipping issues */
-  background-color: #f5f1e8;     /* your page background */
+  background-color: #ffffff;     /* your page background */
   padding: 2rem 1rem;            /* spacing for heading + SVG */
   box-sizing: border-box;
   display: block;                 /* avoid flex issues */
