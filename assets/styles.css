@@ -264,20 +264,20 @@ h3 {
 }
 
 .flow-container img {
-  width: 100%;                   /* full width of container */
-  height: auto;                  /* keep aspect ratio */
+  width: 100%;
+  height: auto;
   display: block;
-  margin-top: 1.5rem;            /* space below heading */
-  border-radius: 0px;
+  margin-top: 1.5rem;
+  border-radius: 0;
 
-  /* fixes for mobile SVG background issues */
-  background-color: transparent !important; 
-  isolation: isolate;
-  mix-blend-mode: normal;
-  -webkit-mask-image: none;
-  mask-image: none;
-  contain: paint;
+  /* keep it clean */
+  background-color: transparent !important;
+  mix-blend-mode: initial !important;
+  isolation: auto !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
 }
+
 
 /* Mobile adjustment */
 @media (max-width: 768px) {
