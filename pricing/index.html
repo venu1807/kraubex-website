@@ -25,7 +25,12 @@
           <li><a href="/academy/">Academy</a></li>
           <li><a href="/pricing/">Pricing</a></li>
         </ul>
+      </div>
 
+      <div class="nav-toggle" id="navToggle" role="button" aria-label="Toggle navigation" aria-expanded="false" tabindex="0">
+        <span></span>
+        <span></span>
+        <span></span>
       </div>
 
       <div class="nav-right">
@@ -131,5 +136,26 @@
       </div>
     </div>
   </footer>
+
+  <script>
+    // Toggle mobile navigation menu
+    const navToggle = document.getElementById('navToggle');
+    const navLeft = document.getElementById('navLeft');
+    const navRight = document.getElementById('navRight');
+
+    navToggle.addEventListener('click', () => {
+      const expanded = navToggle.getAttribute('aria-expanded') === 'true' || false;
+      navToggle.setAttribute('aria-expanded', !expanded);
+      navLeft.classList.toggle('active');
+      navRight.classList.toggle('active');
+    });
+
+    navToggle.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        navToggle.click();
+      }
+    });
+  </script>
 </body>
 </html>

@@ -271,7 +271,6 @@ h3 {
   border-radius: 0;
 
   /* keep it clean */
-  background-color: transparent !important;
   mix-blend-mode: initial !important;
   isolation: auto !important;
   -webkit-mask-image: none !important;

@@ -77,5 +77,26 @@
       </div>
     </div>
   </footer>
+
+  <script>
+    // Toggle mobile navigation menu
+    const navToggle = document.getElementById('navToggle');
+    const navLeft = document.getElementById('navLeft');
+    const navRight = document.getElementById('navRight');
+
+    navToggle.addEventListener('click', () => {
+      const expanded = navToggle.getAttribute('aria-expanded') === 'true' || false;
+      navToggle.setAttribute('aria-expanded', !expanded);
+      navLeft.classList.toggle('active');
+      navRight.classList.toggle('active');
+    });
+
+    navToggle.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        navToggle.click();
+      }
+    });
+  </script>
 </body>
 </html>
