@@ -107,10 +107,17 @@
 
       <section class="media-section">
         <!-- FLOW SECTION -->
+
         <div class="media-item flow-container">
           <h2>How Kraubex Works</h2>
-          <img src="assets/Kraubex_Flow7.svg" alt="Kraubex Flow Diagram" loading="lazy" />
+          <picture>
+            <!-- Prefer SVG -->
+            <source srcset="assets/Kraubex_Flow7.svg" type="image/svg+xml">
+            <!-- Fallback -->
+            <img src="assets/Kraubex_Flow7.svg" alt="Kraubex Flow Diagram" loading="lazy" />
+          </picture>
         </div>
+
 
         <!-- VIDEO SECTION -->
         <div class="media-item video-container">

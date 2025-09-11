@@ -250,21 +250,33 @@ h3 {
   width: 100%;
   margin: 2rem auto 3rem;
   border-radius: 0px;
-  overflow: visible;             /* important: prevents clipping issues */
-  background-color: #ffffff;     /* your page background */
+  overflow: visible;             /* prevents clipping */
+  background-color: #f5f1e8;     /* page background */
   padding: 2rem 1rem;            /* spacing for heading + SVG */
   box-sizing: border-box;
-  display: block;                 /* avoid flex issues */
+  display: block;                /* avoid flex issues */
+}
+
+.flow-container h2 {
+  text-align: center;
+  color: #2c3e50;
+  margin-bottom: 1rem;
 }
 
 .flow-container img {
-  width: 100%;              /* full width of container */
-  height: auto;             /* keep aspect ratio */
+  width: 100%;                   /* full width of container */
+  height: auto;                  /* keep aspect ratio */
   display: block;
-  margin-top: 1.5rem;       /* space below heading */
+  margin-top: 1.5rem;            /* space below heading */
   border-radius: 0px;
-  isolation: isolate;        /* prevents blending issues */
-  mix-blend-mode: normal;    /* stop dim effect */
+
+  /* fixes for mobile SVG background issues */
+  background-color: transparent !important; 
+  isolation: isolate;
+  mix-blend-mode: normal;
+  -webkit-mask-image: none;
+  mask-image: none;
+  contain: paint;
 }
 
 /* Mobile adjustment */
