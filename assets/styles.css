@@ -245,16 +245,17 @@ h3 {
 }
 
 /* Container for both Flow and Video */
+/* Container for both Flow and Video */
 .flow-container {
   max-width: 1000px;
   width: 100%;
   margin: 2rem auto 3rem;
-  border-radius: 0px;
-  overflow: visible;             /* prevents clipping */
-  background-color: #ffffff;     /* page background */
-  padding: 2rem 1rem;            /* spacing for heading + SVG */
+  border-radius: 0;
+  overflow: hidden;              /* ensures PNG fits nicely */
+  background-color: #f5f1e8;     /* solid background */
+  padding: 2rem 1rem;
   box-sizing: border-box;
-  display: block;                /* avoid flex issues */
+  display: block;
 }
 
 .flow-container h2 {
@@ -267,21 +268,22 @@ h3 {
   width: 100%;
   height: auto;
   display: block;
-  margin-top: 1.5rem;
+  margin: 1.5rem auto 0;
   border-radius: 0;
+  background-color: #ffffff;  /* force PNG background (just in case transparency exists) */
 }
-
 
 /* Mobile adjustment */
 @media (max-width: 768px) {
   .flow-container {
-    padding: 2rem 1rem;  /* breathing space for mobile */
+    padding: 1.5rem 1rem;
   }
 
   .flow-container img {
-    margin-top: 1rem;    /* smaller spacing on small screens */
+    margin-top: 1rem;
   }
 }
+
 
 .video-container {
   max-width: 1000px;
