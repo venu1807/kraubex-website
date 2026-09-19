@@ -479,11 +479,21 @@
   .connector-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:12px;}
   .connector-card{background:var(--card); border-radius:10px; padding:14px; display:flex; align-items:center; gap:12px;}
   .connector-card .c-icon{width:36px; height:36px; border-radius:9px; background:var(--subhead); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0;}
-  .connector-card .c-name{font-size:14px; font-weight:700; color:var(--subhead); margin:0;}
-  .connector-card .c-status{font-size:12px; margin:2px 0 0;}
+  .connector-card .c-mid{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
+  .connector-card .c-name{font-size:14px; font-weight:700; color:var(--subhead); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .connector-card .c-status{font-size:12px; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .connector-card .c-status.connected{color:#27500A;}
-  .connector-card .c-status.notconnected{color:var(--text-muted);}
+  .connector-card .c-status.notconnected{color:#B3261E;}
   .connector-card button{margin-left:auto; flex-shrink:0;}
+  .connector-viewtools{display:flex; align-items:center; gap:8px; margin-bottom:12px;}
+  .connector-viewtools .viewbtn{display:flex; gap:4px;}
+  .connector-viewtools .viewbtn button{border:1px solid var(--border); background:var(--card); color:var(--text-muted); border-radius:7px; padding:5px 11px; font-size:12px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px;}
+  .connector-viewtools .viewbtn button.active{background:var(--headline); color:#fff; border-color:var(--headline);}
+  .connector-viewtools .connector-count{margin-left:auto; font-size:12px; color:var(--text-muted);}
+  .connector-grid.list{grid-template-columns:1fr;}
+  .connector-grid.list .connector-card{width:100%;}
+  .connector-grid.list .connector-card .c-mid{flex:1.4;}
+  .connector-card button span{display:inline-flex; align-items:center; gap:6px;}
 
   .appr-card{background:var(--card); border-radius:10px; padding:14px; margin-bottom:10px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
   .appr-card .appr-info{flex:1; min-width:180px;}
@@ -1728,10 +1738,18 @@ function renderConnectBody(subview){
     mcp: [{n:'Procurement MCP',c:true},{n:'Finance MCP',c:false},{n:'HR MCP',c:false},{n:'SAP MCP',c:true},{n:'CRM MCP',c:false},{n:'Custom MCP',c:false}],
   };
   const list = groups[subview] || groups.enterprise;
-  body.innerHTML = `<div class="connector-grid">${list.map(c=>`
+  const layout = window.connectLayout || 'grid';
+  body.innerHTML = `
+    <div class="connector-toolbar">
+      <div class="view-toggle">
+        <button class="vt-btn ${layout==='grid'?'active':''}" onclick="window.connectLayout='grid';renderConnectBody(${subview?'\''+subview+'\'':''.replace(/''/g,'\'')})">▦ Grid</button>
+        <button class="vt-btn ${layout==='list'?'active':''}" onclick="window.connectLayout='list';renderConnectBody(${''})">☰ List</button>
+      </div>
+    </div>
+  <div class="connector-grid ${layout==='list'?'connector-list':''}">${list.map(c=>`
     <div class="connector-card">
       <div class="c-icon">${c.n.slice(0,2).toUpperCase()}</div>
-      <div><p class="c-name">${c.n}</p><p class="c-status ${c.c?'connected':'notconnected'}">${c.c?'● Connected':'○ Not connected'}</p></div>
+      <div class="c-mid"><p class="c-name">${c.n}</p><p class="c-status ${c.c?'connected':'notconnected'}">${c.c?'● Connected':'○ Not connected'}</p></div>
       <button class="btn ${c.c?'btn-ghost':'btn-primary'}" onclick="alert('${c.c?'Manage':'Connect'} ${c.n}')">${c.c?'Manage':'Connect'}</button>
     </div>`).join('')}</div>`;
 }
