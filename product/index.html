@@ -633,6 +633,17 @@
   .wf-branch-label.no{background:#FCEBEB; color:#791F1F; border-color:#F7C1C1;}
   .wf-branch-nodes{display:flex; align-items:center; gap:0;}
   .wf-merge-dot{width:10px; height:10px; border-radius:50%; background:var(--subhead); flex-shrink:0; margin:0 4px;}
+  .wf-port{width:12px; height:12px; border-radius:50%; background:#fff; border:2px solid #334155; position:absolute; top:50%; transform:translateY(-50%); z-index:4; cursor:crosshair; box-shadow:0 1px 4px rgba(0,0,0,.18); transition:transform .12s, background .12s;}
+  .wf-port.in{left:-6px;}
+  .wf-port.out{right:-6px;}
+  .wf-port.yes{border-color:#1D9E75; right:-6px;}
+  .wf-port.no{border-color:#791F1F; right:-6px;}
+  .wf-port:hover{background:#334155; transform:translateY(-50%) scale(1.25);}
+  .wf-port.yes:hover{background:#1D9E75;}
+  .wf-port.no:hover{background:#791F1F;}
+  .wf-port.dragging{transform:translateY(-50%) scale(1.35); box-shadow:0 2px 8px rgba(0,0,0,.25);}
+  .wf-arrow-path{filter:drop-shadow(0 1px 2px rgba(0,0,0,.12));}
+  .wf-temp-arrow{pointer-events:none;}
   .wf-node-detail-overlay{position:fixed; inset:0; background:rgba(0,20,35,.45); z-index:75; display:none; align-items:center; justify-content:center; padding:20px;}
   .wf-node-detail-overlay.show{display:flex;}
   .wf-node-detail-modal{background:var(--card); border-radius:12px; width:480px; max-width:92vw; max-height:88vh; overflow-y:auto; box-shadow:0 16px 40px rgba(0,0,0,.22);}
@@ -2745,7 +2756,12 @@ function wfNodeHtml(n, i, isBranch, branchKey, branchIdx){
   const dragHandler = `onmousedown="wfDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1})" ontouchstart="wfDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1})"`;
   const x = n.x!==undefined ? n.x : 0;
   const y = n.y!==undefined ? n.y : 0;
+  const isCondition = n.type==='condition' && n.branches;
+  const portsHtml = isCondition
+    ? `<div class="wf-port in" data-port="in" onmousedown="wfPortDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1},'in'); event.stopPropagation();"></div><div class="wf-port yes" data-port="yes" onmousedown="wfPortDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1},'yes'); event.stopPropagation();" title="Yes branch"></div><div class="wf-port no" data-port="no" onmousedown="wfPortDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1},'no'); event.stopPropagation();" style="top:66%;" title="No branch"></div>`
+    : `<div class="wf-port in" data-port="in" onmousedown="wfPortDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1},'in'); event.stopPropagation();"></div><div class="wf-port out" data-port="out" onmousedown="wfPortDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1},'out'); event.stopPropagation();"></div>`;
   return `<div class="wf-node ${n.type}" id="${nid}" style="left:${x}px; top:${y}px;" ${dragHandler} ${clickHandler}>
+      ${portsHtml}
       ${editingWfMode ? `<svg class="wf-node-remove" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ${removeHandler}><path d="M6 6l12 12M18 6L6 18"/></svg>` : ''}
       <div class="wf-node-icon">${wfNodeIcon(n.type)}</div>
       <p class="wf-node-type">${n.sub}</p>
@@ -2757,9 +2773,15 @@ function wfNodeHtml(n, i, isBranch, branchKey, branchIdx){
 function wfDrawArrows(){
   const svg = document.getElementById('wfArrows');
   if(!svg) return;
-  const arrowHead = '<defs><marker id="wfArrowHead" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="9" markerHeight="7" orient="auto"><polygon points="0 0, 9 3.5, 0 7" fill="#334155"/></marker></defs>';
+  const arrowHead = '<defs><marker id="wfArrowHead" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="9" markerHeight="7" orient="auto"><polygon points="0 0, 9 3.5, 0 7" fill="#0F172A"/></marker><filter id="wfShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity="0.18"/></filter></defs>';
   let paths = arrowHead;
   const W=200, H=110;
+  if(window.wfPortDrag && window.wfPortDrag.active){
+    const s = window.wfPortDrag;
+    const sx = s.sx, sy=s.sy, tx=s.tx, ty=s.ty;
+    const col = s.port==='yes'?'#1D9E75': s.port==='no'?'#791F1F':'#0F172A';
+    paths += `<path class="wf-arrow-path wf-temp-arrow" d="M ${sx} ${sy} C ${sx+60} ${sy}, ${tx-60} ${ty}, ${tx} ${ty}" stroke="${col}" stroke-width="2.4" fill="none" stroke-dasharray="8 6" opacity="0.9" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`;
+  }
   const getNextPos = (idx)=>{
     if(idx+1 < editingNodes.length) return editingNodes[idx+1];
     return null;
@@ -2772,31 +2794,29 @@ function wfDrawArrows(){
       const sx = (n.x||0)+W, sy=(n.y||0)+H/2;
       if(yesNodes.length){
         const tx = (yesNodes[0].x||0), ty=(yesNodes[0].y||0)+H/2;
-        paths += `<path d="M ${sx} ${sy} C ${sx+40} ${sy}, ${tx-40} ${ty}, ${tx} ${ty}" stroke="#1D9E75" stroke-width="2.2" fill="none" marker-end="url(#wfArrowHead)"/><text x="${(sx+tx)/2}" y="${(sy+ty)/2-8}" font-size="10" font-weight="700" fill="#1D9E75" text-anchor="middle">Yes</text>`;
+        paths += `<path class="wf-arrow-path" d="M ${sx} ${sy} C ${sx+60} ${sy}, ${tx-60} ${ty}, ${tx} ${ty}" stroke="#1D9E75" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/><text x="${(sx+tx)/2}" y="${(sy+ty)/2-10}" font-size="10.5" font-weight="800" fill="#1D9E75" text-anchor="middle" style="paint-order:stroke; stroke:#F3F0E6; stroke-width:3px;">Yes</text>`;
       }
       if(noNodes.length){
         const tx2=(noNodes[0].x||0), ty2=(noNodes[0].y||0)+H/2;
-        paths += `<path d="M ${sx} ${sy} C ${sx+40} ${sy}, ${tx2-40} ${ty2}, ${tx2} ${ty2}" stroke="#791F1F" stroke-width="2.2" fill="none" marker-end="url(#wfArrowHead)"/><text x="${(sx+tx2)/2}" y="${(sy+ty2)/2-8}" font-size="10" font-weight="700" fill="#791F1F" text-anchor="middle">No</text>`;
+        paths += `<path class="wf-arrow-path" d="M ${sx} ${sy} C ${sx+60} ${sy}, ${tx2-60} ${ty2}, ${tx2} ${ty2}" stroke="#791F1F" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/><text x="${(sx+tx2)/2}" y="${(sy+ty2)/2-10}" font-size="10.5" font-weight="800" fill="#791F1F" text-anchor="middle" style="paint-order:stroke; stroke:#F3F0E6; stroke-width:3px;">No</text>`;
       }
-      // internal branch chains
       ;[yesNodes,noNodes].forEach(arr=>{
         for(let k=0;k<arr.length-1;k++){
           const a=arr[k], b=arr[k+1];
           const ax=(a.x||0)+W, ay=(a.y||0)+H/2, bx=(b.x||0), by=(b.y||0)+H/2;
-          paths += `<path d="M ${ax} ${ay} C ${ax+40} ${ay}, ${bx-40} ${by}, ${bx} ${by}" stroke="#334155" stroke-width="2" fill="none" marker-end="url(#wfArrowHead)"/>`;
+          paths += `<path class="wf-arrow-path" d="M ${ax} ${ay} C ${ax+50} ${ay}, ${bx-50} ${by}, ${bx} ${by}" stroke="#334155" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`;
         }
       });
-      // merge to next
       if(next){
         const lastYes = yesNodes[yesNodes.length-1], lastNo=noNodes[noNodes.length-1];
         const nx=(next.x||0), ny=(next.y||0)+H/2;
-        if(lastYes){ const ax=(lastYes.x||0)+W, ay=(lastYes.y||0)+H/2; paths += `<path d="M ${ax} ${ay} C ${ax+40} ${ay}, ${nx-40} ${ny}, ${nx} ${ny}" stroke="#334155" stroke-width="2" fill="none" stroke-dasharray="6 4" marker-end="url(#wfArrowHead)"/>`; }
-        if(lastNo){ const ax2=(lastNo.x||0)+W, ay2=(lastNo.y||0)+H/2; paths += `<path d="M ${ax2} ${ay2} C ${ax2+40} ${ay2}, ${nx-40} ${ny}, ${nx} ${ny}" stroke="#334155" stroke-width="2" fill="none" stroke-dasharray="6 4" marker-end="url(#wfArrowHead)"/>`; }
+        if(lastYes){ const ax=(lastYes.x||0)+W, ay=(lastYes.y||0)+H/2; paths += `<path class="wf-arrow-path" d="M ${ax} ${ay} C ${ax+60} ${ay}, ${nx-60} ${ny}, ${nx} ${ny}" stroke="#334155" stroke-width="2.4" fill="none" stroke-dasharray="7 5" opacity="0.95" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`; }
+        if(lastNo){ const ax2=(lastNo.x||0)+W, ay2=(lastNo.y||0)+H/2; paths += `<path class="wf-arrow-path" d="M ${ax2} ${ay2} C ${ax2+60} ${ay2}, ${nx-60} ${ny}, ${nx} ${ny}" stroke="#334155" stroke-width="2.4" fill="none" stroke-dasharray="7 5" opacity="0.95" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`; }
       }
     } else {
       if(next){
         const sx=(n.x||0)+W, sy=(n.y||0)+H/2, tx=(next.x||0), ty=(next.y||0)+H/2;
-        paths += `<path d="M ${sx} ${sy} C ${sx+50} ${sy}, ${tx-50} ${ty}, ${tx} ${ty}" stroke="#334155" stroke-width="2" fill="none" marker-end="url(#wfArrowHead)"/>`;
+        paths += `<path class="wf-arrow-path" d="M ${sx} ${sy} C ${sx+70} ${sy}, ${tx-70} ${ty}, ${tx} ${ty}" stroke="#0F172A" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`;
       }
     }
   });
@@ -2870,6 +2890,96 @@ function wfDragEnd(){
   document.removeEventListener('touchend', wfDragEnd);
   wfDragState=null;
   setTimeout(()=>{ window.wfDragMoved=false; }, 120);
+}
+
+window.wfPortDrag = null;
+function wfPortDragStart(e,i,branchKey,branchIdx,port){
+  if(port==='in') return;
+  const isBranch = branchKey && branchKey.length>0;
+  const node = isBranch ? (editingNodes[i] && editingNodes[i].branches && editingNodes[i].branches[branchKey] && editingNodes[i].branches[branchKey][branchIdx]) : editingNodes[i];
+  if(!node) return;
+  const W=200, H=110;
+  const sx = (node.x||0)+(port==='in'?0:W);
+  const sy = (node.y||0)+H/2;
+  window.wfPortDrag = {active:true, fromI:i, fromBranchKey:branchKey||'', fromBranchIdx: isBranch?branchIdx:-1, port, sx, sy, tx:sx, ty:sy};
+  const portEl = e.currentTarget;
+  if(portEl) portEl.classList.add('dragging');
+  e.preventDefault(); e.stopPropagation();
+  document.addEventListener('mousemove', wfPortDragMove);
+  document.addEventListener('mouseup', wfPortDragEnd);
+  document.addEventListener('touchmove', wfPortDragMove, {passive:false});
+  document.addEventListener('touchend', wfPortDragEnd);
+}
+function wfPortDragMove(e){
+  if(!window.wfPortDrag || !window.wfPortDrag.active) return;
+  const touch = e.touches && e.touches[0];
+  const cx = touch? touch.clientX : e.clientX;
+  const cy = touch? touch.clientY : e.clientY;
+  const canvas = document.getElementById('wfCanvas');
+  const rect = canvas.getBoundingClientRect();
+  const tx = cx - rect.left + canvas.scrollLeft;
+  const ty = cy - rect.top + canvas.scrollTop;
+  window.wfPortDrag.tx = tx;
+  window.wfPortDrag.ty = ty;
+  wfDrawArrows();
+  if(e.cancelable) e.preventDefault();
+}
+function wfPortDragEnd(e){
+  if(!window.wfPortDrag || !window.wfPortDrag.active) return;
+  const drag = window.wfPortDrag;
+  document.querySelectorAll('.wf-port.dragging').forEach(el=>el.classList.remove('dragging'));
+  document.removeEventListener('mousemove', wfPortDragMove);
+  document.removeEventListener('mouseup', wfPortDragEnd);
+  document.removeEventListener('touchmove', wfPortDragMove);
+  document.removeEventListener('touchend', wfPortDragEnd);
+  const touch = e.changedTouches && e.changedTouches[0];
+  const cx = touch? touch.clientX : e.clientX;
+  const cy = touch? touch.clientY : e.clientY;
+  const targetEl = document.elementFromPoint(cx, cy);
+  const nodeEl = targetEl && targetEl.closest && targetEl.closest('.wf-node');
+  window.wfPortDrag.active = false;
+  wfDrawArrows();
+  if(!nodeEl){ window.wfPortDrag=null; return; }
+  const tid = nodeEl.id;
+  let tInfo=null;
+  if(tid.startsWith('wfNode-')){
+    const parts = tid.replace('wfNode-','').split('-');
+    if(parts.length===1) tInfo={i:parseInt(parts[0]), branchKey:'', branchIdx:-1};
+    else if(parts.length===3) tInfo={i:parseInt(parts[0]), branchKey:parts[1], branchIdx:parseInt(parts[2])};
+  }
+  if(!tInfo){ window.wfPortDrag=null; return; }
+  if(tInfo.i===drag.fromI && tInfo.branchKey===drag.fromBranchKey && tInfo.branchIdx===drag.fromBranchIdx){ window.wfPortDrag=null; return; }
+  let targetNode=null;
+  if(tInfo.branchKey){
+    const par=editingNodes[tInfo.i];
+    if(par && par.branches && par.branches[tInfo.branchKey]) targetNode=par.branches[tInfo.branchKey][tInfo.branchIdx];
+  } else {
+    targetNode=editingNodes[tInfo.i];
+  }
+  if(!targetNode){ window.wfPortDrag=null; return; }
+  if(tInfo.branchKey){
+    editingNodes[tInfo.i].branches[tInfo.branchKey].splice(tInfo.branchIdx,1);
+  } else {
+    editingNodes.splice(tInfo.i,1);
+    if(!drag.fromBranchKey && tInfo.i < drag.fromI) drag.fromI--;
+  }
+  if(drag.port==='yes' || drag.port==='no'){
+    const src=editingNodes[drag.fromI];
+    if(!src || !src.branches){ editingNodes.splice(drag.fromI+1,0,targetNode); }
+    else {
+      if(!src.branches[drag.port]) src.branches[drag.port]=[];
+      src.branches[drag.port].push(targetNode);
+      targetNode.x=(src.x||0)+260;
+      targetNode.y=(src.y||0)+(drag.port==='yes'?-130:130);
+    }
+  } else {
+    editingNodes.splice(drag.fromI+1,0,targetNode);
+    const src=editingNodes[drag.fromI];
+    targetNode.x=(src.x||0)+260;
+    targetNode.y=src.y||0;
+  }
+  window.wfPortDrag=null;
+  renderWfCanvas();
 }
 
 function openWfNodeDetail(i){
