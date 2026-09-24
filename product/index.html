@@ -655,6 +655,25 @@
   .wf-node-detail-row span:first-child{color:var(--text-muted);}
   .wf-node-detail-row span:last-child{color:var(--subhead); font-weight:600; text-align:right; max-width:62%;}
   .wf-node-detail-desc{font-size:13px; color:var(--subhead); line-height:1.5; margin:10px 0; background:var(--bg); padding:10px 12px; border-radius:8px;}
+  .oc-model-picker{position:relative; margin-top:10px; padding-top:8px; border-top:1px solid var(--border);}
+  .oc-model-label{font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.04em; text-transform:uppercase; display:block; margin-bottom:4px;}
+  .oc-model-btn{width:100%; display:flex; align-items:center; gap:7px; padding:6px 8px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--subhead); font-size:11px; cursor:pointer; transition:border-color .15s, box-shadow .15s; text-align:left;}
+  .oc-model-btn:hover{border-color:var(--headline); box-shadow:0 1px 6px rgba(0,0,0,.06);}
+  .oc-model-btn:focus{outline:none; border-color:var(--headline); box-shadow:0 0 0 3px rgba(184,62,1,.12);}
+  .oc-model-dot{width:7px; height:7px; border-radius:50%; flex-shrink:0;}
+  .oc-model-provider{font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.02em; text-transform:uppercase; white-space:nowrap;}
+  .oc-model-name{font-size:11px; font-weight:600; color:var(--subhead); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .oc-model-chevron{color:var(--text-muted); flex-shrink:0; transition:transform .15s;}
+  .oc-model-picker.open .oc-model-chevron{transform:rotate(180deg);}
+  .oc-model-dropdown{position:absolute; left:0; right:0; bottom:calc(100% + 6px); background:var(--card); border:1px solid var(--border); border-radius:10px; box-shadow:0 12px 28px rgba(0,0,0,.14); max-height:240px; overflow-y:auto; display:none; z-index:12; padding:6px;}
+  .oc-model-dropdown.show{display:block;}
+  .oc-model-group{font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.04em; text-transform:uppercase; padding:6px 8px 2px;}
+  .oc-model-option{display:flex; align-items:center; gap:8px; padding:7px 8px; border-radius:6px; cursor:pointer; font-size:11px; color:var(--subhead);}
+  .oc-model-option:hover{background:var(--bg);}
+  .oc-model-option.active{background:var(--subhead); color:#fff;}
+  .oc-model-option.active .oc-model-provider{color:rgba(255,255,255,.7);}
+  .oc-model-option .oc-model-desc{font-size:10px; color:var(--text-muted); margin-left:auto; white-space:nowrap;}
+  .oc-model-option.active .oc-model-desc{color:rgba(255,255,255,.75);}
   .wf-palette-wrap{border-top:1px solid var(--border); background:var(--bg); padding:14px 20px; max-height:220px; overflow-y:auto;}
   .wf-palette-hint{font-size:11px; color:var(--text-muted); margin:0 0 10px;}
   .wf-palette{display:flex; flex-direction:column; gap:10px;}
@@ -1490,6 +1509,73 @@ function setAgentModel(name, modelId){ agentModels[name]=modelId; }
 function modelOptionsHtml(selectedId){
   return kraubexModels.map(m=>`<option value="${m.id}" ${m.id===selectedId?'selected':''}>${m.name} — ${m.provider}</option>`).join('');
 }
+const providerColors = {OpenAI:'#10A37F', Anthropic:'#C97A2E', Google:'#4285F4', Meta:'#0668E1', Mistral:'#FF7000', Cohere:'#39594E', 'Kraubex AI':'#B83E01'};
+function providerColor(p){ return providerColors[p] || '#6B7280'; }
+function slugForModelPicker(name){ return name.replace(/[^a-z0-9]/gi,'-').toLowerCase(); }
+function modelPickerHtml(agentName){
+  const sel = getAgentModel(agentName);
+  const cur = kraubexModels.find(m=>m.id===sel) || kraubexModels[0];
+  const grouped = {};
+  kraubexModels.forEach(m=>{ if(!grouped[m.provider]) grouped[m.provider]=[]; grouped[m.provider].push(m); });
+  const slug = slugForModelPicker(agentName);
+  return `<div class="oc-model-picker" id="picker-${slug}" onclick="event.stopPropagation()">
+    <label class="oc-model-label">Model</label>
+    <button class="oc-model-btn" onclick="toggleModelPicker('${agentName.replace(/'/g,"\\'")}')">
+      <span class="oc-model-dot" style="background:${providerColor(cur.provider)}"></span>
+      <span class="oc-model-provider">${cur.provider}</span>
+      <span class="oc-model-name">${cur.name}</span>
+      <svg class="oc-model-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="oc-model-dropdown" id="dropdown-${slug}">
+      ${Object.entries(grouped).map(([provider, list])=>`
+        <div class="oc-model-group">${provider}</div>
+        ${list.map(m=>`<div class="oc-model-option ${m.id===sel?'active':''}" onclick="selectModel('${agentName.replace(/'/g,"\\'")}', '${m.id}')">
+          <span class="oc-model-dot" style="background:${providerColor(m.provider)}"></span>
+          <span style="flex:1; text-align:left;"><span style="font-weight:600;">${m.name}</span> <span style="font-size:10px; color:var(--text-muted); margin-left:4px;">${m.desc}</span></span>
+          ${m.id===sel?'<span>✓</span>':''}
+        </div>`).join('')}
+      `).join('')}
+    </div>
+  </div>`;
+}
+function toggleModelPicker(agentName){
+  const slug = slugForModelPicker(agentName);
+  const dd = document.getElementById('dropdown-'+slug);
+  const isOpen = dd && dd.classList.contains('show');
+  document.querySelectorAll('.oc-model-dropdown.show').forEach(el=>el.classList.remove('show'));
+  document.querySelectorAll('.oc-model-picker.open').forEach(el=>el.classList.remove('open'));
+  if(!isOpen && dd){
+    dd.classList.add('show');
+    const picker = document.getElementById('picker-'+slug);
+    if(picker) picker.classList.add('open');
+  }
+}
+function selectModel(agentName, modelId){
+  setAgentModel(agentName, modelId);
+  const slug = slugForModelPicker(agentName);
+  const dd = document.getElementById('dropdown-'+slug);
+  if(dd) dd.classList.remove('show');
+  const picker = document.getElementById('picker-'+slug);
+  if(picker) picker.classList.remove('open');
+  const cur = kraubexModels.find(m=>m.id===modelId);
+  if(cur && picker){
+    const btn = picker.querySelector('.oc-model-btn');
+    if(btn){
+      const dot = btn.querySelector('.oc-model-dot');
+      if(dot) dot.style.background = providerColor(cur.provider);
+      const prov = btn.querySelector('.oc-model-provider');
+      if(prov) prov.textContent = cur.provider;
+      const nameEl = btn.querySelector('.oc-model-name');
+      if(nameEl) nameEl.textContent = cur.name;
+    }
+  }
+}
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('.oc-model-picker')){
+    document.querySelectorAll('.oc-model-dropdown.show').forEach(el=>el.classList.remove('show'));
+    document.querySelectorAll('.oc-model-picker.open').forEach(el=>el.classList.remove('open'));
+  }
+});
 function iconFor(a){
   return `<div class="agent-icon" style="background:${a.color};">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 9h.01M15 9h.01M8 15c1 1 2.5 1.5 4 1.5s3-.5 4-1.5"/></svg>
@@ -1499,7 +1585,7 @@ function domainIconFor(deptName, color){
   const c = color || deptColors[hashStr(deptName) % deptColors.length];
   const icons = {
     'Procurement':'<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h2l2.4 12.2a2 2 0 002 1.8h8.6a2 2 0 002-1.6L21 7H6"/>',
-    'Finance':'<path d="M14 9a6 6 0 00-8.2 0"/><path d="M14 15a6 6 0 01-8.2 0"/><path d="M8 10h8"/><path d="M8 14h8"/><path d="M9 9H7"/><path d="M9 15H7"/>',
+    'Finance':'<text x="12" y="15" text-anchor="middle" dominant-baseline="central" font-family="Inter, Geist, sans-serif" font-size="16" font-weight="800" fill="currentColor" stroke="none">€</text>',
     'Sales':'<path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-9"/>',
     'Marketing':'<path d="M3 11l18-5v12L3 14v-3z"/><path d="M11 11v6a2 2 0 002 2h2"/>',
     'Supply Chain':'<path d="M14 18V6a2 2 0 00-2-2H5a2 2 0 00-2 2v11a1 1 0 001 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 001-1v-3.83a1 1 0 00-.37-.77L18 9V18"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
@@ -1513,7 +1599,7 @@ function domainIconFor(deptName, color){
     'Knowledge':'<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v15H6.5A2.5 2.5 0 014 19.5z"/><path d="M8 7h8M8 11h8"/>',
   };
   const svg = icons[deptName] || '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/>';
-  return `<div class="agent-icon" style="background:${c};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${svg}</svg></div>`;
+  return `<div class="agent-icon" style="background:${c};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${svg}</svg></div>`;
 }
 function domainAgentCardHTML(dept, domainAgent){
   const sel = getAgentModel(domainAgent.name);
@@ -1539,17 +1625,11 @@ function domainAgentCardHTML(dept, domainAgent){
           ${domainAgent.rating}
         </span>
       </div>
-      <div style="margin-top:10px; padding-top:8px; border-top:1px solid var(--border);" onclick="event.stopPropagation()">
-        <label style="font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.04em; text-transform:uppercase;">Model</label>
-        <select style="width:100%; margin-top:4px; font-size:11px; padding:5px 6px; border:1px solid var(--border); border-radius:6px; background:var(--card); color:var(--subhead);" onchange="setAgentModel('${domainAgent.name.replace(/'/g,"\\'")}', this.value)" onclick="event.stopPropagation()">
-          ${modelOptionsHtml(sel)}
-        </select>
-      </div>
+      ${modelPickerHtml(domainAgent.name)}
     </div>`;
 }
 
 function agentCardHTML(a, i){
-  const sel = getAgentModel(a.name);
   return `
     <div class="agent-card" style="cursor:pointer;" onclick="openAssignModal(${i})">
       <div class="agent-card-top">
@@ -1573,12 +1653,7 @@ function agentCardHTML(a, i){
           ${a.rating}
         </span>
       </div>
-      <div style="margin-top:10px; padding-top:8px; border-top:1px solid var(--border);" onclick="event.stopPropagation()">
-        <label style="font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.04em; text-transform:uppercase;">Model</label>
-        <select style="width:100%; margin-top:4px; font-size:11px; padding:5px 6px; border:1px solid var(--border); border-radius:6px; background:var(--card); color:var(--subhead);" onchange="setAgentModel('${a.name.replace(/'/g,"\\'")}', this.value)" onclick="event.stopPropagation()">
-          ${modelOptionsHtml(sel)}
-        </select>
-      </div>
+      ${modelPickerHtml(a.name)}
     </div>`;
 }
 
@@ -1797,7 +1872,6 @@ function openDeptAgent(slug, idx){
 }
 
 function deptAgentCardHTML(a, slug, i){
-  const sel = getAgentModel(a.name);
   return `
     <div class="agent-card" style="cursor:pointer;" onclick="openDeptAgent('${slug}', ${i})">
       <div class="agent-card-top">
@@ -1819,12 +1893,7 @@ function deptAgentCardHTML(a, slug, i){
           ${a.rating}
         </span>
       </div>
-      <div style="margin-top:10px; padding-top:8px; border-top:1px solid var(--border);" onclick="event.stopPropagation()">
-        <label style="font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.04em; text-transform:uppercase;">Model</label>
-        <select style="width:100%; margin-top:4px; font-size:11px; padding:5px 6px; border:1px solid var(--border); border-radius:6px; background:var(--card); color:var(--subhead);" onchange="setAgentModel('${a.name.replace(/'/g,"\\'")}', this.value)" onclick="event.stopPropagation()">
-          ${modelOptionsHtml(sel)}
-        </select>
-      </div>
+      ${modelPickerHtml(a.name)}
     </div>`;
 }
 function genericDeptHTML(dept){
