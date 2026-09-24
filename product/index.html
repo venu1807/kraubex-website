@@ -1477,6 +1477,51 @@ function iconFor(a){
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 9h.01M15 9h.01M8 15c1 1 2.5 1.5 4 1.5s3-.5 4-1.5"/></svg>
   </div>`;
 }
+function domainIconFor(deptName, color){
+  const c = color || deptColors[hashStr(deptName) % deptColors.length];
+  const icons = {
+    'Procurement':'<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h2l2.4 12.2a2 2 0 002 1.8h8.6a2 2 0 002-1.6L21 7H6"/>',
+    'Finance':'<path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/><path d="M6 7h2"/><path d="M16 7h2"/>',
+    'Sales':'<path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-9"/>',
+    'Marketing':'<path d="M3 11l18-5v12L3 14v-3z"/><path d="M11 11v6a2 2 0 002 2h2"/>',
+    'Supply Chain':'<path d="M14 18V6a2 2 0 00-2-2H5a2 2 0 00-2 2v11a1 1 0 001 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 001-1v-3.83a1 1 0 00-.37-.77L18 9V18"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
+    'Operations':'<circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M18.36 18.36l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M18.36 5.64l2.12-2.12"/>',
+    'Manufacturing':'<path d="M3 20h18"/><path d="M5 20V10a2 2 0 012-2h2a2 2 0 012 2v10"/><path d="M11 20V14a2 2 0 012-2h2a2 2 0 012 2v6"/><path d="M3 10l3-3 3 3 3-3 3 3 3-3 3 3"/>',
+    'Quality':'<path d="M12 2l7 4v6c0 5-3.5 9-7 10-3.5-1-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+    'Data & Analytics':'<path d="M3 3v18h18"/><path d="M7 16h3V9H7v7zM14 16h3V5h-3v11z"/>',
+    'ESG & Sustainability':'<path d="M11 20A7 7 0 0111 6a7 7 0 010 14z"/><path d="M11 6c-1 2-1 5 0 8"/><path d="M11 6c2 1 4 3 4 6s-2 5-4 6"/>',
+    'R&D':'<path d="M9 3h6"/><path d="M10 3v6l-3 6a2 2 0 002 3h6a2 2 0 002-3l-3-6V3"/><path d="M12 12h.01"/>',
+    'Strategy':'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="1"/>',
+    'Knowledge':'<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v15H6.5A2.5 2.5 0 014 19.5z"/><path d="M8 7h8M8 11h8"/>',
+  };
+  const svg = icons[deptName] || '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/>';
+  return `<div class="agent-icon" style="background:${c};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${svg}</svg></div>`;
+}
+function domainAgentCardHTML(dept, domainAgent){
+  return `
+    <div class="agent-card domain-agent-card" style="cursor:pointer; border:2px solid var(--headline); background:linear-gradient(135deg, var(--card) 0%, var(--bg) 100%);" onclick="openAssignModalObj({name:'${domainAgent.name.replace(/'/g,"\\'")}', desc:'${domainAgent.desc.replace(/'/g,"\\'")}', tag:'${domainAgent.tag}', color:'${domainAgent.color}'})">
+      <div class="agent-card-top">
+        ${domainIconFor(dept.name, domainAgent.color)}
+        <div class="agent-name-row">
+          <div><p>${domainAgent.name}</p></div>
+          <span class="agent-badge ${domainAgent.status}">${domainAgent.status}</span>
+        </div>
+      </div>
+      <p class="agent-desc">${domainAgent.desc}</p>
+      <p class="agent-desc" style="font-size:11px; color:var(--text-muted); margin-top:6px; background:var(--bg); padding:6px 8px; border-radius:6px;">Domain Agent — orchestrates all skill agents in ${dept.name}. Owns strategy, governance and cross-agent coordination.</p>
+      <p class="agent-tag">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
+        ${domainAgent.tag}
+      </p>
+      <div class="agent-foot">
+        <span>${domainAgent.tasks} tasks</span>
+        <span class="agent-rating">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 16.9 5.8 20.3l1.6-6.8L2.2 8.9l6.9-.6z"/></svg>
+          ${domainAgent.rating}
+        </span>
+      </div>
+    </div>`;
+}
 
 function agentCardHTML(a, i){
   return `
@@ -1511,16 +1556,11 @@ function procurementDeptHTML(){
   const skillCards = agents
     .map((a,i)=>({a,i})).filter(x=>x.a.group==='skill')
     .map(({a,i})=>agentCardHTML(a,i)).join('');
+  const domainDept = {name:'Procurement', desc:domain.desc};
   return `
     <div class="domain-section" style="padding:0;">
       <p class="domain-eyebrow">Business domain agent</p>
-      <div class="domain-card" style="cursor:pointer;" onclick="openAssignModal(${domainIdx})">
-        <p class="domain-card-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h2l2.4 12.2a2 2 0 002 1.8h8.6a2 2 0 002-1.6L21 7H6"/></svg>
-          ${domain.name}
-        </p>
-        <p class="domain-sub">${domain.desc}</p>
-      </div>
+      ${domainAgentCardHTML(domainDept, domain)}
       <div class="domain-line"></div>
       <div class="skill-box">
         <h4>Skill agents</h4>
@@ -1746,16 +1786,20 @@ function deptAgentCardHTML(a, slug, i){
 }
 function genericDeptHTML(dept){
   const skillAgents = buildDeptSkillAgents(dept);
+  const color = deptColors[hashStr(dept.name) % deptColors.length];
+  const domainAgent = {
+    name: `${dept.name} Domain Agent`,
+    desc: dept.desc,
+    status: 'active',
+    color: color,
+    tag: dept.name,
+    tasks: 70 + (hashStr(dept.name) % 280),
+    rating: (4.4 + (hashStr(dept.name) % 6) / 10).toFixed(1)
+  };
   return `
     <div class="domain-section" style="padding:0;">
       <p class="domain-eyebrow">Business domain agent</p>
-      <div class="domain-card">
-        <p class="domain-card-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h2l2.4 12.2a2 2 0 002 1.8h8.6a2 2 0 002-1.6L21 7H6"/></svg>
-          ${dept.name} Domain Agent
-        </p>
-        <p class="domain-sub">${dept.desc}</p>
-      </div>
+      ${domainAgentCardHTML(dept, domainAgent)}
       <div class="domain-line"></div>
       <div class="skill-box">
         <h4>Skill agents</h4>
