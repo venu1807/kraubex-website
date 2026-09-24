@@ -2184,14 +2184,20 @@ function renderWorkflowsBody(subview){
   const body = document.getElementById('secBody-workflows');
   const filtered = subview==='all'||!subview ? workflows : workflows.filter(w=>w.status.toLowerCase()===subview);
   body.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:12px;">
+      <p style="font-size:13px; color:var(--text-muted); margin:0;">Build, manage and monitor multi-agent workflows</p>
+      <button class="btn btn-primary" onclick="createNewWorkflow()" style="white-space:nowrap;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Create new AI workflow</button>
+    </div>
     <table><thead><tr><th>Workflow</th><th>Department</th><th>Status</th><th>Last run</th><th>Actions</th></tr></thead>
     <tbody>${filtered.map(w=>`<tr>
       <td style="cursor:pointer;" onclick="openWorkflowTemplate('${w.name.replace(/'/g,"\\'")}')">${w.name}</td>
       <td>${w.dept}</td>
       <td><span class="tag ${w.status==='Active'?'tag-active':w.status==='Failed'?'tag-expired':'tag-normal'}">${w.status}</span></td>
       <td style="color:var(--text-muted);">${w.lastRun}</td>
-      <td class="actions" style="justify-content:center;">
+      <td class="actions" style="justify-content:center; gap:6px;">
+        <button class="icon-btn" title="View" onclick="openWorkflowTemplate('${w.name.replace(/'/g,"\\'")}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
         <button class="icon-btn" title="Edit" onclick="openWorkflowTemplate('${w.name.replace(/'/g,"\\'")}', true)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
+        <button class="icon-btn" title="Share" onclick="shareWorkflow('${w.name.replace(/'/g,"\\'")}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.42 6.51l-6.83 3.98"/></svg></button>
         <button class="icon-btn danger" title="Delete" onclick="deleteWorkflow('${w.name.replace(/'/g,"\\'")}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/></svg></button>
       </td>
     </tr>`).join('')}</tbody></table>`;
@@ -2201,6 +2207,19 @@ function deleteWorkflow(name){
   const idx = workflows.findIndex(w=>w.name===name);
   if(idx>-1) workflows.splice(idx,1);
   sectionConfig.workflows.render('all');
+}
+function shareWorkflow(name){
+  const wf = workflows.find(w=>w.name===name);
+  if(!wf) return;
+  const url = location.href.split('#')[0] + '#workflow=' + encodeURIComponent(wf.name);
+  const data = {title: wf.name, text: `Workflow: ${wf.name} (${wf.dept}) — ${wf.status}`, url};
+  if(navigator.share){
+    navigator.share(data).catch(()=>{});
+  } else if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(url).then(()=> alert('Link copied to clipboard:\n' + url)).catch(()=> prompt('Copy share link:', url));
+  } else {
+    prompt('Copy share link:', url);
+  }
 }
 function createNewWorkflow(){
   const name = prompt('Name your new workflow:');
