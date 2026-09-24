@@ -2268,29 +2268,68 @@ function handleConnectorAction(){
 function renderTasksBody(subview){
   const body = document.getElementById('secBody-tasks');
   const tasks = [
-    {name:'Review SteelSphere contract renewal', agent:'Contract Life Cycle Management Agent', status:'In progress', type:'Decision', createdBy:'Sarah Chen', createdAt:'2h ago'},
-    {name:'Benchmark copper pricing', agent:'Price Optimizer Agent', status:'Waiting for data', type:'Research', createdBy:'Marcus Weber', createdAt:'5h ago'},
-    {name:'Screen 4 new candidates', agent:'Human Resources Domain Agent', status:'Running', type:'Analysis', createdBy:'Nadia Hoffmann', createdAt:'1d ago'},
-    {name:'Draft Q3 ESG report', agent:'ESG & Sustainability Domain Agent', status:'Completed', type:'Document', createdBy:'Fatima Al-Sayed', createdAt:'3d ago'},
-    {name:'Reconcile March invoices', agent:'Finance Domain Agent', status:'Failed', type:'Action', createdBy:'David Schulz', createdAt:'6h ago'},
-    {name:'Approve Q2 vendor payments', agent:'Finance Domain Agent', status:'In progress', type:'Approval', createdBy:'Elena Fischer', createdAt:'4h ago'},
-    {name:'Onboard new steel supplier', agent:'Contract Life Cycle Management Agent', status:'Waiting for data', type:'Onboarding', createdBy:'Priya Patel', createdAt:'1d ago'},
+    {name:'Review SteelSphere contract renewal', agent:'Contract Life Cycle Management Agent', status:'In progress', type:'Decision', createdBy:'Sarah Chen', createdAt:'2h ago', date:'24 Sep 2026'},
+    {name:'Benchmark copper pricing', agent:'Price Optimizer Agent', status:'Waiting for data', type:'Research', createdBy:'Marcus Weber', createdAt:'5h ago', date:'24 Sep 2026'},
+    {name:'Screen 4 new candidates', agent:'Human Resources Domain Agent', status:'Running', type:'Analysis', createdBy:'Nadia Hoffmann', createdAt:'1d ago', date:'23 Sep 2026'},
+    {name:'Draft Q3 ESG report', agent:'ESG & Sustainability Domain Agent', status:'Completed', type:'Document', createdBy:'Fatima Al-Sayed', createdAt:'3d ago', date:'21 Sep 2026'},
+    {name:'Reconcile March invoices', agent:'Finance Domain Agent', status:'Failed', type:'Action', createdBy:'David Schulz', createdAt:'6h ago', date:'24 Sep 2026'},
+    {name:'Approve Q2 vendor payments', agent:'Finance Domain Agent', status:'In progress', type:'Approval', createdBy:'Elena Fischer', createdAt:'4h ago', date:'24 Sep 2026'},
+    {name:'Onboard new steel supplier', agent:'Contract Life Cycle Management Agent', status:'Waiting for data', type:'Onboarding', createdBy:'Priya Patel', createdAt:'1d ago', date:'23 Sep 2026'},
   ];
   const filtered = !subview || subview==='all' ? tasks : tasks.filter(t=>t.status.toLowerCase().replace(/\s+/g,'-')===subview);
+  if(filtered.length===0){ body.innerHTML='<p style="font-size:13px; color:var(--text-muted); padding:16px;">No tasks in this view.</p>'; return; }
   const grouped = {};
   filtered.forEach(t=>{ if(!grouped[t.agent]) grouped[t.agent]=[]; grouped[t.agent].push(t); });
-  if(filtered.length===0){ body.innerHTML='<p style="font-size:13px; color:var(--text-muted); padding:16px;">No tasks in this view.</p>'; return; }
-  body.innerHTML = Object.entries(grouped).map(([agent, list])=>`
-    <div style="margin-bottom:20px;">
-      <h4 style="font-size:14px; font-weight:700; color:var(--subhead); margin:0 0 10px; display:flex; align-items:center; gap:8px;">
-        <span style="background:var(--headline); color:#fff; width:28px; height:28px; border-radius:7px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;">${agent.slice(0,2).toUpperCase()}</span>
-        ${agent} <span style="font-weight:400; color:var(--text-muted); font-size:12px;">(${list.length})</span>
-      </h4>
-      <table><thead><tr><th>Task</th><th>Type</th><th>Status</th><th>Created by</th></tr></thead>
-      <tbody>${list.map(t=>`<tr><td>${t.name}</td><td>${t.type}</td><td><span class="tag ${t.status==='Completed'?'tag-active':t.status==='Failed'?'tag-expired':'tag-upcoming'}">${t.status}</span></td><td><span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:22px; height:22px; border-radius:50%; background:var(--bg); border:1px solid var(--border); display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:var(--subhead);">${t.createdBy.split(' ').map(s=>s[0]).join('').slice(0,2)}</span>${t.createdBy} <span style="color:var(--text-muted); font-size:11px;">• ${t.createdAt}</span></span></td></tr>`).join('')}</tbody></table>
-    </div>
-  `).join('');
+  const thStyle = 'text-align:left; font-size:12px; font-weight:700; color:var(--text-muted); padding:10px 12px; white-space:nowrap;';
+  const tdTask = 'text-align:left; padding:10px 12px; font-size:13px; color:var(--subhead); font-weight:500;';
+  const tdCenter = 'text-align:center; padding:10px 12px; font-size:13px;';
+  const tdLeft = 'text-align:left; padding:10px 12px; font-size:13px;';
+  body.innerHTML = `
+    <div class="table-wrap">
+    <table style="width:100%; table-layout:fixed; border-collapse:collapse;">
+      <colgroup><col style="width:28%"><col style="width:12%"><col style="width:13%"><col style="width:15%"><col style="width:12%"><col style="width:20%"></colgroup>
+      <thead><tr>
+        <th style="${thStyle}">Task</th>
+        <th style="${thStyle}; text-align:center;">Type</th>
+        <th style="${thStyle}; text-align:center;">Status</th>
+        <th style="${thStyle}">Created by</th>
+        <th style="${thStyle}; text-align:center;">Date</th>
+        <th style="${thStyle}; text-align:center;">Actions</th>
+      </tr></thead>
+      <tbody>
+        ${Object.entries(grouped).map(([agent, list])=>`
+          <tr class="task-group-row"><td colspan="6" style="background:var(--bg); padding:10px 12px; border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+            <div style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--subhead);">
+              <span style="background:var(--headline); color:#fff; width:26px; height:26px; border-radius:7px; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0;">${agent.slice(0,2).toUpperCase()}</span>
+              ${agent} <span style="font-weight:400; color:var(--text-muted); font-size:11px;">(${list.length})</span>
+            </div>
+          </td></tr>
+          ${list.map(t=>`
+            <tr>
+              <td style="${tdTask} white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t.name}</td>
+              <td style="${tdCenter} color:var(--text-muted);">${t.type}</td>
+              <td style="${tdCenter}"><span class="tag ${t.status==='Completed'?'tag-active':t.status==='Failed'?'tag-expired':'tag-upcoming'}">${t.status}</span></td>
+              <td style="${tdLeft}"><span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:22px; height:22px; border-radius:50%; background:var(--bg); border:1px solid var(--border); display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:var(--subhead); flex-shrink:0;">${t.createdBy.split(' ').map(s=>s[0]).join('').slice(0,2)}</span><span style="white-space:nowrap;">${t.createdBy}</span></span></td>
+              <td style="${tdCenter} color:var(--text-muted); font-size:12px; white-space:nowrap;">${t.date}</td>
+              <td style="${tdCenter}">
+                <span style="display:inline-flex; gap:6px; justify-content:center; align-items:center;">
+                  <button class="icon-btn" title="View" onclick="viewTask('${t.name.replace(/'/g,"\\'")}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                  <button class="icon-btn" title="Edit" onclick="editTask('${t.name.replace(/'/g,"\\'")}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                  <button class="icon-btn" title="Delete" onclick="deleteTask('${t.name.replace(/'/g,"\\'")}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>
+                  <button class="icon-btn" title="Share" onclick="shareTask('${t.name.replace(/'/g,"\\'")}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
+                </span>
+              </td>
+            </tr>
+          `).join('')}
+        `).join('')}
+      </tbody>
+    </table>
+    </div>`;
 }
+function viewTask(name){ alert('View task: ' + name); }
+function editTask(name){ const n=prompt('Edit task name:', name); if(n && n.trim() && n.trim()!==name) alert('Task renamed to: '+n.trim()+' (demo)'); }
+function deleteTask(name){ if(confirm('Delete task "'+name+'"?')) alert('Task "'+name+'" deleted (demo).'); }
+function shareTask(name){ if(navigator.share){ navigator.share({title:name, text:'Task: '+name}).catch(()=>{}); } else { prompt('Share link for "'+name+'":', location.href+'#task='+encodeURIComponent(name)); } }
 
 function renderApprovalsBody(subview){
   const body = document.getElementById('secBody-approvals');
