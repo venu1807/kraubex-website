@@ -2180,17 +2180,46 @@ const workflows = [
     }},
   ]},
 ];
+if(!window.wfFilters) window.wfFilters = {search:'', dept:'all', creator:'all'};
+if(!window.taskFilters) window.taskFilters = {search:'', type:'all', agent:'all', creator:'all', status:'all'};
 function renderWorkflowsBody(subview){
+  window.lastWorkflowSubview = subview || 'all';
   const body = document.getElementById('secBody-workflows');
+  // preserve toolbar filter values before re-render
+  const prevSearch = document.getElementById('wfSearchInput')?.value;
+  if(prevSearch !== undefined) window.wfFilters.search = prevSearch;
+  const prevDept = document.getElementById('wfDeptFilter')?.value;
+  if(prevDept !== undefined) window.wfFilters.dept = prevDept;
+  const prevCreator = document.getElementById('wfCreatorFilter')?.value;
+  if(prevCreator !== undefined) window.wfFilters.creator = prevCreator;
   let filtered;
   if(!subview || subview==='all') filtered = workflows;
   else if(subview==='my-workflows') filtered = workflows.filter(w=>w.createdBy==='You');
   else filtered = workflows.filter(w=>w.status.toLowerCase()===subview);
+  // apply toolbar filters
+  const s = (window.wfFilters.search||'').toLowerCase().trim();
+  if(s) filtered = filtered.filter(w=> w.name.toLowerCase().includes(s) || w.dept.toLowerCase().includes(s) || w.createdBy.toLowerCase().includes(s));
+  if(window.wfFilters.dept && window.wfFilters.dept!=='all') filtered = filtered.filter(w=>w.dept===window.wfFilters.dept);
+  if(window.wfFilters.creator && window.wfFilters.creator!=='all') filtered = filtered.filter(w=>w.createdBy===window.wfFilters.creator);
   const myCount = workflows.filter(w=>w.createdBy==='You').length;
+  const depts = [...new Set(workflows.map(w=>w.dept))];
+  const creators = [...new Set(workflows.map(w=>w.createdBy))];
   body.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:12px;">
       <p style="font-size:13px; color:var(--text-muted); margin:0;">Build, manage and monitor multi-agent workflows ${subview==='my-workflows' ? `— <b style="color:var(--subhead);">${myCount} created by you</b>` : ''}</p>
       <button class="btn btn-primary" onclick="createNewWorkflow()" style="white-space:nowrap;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Create new AI workflow</button>
+    </div>
+    <div class="toolbar" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
+      <input class="search" id="wfSearchInput" placeholder="Search workflows, department or creator..." value="${window.wfFilters.search||''}" oninput="window.wfFilters.search=this.value; renderWorkflowsBody(window.lastWorkflowSubview)" style="flex:1; min-width:220px;">
+      <select class="filter-select" id="wfDeptFilter" onchange="window.wfFilters.dept=this.value; renderWorkflowsBody(window.lastWorkflowSubview)" style="min-width:150px;">
+        <option value="all" ${window.wfFilters.dept==='all'?'selected':''}>All Departments</option>
+        ${depts.map(d=>`<option value="${d}" ${window.wfFilters.dept===d?'selected':''}>${d}</option>`).join('')}
+      </select>
+      <select class="filter-select" id="wfCreatorFilter" onchange="window.wfFilters.creator=this.value; renderWorkflowsBody(window.lastWorkflowSubview)" style="min-width:150px;">
+        <option value="all" ${window.wfFilters.creator==='all'?'selected':''}>All Creators</option>
+        ${creators.map(c=>`<option value="${c}" ${window.wfFilters.creator===c?'selected':''}>${c}</option>`).join('')}
+      </select>
+      ${(window.wfFilters.search||window.wfFilters.dept!=='all'||window.wfFilters.creator!=='all') ? `<button class="btn btn-ghost" style="padding:6px 10px; font-size:12px;" onclick="window.wfFilters={search:'',dept:'all',creator:'all'}; renderWorkflowsBody(window.lastWorkflowSubview)">Clear</button>` : ''}
     </div>
     <table><thead><tr><th>Workflow</th><th>Department</th><th>Status</th><th>Created by</th><th>Last run</th><th>Actions</th></tr></thead>
     <tbody>${filtered.map(w=>`<tr>
@@ -2450,6 +2479,7 @@ function handleConnectorAction(){
 }
 
 function renderTasksBody(subview){
+  window.lastTasksSubview = subview || 'all';
   const body = document.getElementById('secBody-tasks');
   const tasks = [
     {name:'Review SteelSphere contract renewal', agent:'Contract Life Cycle Management Agent', status:'In progress', type:'Decision', createdBy:'Sarah Chen', createdAt:'2h ago', date:'24 Sep 2026'},
@@ -2460,15 +2490,48 @@ function renderTasksBody(subview){
     {name:'Approve Q2 vendor payments', agent:'Finance Domain Agent', status:'In progress', type:'Approval', createdBy:'Elena Fischer', createdAt:'4h ago', date:'24 Sep 2026'},
     {name:'Onboard new steel supplier', agent:'Contract Life Cycle Management Agent', status:'Waiting for data', type:'Onboarding', createdBy:'Priya Patel', createdAt:'1d ago', date:'23 Sep 2026'},
   ];
-  const filtered = !subview || subview==='all' ? tasks : tasks.filter(t=>t.status.toLowerCase().replace(/\s+/g,'-')===subview);
-  if(filtered.length===0){ body.innerHTML='<p style="font-size:13px; color:var(--text-muted); padding:16px;">No tasks in this view.</p>'; return; }
+  // preserve toolbar values
+  const prevTSearch = document.getElementById('taskSearchInput')?.value;
+  if(prevTSearch !== undefined) window.taskFilters.search = prevTSearch;
+  const prevTType = document.getElementById('taskTypeFilter')?.value;
+  if(prevTType !== undefined) window.taskFilters.type = prevTType;
+  const prevTAgent = document.getElementById('taskAgentFilter')?.value;
+  if(prevTAgent !== undefined) window.taskFilters.agent = prevTAgent;
+  const prevTCreator = document.getElementById('taskCreatorFilter')?.value;
+  if(prevTCreator !== undefined) window.taskFilters.creator = prevTCreator;
+  let filtered = !subview || subview==='all' ? tasks : tasks.filter(t=>t.status.toLowerCase().replace(/\s+/g,'-')===subview);
+  const s = (window.taskFilters.search||'').toLowerCase().trim();
+  if(s) filtered = filtered.filter(t=> t.name.toLowerCase().includes(s) || t.agent.toLowerCase().includes(s) || t.createdBy.toLowerCase().includes(s) || t.type.toLowerCase().includes(s));
+  if(window.taskFilters.type && window.taskFilters.type!=='all') filtered = filtered.filter(t=>t.type===window.taskFilters.type);
+  if(window.taskFilters.agent && window.taskFilters.agent!=='all') filtered = filtered.filter(t=>t.agent===window.taskFilters.agent);
+  if(window.taskFilters.creator && window.taskFilters.creator!=='all') filtered = filtered.filter(t=>t.createdBy===window.taskFilters.creator);
   const grouped = {};
   filtered.forEach(t=>{ if(!grouped[t.agent]) grouped[t.agent]=[]; grouped[t.agent].push(t); });
+  if(filtered.length===0){ body.innerHTML='<p style="font-size:13px; color:var(--text-muted); padding:16px;">No tasks in this view.</p>'; return; }
   const thStyle = 'text-align:left; font-size:12px; font-weight:700; color:var(--text-muted); padding:10px 12px; white-space:nowrap;';
   const tdTask = 'text-align:left; padding:10px 12px; font-size:13px; color:var(--subhead); font-weight:500;';
   const tdCenter = 'text-align:center; padding:10px 12px; font-size:13px;';
   const tdLeft = 'text-align:left; padding:10px 12px; font-size:13px;';
+  const allTypes = [...new Set(tasks.map(t=>t.type))];
+  const allAgents = [...new Set(tasks.map(t=>t.agent))];
+  const allCreators = [...new Set(tasks.map(t=>t.createdBy))];
   body.innerHTML = `
+    <div class="toolbar" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
+      <input class="search" id="taskSearchInput" placeholder="Search tasks, agent or creator..." value="${window.taskFilters.search||''}" oninput="window.taskFilters.search=this.value; renderTasksBody(window.lastTasksSubview)" style="flex:1; min-width:220px;">
+      <select class="filter-select" id="taskTypeFilter" onchange="window.taskFilters.type=this.value; renderTasksBody(window.lastTasksSubview)" style="min-width:130px;">
+        <option value="all" ${window.taskFilters.type==='all'?'selected':''}>All Types</option>
+        ${allTypes.map(tp=>`<option value="${tp}" ${window.taskFilters.type===tp?'selected':''}>${tp}</option>`).join('')}
+      </select>
+      <select class="filter-select" id="taskAgentFilter" onchange="window.taskFilters.agent=this.value; renderTasksBody(window.lastTasksSubview)" style="min-width:160px;">
+        <option value="all" ${window.taskFilters.agent==='all'?'selected':''}>All Agents</option>
+        ${allAgents.map(a=>`<option value="${a}" ${window.taskFilters.agent===a?'selected':''}>${a}</option>`).join('')}
+      </select>
+      <select class="filter-select" id="taskCreatorFilter" onchange="window.taskFilters.creator=this.value; renderTasksBody(window.lastTasksSubview)" style="min-width:140px;">
+        <option value="all" ${window.taskFilters.creator==='all'?'selected':''}>All Creators</option>
+        ${allCreators.map(c=>`<option value="${c}" ${window.taskFilters.creator===c?'selected':''}>${c}</option>`).join('')}
+      </select>
+      ${(window.taskFilters.search||window.taskFilters.type!=='all'||window.taskFilters.agent!=='all'||window.taskFilters.creator!=='all') ? `<button class="btn btn-ghost" style="padding:6px 10px; font-size:12px;" onclick="window.taskFilters={search:'',type:'all',agent:'all',creator:'all',status:'all'}; renderTasksBody(window.lastTasksSubview)">Clear</button>` : ''}
+    </div>
     <div class="table-wrap">
     <table style="width:100%; table-layout:fixed; border-collapse:collapse;">
       <colgroup><col style="width:28%"><col style="width:12%"><col style="width:13%"><col style="width:15%"><col style="width:12%"><col style="width:20%"></colgroup>
