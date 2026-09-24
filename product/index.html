@@ -494,6 +494,9 @@
   .connector-card .c-status{font-size:12px; margin:2px 0 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .connector-card .c-status.connected{color:#27500A;}
   .connector-card .c-status.notconnected{color:var(--text-muted);}
+  .connector-card .c-desc{font-size:11.5px; color:var(--text-muted); margin:2px 0 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.3;}
+  .connector-card .c-meta{font-size:11px; color:var(--text-muted); margin:3px 0 0; display:flex; gap:6px; align-items:center; flex-wrap:wrap;}
+  .connector-card .c-cat{font-size:10px; font-weight:700; background:var(--bg); border:1px solid var(--border); padding:2px 7px; border-radius:10px; color:var(--subhead); line-height:1;}
   .connector-card button{margin-left:auto; flex-shrink:0; white-space:nowrap; padding:8px 14px; font-size:13px;}
   .connector-fence{height:4px; border-radius:2px; margin:0 0 14px 0; background:var(--border); transition:background .3s, box-shadow .3s, opacity .3s;}
   .connector-fence.fence-ok{background:#27500A; box-shadow:0 0 6px rgba(39,80,10,.35);}
@@ -2034,10 +2037,35 @@ function askKnowledgeQuestion(){
 function renderConnectBody(subview){
   const body = document.getElementById('secBody-connect');
   const groups = {
-    enterprise: [{n:'SAP',c:true},{n:'Microsoft Dynamics',c:true},{n:'Salesforce',c:false},{n:'Oracle',c:false},{n:'PLM',c:false},{n:'MES',c:false}],
-    m365: [{n:'SharePoint',c:true},{n:'OneDrive',c:true},{n:'Teams',c:true},{n:'Outlook',c:false}],
-    db: [{n:'SQL Server',c:true},{n:'PostgreSQL',c:false},{n:'MySQL',c:false},{n:'MongoDB',c:false},{n:'SAP HANA',c:false}],
-    mcp: [{n:'Procurement MCP',c:true},{n:'Finance MCP',c:false},{n:'HR MCP',c:false},{n:'SAP MCP',c:true},{n:'CRM MCP',c:false},{n:'Custom MCP',c:false}],
+    enterprise: [
+      {n:'SAP',c:true,d:'ERP — S/4HANA Finance & Procurement',cat:'Enterprise',meta:'Synced 2h ago'},
+      {n:'Microsoft Dynamics',c:true,d:'ERP & CRM — Dynamics 365',cat:'Enterprise',meta:'Synced 5h ago'},
+      {n:'Salesforce',c:false,d:'CRM — Sales & Customer Data',cat:'Enterprise',meta:'Not configured'},
+      {n:'Oracle',c:false,d:'ERP — Oracle Cloud Financials',cat:'Enterprise',meta:'Not configured'},
+      {n:'PLM',c:false,d:'Product Lifecycle — Teamcenter',cat:'Enterprise',meta:'Not configured'},
+      {n:'MES',c:false,d:'Manufacturing Execution — Shop Floor',cat:'Enterprise',meta:'Not configured'}
+    ],
+    m365: [
+      {n:'SharePoint',c:true,d:'Intranet & Docs — Sites & Libraries',cat:'M365',meta:'Synced 1h ago'},
+      {n:'OneDrive',c:true,d:'Cloud Storage — File Sync',cat:'M365',meta:'Synced 30m ago'},
+      {n:'Teams',c:true,d:'Collaboration — Chat & Meetings',cat:'M365',meta:'Synced 10m ago'},
+      {n:'Outlook',c:false,d:'Email & Calendar — Exchange Online',cat:'M365',meta:'Not configured'}
+    ],
+    db: [
+      {n:'SQL Server',c:true,d:'Relational DB — Primary Warehouse',cat:'Database',meta:'Synced 15m ago'},
+      {n:'PostgreSQL',c:false,d:'Analytics — Open Source DB',cat:'Database',meta:'Not configured'},
+      {n:'MySQL',c:false,d:'Web DB — MySQL 8.0',cat:'Database',meta:'Not configured'},
+      {n:'MongoDB',c:false,d:'NoSQL — Document Store',cat:'Database',meta:'Not configured'},
+      {n:'SAP HANA',c:false,d:'In-Memory — SAP Analytics',cat:'Database',meta:'Not configured'}
+    ],
+    mcp: [
+      {n:'Procurement MCP',c:true,d:'Agent — Source-to-Pay Workflows',cat:'MCP',meta:'Active · 12 agents'},
+      {n:'Finance MCP',c:false,d:'Agent — Invoice & Spend',cat:'MCP',meta:'Idle'},
+      {n:'HR MCP',c:false,d:'Agent — People & Payroll',cat:'MCP',meta:'Idle'},
+      {n:'SAP MCP',c:true,d:'Agent — SAP Connector',cat:'MCP',meta:'Active · 8 agents'},
+      {n:'CRM MCP',c:false,d:'Agent — Customer 360',cat:'MCP',meta:'Idle'},
+      {n:'Custom MCP',c:false,d:'Agent — Your Custom MCP',cat:'MCP',meta:'Not configured'}
+    ],
   };
   const list = groups[subview] || groups.enterprise;
   const fenceOn = window.fenceEnabled !== false;
@@ -2048,7 +2076,7 @@ function renderConnectBody(subview){
   body.innerHTML = `${fenceHtml}<div class="connector-grid">${list.map(c=>`
     <div class="connector-card">
       <div class="c-icon">${c.n.slice(0,2).toUpperCase()}</div>
-      <div class="c-mid"><p class="c-name">${c.n}</p><p class="c-status ${c.c?'connected':'notconnected'}">${c.c?'● Connected':'○ Not connected'}</p></div>
+      <div class="c-mid"><p class="c-name">${c.n}</p><p class="c-status ${c.c?'connected':'notconnected'}">${c.c?'● Connected':'○ Not connected'}</p><p class="c-desc">${c.d}</p><div class="c-meta"><span class="c-cat">${c.cat}</span><span>${c.meta}</span></div></div>
       <button class="btn ${c.c?'btn-ghost':'btn-primary'}" onclick="alert('${c.c?'Manage':'Connect'} ${c.n}')">${c.c?'Manage':'Connect'}</button>
     </div>`).join('')}</div>`;
 }
