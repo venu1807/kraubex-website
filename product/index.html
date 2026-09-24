@@ -2770,6 +2770,18 @@ function wfNodeHtml(n, i, isBranch, branchKey, branchIdx){
       ${n.owner ? `<p class="wf-node-meta"><span class="wf-meta-dot"></span>${n.owner}</p>` : ''}
     </div>`;
 }
+function wfGetPortCoords(elId, port){
+  const el = document.getElementById(elId);
+  if(el){
+    const w = el.offsetWidth, h = el.offsetHeight;
+    const x = el.offsetLeft, y = el.offsetTop;
+    if(port==='in') return {x: x, y: y + h/2};
+    if(port==='yes') return {x: x + w, y: y + h*0.34};
+    if(port==='no') return {x: x + w, y: y + h*0.66};
+    return {x: x + w, y: y + h/2};
+  }
+  return null;
+}
 function wfPortPos(node, port){
   const W=200, H=110;
   if(port==='in') return {x:(node.x||0), y:(node.y||0)+H/2};
@@ -2794,34 +2806,37 @@ function wfDrawArrows(){
   };
   editingNodes.forEach((n,i)=>{
     const next = getNextPos(i);
+    const nid = `wfNode-${i}`;
     if(n.branches){
       const yesNodes = n.branches.yes||[];
       const noNodes = n.branches.no||[];
-      const sYes = wfPortPos(n,'yes'), sNo = wfPortPos(n,'no');
+      const sYes = wfGetPortCoords(nid,'yes') || wfPortPos(n,'yes'), sNo = wfGetPortCoords(nid,'no') || wfPortPos(n,'no');
       if(yesNodes.length){
-        const t = wfPortPos(yesNodes[0],'in');
+        const t = wfGetPortCoords(`wfNode-${i}-yes-0`,'in') || wfPortPos(yesNodes[0],'in');
         paths += `<path class="wf-arrow-path" d="M ${sYes.x} ${sYes.y} C ${sYes.x+50} ${sYes.y}, ${t.x-50} ${t.y}, ${t.x} ${t.y}" stroke="#1D9E75" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/><text x="${(sYes.x+t.x)/2}" y="${(sYes.y+t.y)/2-10}" font-size="10.5" font-weight="800" fill="#1D9E75" text-anchor="middle" style="paint-order:stroke; stroke:#F3F0E6; stroke-width:3px;">Yes</text>`;
       }
       if(noNodes.length){
-        const t2 = wfPortPos(noNodes[0],'in');
+        const t2 = wfGetPortCoords(`wfNode-${i}-no-0`,'in') || wfPortPos(noNodes[0],'in');
         paths += `<path class="wf-arrow-path" d="M ${sNo.x} ${sNo.y} C ${sNo.x+50} ${sNo.y}, ${t2.x-50} ${t2.y}, ${t2.x} ${t2.y}" stroke="#791F1F" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/><text x="${(sNo.x+t2.x)/2}" y="${(sNo.y+t2.y)/2-10}" font-size="10.5" font-weight="800" fill="#791F1F" text-anchor="middle" style="paint-order:stroke; stroke:#F3F0E6; stroke-width:3px;">No</text>`;
       }
       ;[yesNodes,noNodes].forEach(arr=>{
+        const key = arr===yesNodes?'yes':'no';
         for(let k=0;k<arr.length-1;k++){
-          const a=arr[k], b=arr[k+1];
-          const aPos = wfPortPos(a,'out'), bPos = wfPortPos(b,'in');
+          const aPos = wfGetPortCoords(`wfNode-${i}-${key}-${k}`,'out') || wfPortPos(arr[k],'out');
+          const bPos = wfGetPortCoords(`wfNode-${i}-${key}-${k+1}`,'in') || wfPortPos(arr[k+1],'in');
           paths += `<path class="wf-arrow-path" d="M ${aPos.x} ${aPos.y} C ${aPos.x+50} ${aPos.y}, ${bPos.x-50} ${bPos.y}, ${bPos.x} ${bPos.y}" stroke="#334155" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`;
         }
       });
       if(next){
         const lastYes = yesNodes[yesNodes.length-1], lastNo=noNodes[noNodes.length-1];
-        const nPos = wfPortPos(next,'in');
-        if(lastYes){ const aPos=wfPortPos(lastYes,'out'); paths += `<path class="wf-arrow-path" d="M ${aPos.x} ${aPos.y} C ${aPos.x+60} ${aPos.y}, ${nPos.x-60} ${nPos.y}, ${nPos.x} ${nPos.y}" stroke="#334155" stroke-width="2.4" fill="none" stroke-dasharray="7 5" opacity="0.95" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`; }
-        if(lastNo){ const aPos2=wfPortPos(lastNo,'out'); paths += `<path class="wf-arrow-path" d="M ${aPos2.x} ${aPos2.y} C ${aPos2.x+60} ${aPos2.y}, ${nPos.x-60} ${nPos.y}, ${nPos.x} ${nPos.y}" stroke="#334155" stroke-width="2.4" fill="none" stroke-dasharray="7 5" opacity="0.95" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`; }
+        const nPos = wfGetPortCoords(`wfNode-${i+1}`,'in') || wfPortPos(next,'in');
+        if(lastYes){ const aPos=wfGetPortCoords(`wfNode-${i}-yes-${yesNodes.length-1}`,'out') || wfPortPos(lastYes,'out'); paths += `<path class="wf-arrow-path" d="M ${aPos.x} ${aPos.y} C ${aPos.x+60} ${aPos.y}, ${nPos.x-60} ${nPos.y}, ${nPos.x} ${nPos.y}" stroke="#334155" stroke-width="2.4" fill="none" stroke-dasharray="7 5" opacity="0.95" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`; }
+        if(lastNo){ const aPos2=wfGetPortCoords(`wfNode-${i}-no-${noNodes.length-1}`,'out') || wfPortPos(lastNo,'out'); paths += `<path class="wf-arrow-path" d="M ${aPos2.x} ${aPos2.y} C ${aPos2.x+60} ${aPos2.y}, ${nPos.x-60} ${nPos.y}, ${nPos.x} ${nPos.y}" stroke="#334155" stroke-width="2.4" fill="none" stroke-dasharray="7 5" opacity="0.95" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`; }
       }
     } else {
       if(next){
-        const sPos=wfPortPos(n,'out'), tPos=wfPortPos(next,'in');
+        const sPos=wfGetPortCoords(nid,'out') || wfPortPos(n,'out');
+        const tPos=wfGetPortCoords(`wfNode-${i+1}`,'in') || wfPortPos(next,'in');
         paths += `<path class="wf-arrow-path" d="M ${sPos.x} ${sPos.y} C ${sPos.x+70} ${sPos.y}, ${tPos.x-70} ${tPos.y}, ${tPos.x} ${tPos.y}" stroke="#0F172A" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`;
       }
     }
@@ -2915,12 +2930,18 @@ function wfPortDragStart(e,i,branchKey,branchIdx,port){
   const isBranch = branchKey && branchKey.length>0;
   const node = isBranch ? (editingNodes[i] && editingNodes[i].branches && editingNodes[i].branches[branchKey] && editingNodes[i].branches[branchKey][branchIdx]) : editingNodes[i];
   if(!node) return;
-  const W=200, H=110;
+  let pos = null;
+  const tryId = isBranch ? `wfNode-${i}-${branchKey}-${branchIdx}` : `wfNode-${i}`;
+  pos = wfGetPortCoords(tryId, port);
   let sx, sy;
-  if(port==='yes'){ sx=(node.x||0)+W; sy=(node.y||0)+H*0.34; }
-  else if(port==='no'){ sx=(node.x||0)+W; sy=(node.y||0)+H*0.66; }
-  else if(port==='in'){ sx=(node.x||0); sy=(node.y||0)+H/2; }
-  else { sx=(node.x||0)+W; sy=(node.y||0)+H/2; }
+  if(pos){ sx=pos.x; sy=pos.y; }
+  else {
+    const W=200, H=110;
+    if(port==='yes'){ sx=(node.x||0)+W; sy=(node.y||0)+H*0.34; }
+    else if(port==='no'){ sx=(node.x||0)+W; sy=(node.y||0)+H*0.66; }
+    else if(port==='in'){ sx=(node.x||0); sy=(node.y||0)+H/2; }
+    else { sx=(node.x||0)+W; sy=(node.y||0)+H/2; }
+  }
   window.wfPortDrag = {active:true, fromI:i, fromBranchKey:branchKey||'', fromBranchIdx: isBranch?branchIdx:-1, port, sx, sy, tx:sx, ty:sy};
   const portEl = e.currentTarget;
   if(portEl) portEl.classList.add('dragging');
