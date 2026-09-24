@@ -2113,7 +2113,7 @@ function renderObservabilityBody(body){
 }
 
 const workflows = [
-  {name:'PO auto-approval under €5K', dept:'Procurement', status:'Active', lastRun:'2h ago', nodes:[
+  {name:'PO auto-approval under €5K', dept:'Procurement', status:'Active', lastRun:'2h ago', createdBy:'You', nodes:[
     {type:'trigger', label:'New PO created', sub:'Trigger', detail:'Fires when a PO is created in SAP/Dynamics. Filters: dept=Procurement.', owner:'System', config:'Event PO.created • Dept = Procurement'},
     {type:'condition', label:'Amount < €5,000?', sub:'Condition', detail:'Checks PO total against auto-approval threshold. Evaluates PO.amount < 5000.', config:'Expression: PO.amount < 5000 • Threshold = €5,000', branches:{
       yes: [
@@ -2126,7 +2126,7 @@ const workflows = [
     }},
     {type:'action', label:'Notify requester', sub:'Action', detail:'Sends notification with approval outcome and next steps.', config:'Channel: Email + Teams • Template: PO_Notify'},
   ]},
-  {name:'Supplier onboarding', dept:'Procurement', status:'Active', lastRun:'1d ago', nodes:[
+  {name:'Supplier onboarding', dept:'Procurement', status:'Active', lastRun:'1d ago', createdBy:'Sarah Chen', nodes:[
     {type:'trigger', label:'New supplier submitted', sub:'Trigger', detail:'Supplier intake form submitted via portal.', owner:'System', config:'Source: Supplier Portal • Form: Onboard_v2'},
     {type:'agent', label:'Supplier Intelligence Agent', sub:'Gather company data', detail:'Collects firmographic, certifications, and references.', owner:'Supplier Intelligence Agent', config:'Sources: Dun & Bradstreet, Web, ERP'},
     {type:'agent', label:'Supplier Risk Agent', sub:'Run risk screening', detail:'Scores financial, compliance, geo and ESG risk.', owner:'Supplier Risk Agent', config:'Model: Risk-v3 • Threshold: 65'},
@@ -2141,7 +2141,7 @@ const workflows = [
       ]
     }},
   ]},
-  {name:'Invoice 3-way match', dept:'Finance', status:'Active', lastRun:'35m ago', nodes:[
+  {name:'Invoice 3-way match', dept:'Finance', status:'Active', lastRun:'35m ago', createdBy:'Marcus Weber', nodes:[
     {type:'trigger', label:'Invoice received', sub:'Trigger', detail:'Inbound invoice via email or EDI.', owner:'System', config:'Channel: Email/EDI • Parse: OCR'},
     {type:'agent', label:'Finance Agent', sub:'Match invoice, PO, and GRN', detail:'Validates price, quantity and receipt against PO/GRN.', owner:'Finance Agent', config:'Match tolerance: 2% / Qty exact'},
     {type:'condition', label:'All three match?', sub:'Condition', detail:'Branches on 3-way match result.', config:'Rule: invoice==PO==GRN', branches:{
@@ -2149,14 +2149,14 @@ const workflows = [
       no: [{type:'human', label:'Marcus Weber', sub:'Reviews flagged discrepancy', detail:'Finance reviews mismatches and resolves.', owner:'Marcus Weber • Finance', config:'SLA: 24h • Escalation: CFO if >€10K'}]
     }},
   ]},
-  {name:'Contract renewal alert', dept:'Legal & Contracts', status:'Scheduled', lastRun:'—', nodes:[
+  {name:'Contract renewal alert', dept:'Legal & Contracts', status:'Scheduled', lastRun:'—', createdBy:'Elena Fischer', nodes:[
     {type:'trigger', label:'90 days before expiry', sub:'Scheduled trigger', detail:'Scheduled check scans contracts 90 days before end date.', owner:'System', config:'Cron: 0 9 * * * • Lookahead: 90d'},
     {type:'agent', label:'Contract Life Cycle Management Agent', sub:'Review contract terms', detail:'Analyzes terms, pricing, and renewal clauses.', owner:'Contract Life Cycle Management Agent', config:'Model: CLM-v2 • Sources: Contracts DB'},
     {type:'action', label:'Draft renewal request', sub:'Action', detail:'Generates renewal draft for legal review.', owner:'System', config:'Template: Renewal_Request_v1'},
     {type:'human', label:'Elena Fischer', sub:'Reviews and signs off', detail:'Legal counsel reviews and approves draft.', owner:'Elena Fischer • Legal', config:'SLA: 5 days • Sign-off required'},
     {type:'action', label:'Notify contract owner', sub:'Action', detail:'Notifies owner of renewal status.', owner:'System', config:'Channel: Email • CC: Legal'},
   ]},
-  {name:'Candidate screening', dept:'Human Resources', status:'Draft', lastRun:'—', nodes:[
+  {name:'Candidate screening', dept:'Human Resources', status:'Draft', lastRun:'—', createdBy:'Nadia Hoffmann', nodes:[
     {type:'trigger', label:'New application received', sub:'Trigger', detail:'ATS event when candidate applies.', owner:'System', config:'ATS: Workday • Event: Application.created'},
     {type:'agent', label:'Recruiting Agent', sub:'Screen resume against role', detail:'Screens CV against JD using LLM scoring.', owner:'Recruiting Agent', config:'Model: Recruit-v1 • Threshold: 70'},
     {type:'condition', label:'Meets minimum criteria?', sub:'Condition', detail:'Pass/fail on screening score.', config:'Threshold: score >= 70', branches:{
@@ -2164,14 +2164,14 @@ const workflows = [
       no: [{type:'action', label:'Send rejection email', sub:'Action', detail:'Sends polite rejection with feedback.', owner:'System', config:'Template: Reject_Candidate'}]
     }},
   ]},
-  {name:'Quarterly ESG report', dept:'ESG & Sustainability', status:'Completed', lastRun:'3d ago', nodes:[
+  {name:'Quarterly ESG report', dept:'ESG & Sustainability', status:'Completed', lastRun:'3d ago', createdBy:'Fatima Al-Sayed', nodes:[
     {type:'trigger', label:'Quarter end', sub:'Scheduled trigger', detail:'Fires at quarter-end close.', owner:'System', config:'Cron: 0 0 1 */3 *'},
     {type:'agent', label:'Sustainability Reporting Agent', sub:'Compile emissions & metrics', detail:'Aggregates carbon, waste, water metrics.', owner:'Sustainability Reporting Agent', config:'Sources: ESG DB, IoT'},
     {type:'agent', label:'Procurement Analytics Agent', sub:'Add spend-based ESG data', detail:'Adds supplier spend ESG weighting.', owner:'Procurement Analytics Agent', config:'Model: ESG-Spend-v1'},
     {type:'action', label:'Generate report draft', sub:'Action', detail:'Renders PDF draft with charts.', owner:'System', config:'Template: ESG_Q_Report'},
     {type:'human', label:'Fatima Al-Sayed', sub:'Signs off on final report', detail:'CSO reviews and signs final ESG report.', owner:'Fatima Al-Sayed • ESG', config:'Sign-off: required • Publish: intranet'},
   ]},
-  {name:'Vendor risk re-score', dept:'Risk', status:'Failed', lastRun:'6h ago', nodes:[
+  {name:'Vendor risk re-score', dept:'Risk', status:'Failed', lastRun:'6h ago', createdBy:'You', nodes:[
     {type:'trigger', label:'Weekly schedule', sub:'Scheduled trigger', detail:'Weekly batch re-scores all active vendors.', owner:'System', config:'Cron: 0 6 * * 1'},
     {type:'agent', label:'Supplier Risk Agent', sub:'Re-score all active vendors', detail:'Re-runs risk models for active supplier base.', owner:'Supplier Risk Agent', config:'Batch: all active • Model: Risk-v3'},
     {type:'condition', label:'Score dropped significantly?', sub:'Condition', detail:'Flags vendors with >15% drop.', config:'Condition: drop > 15%', branches:{
@@ -2182,17 +2182,22 @@ const workflows = [
 ];
 function renderWorkflowsBody(subview){
   const body = document.getElementById('secBody-workflows');
-  const filtered = subview==='all'||!subview ? workflows : workflows.filter(w=>w.status.toLowerCase()===subview);
+  let filtered;
+  if(!subview || subview==='all') filtered = workflows;
+  else if(subview==='my-workflows') filtered = workflows.filter(w=>w.createdBy==='You');
+  else filtered = workflows.filter(w=>w.status.toLowerCase()===subview);
+  const myCount = workflows.filter(w=>w.createdBy==='You').length;
   body.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:12px;">
-      <p style="font-size:13px; color:var(--text-muted); margin:0;">Build, manage and monitor multi-agent workflows</p>
+      <p style="font-size:13px; color:var(--text-muted); margin:0;">Build, manage and monitor multi-agent workflows ${subview==='my-workflows' ? `— <b style="color:var(--subhead);">${myCount} created by you</b>` : ''}</p>
       <button class="btn btn-primary" onclick="createNewWorkflow()" style="white-space:nowrap;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Create new AI workflow</button>
     </div>
-    <table><thead><tr><th>Workflow</th><th>Department</th><th>Status</th><th>Last run</th><th>Actions</th></tr></thead>
+    <table><thead><tr><th>Workflow</th><th>Department</th><th>Status</th><th>Created by</th><th>Last run</th><th>Actions</th></tr></thead>
     <tbody>${filtered.map(w=>`<tr>
       <td style="cursor:pointer;" onclick="openWorkflowTemplate('${w.name.replace(/'/g,"\\'")}')">${w.name}</td>
       <td>${w.dept}</td>
       <td><span class="tag ${w.status==='Active'?'tag-active':w.status==='Failed'?'tag-expired':'tag-normal'}">${w.status}</span></td>
+      <td><span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:22px; height:22px; border-radius:50%; background:${w.createdBy==='You'?'var(--headline)':'var(--bg)'}; border:1px solid var(--border); display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:${w.createdBy==='You'?'#fff':'var(--subhead)'};">${w.createdBy==='You'?'YO':w.createdBy.split(' ').map(s=>s[0]).join('').slice(0,2)}</span><span style="font-size:13px; color:var(--subhead);">${w.createdBy}</span></span></td>
       <td style="color:var(--text-muted);">${w.lastRun}</td>
       <td class="actions" style="justify-content:center; gap:6px;">
         <button class="icon-btn" title="View" onclick="openWorkflowTemplate('${w.name.replace(/'/g,"\\'")}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
@@ -2225,7 +2230,7 @@ function createNewWorkflow(){
   const name = prompt('Name your new workflow:');
   if(!name || !name.trim()) return;
   if(workflows.some(w=>w.name===name.trim())){ alert('A workflow with that name already exists.'); return; }
-  const newWf = {name:name.trim(), dept:'Custom', status:'Draft', lastRun:'—', nodes:[
+  const newWf = {name:name.trim(), dept:'Custom', status:'Draft', lastRun:'—', createdBy:'You', nodes:[
     {type:'trigger', label:'Set a trigger', sub:'Trigger'},
   ]};
   workflows.push(newWf);
@@ -3428,7 +3433,7 @@ const sectionConfig = {
     title:'Agentic Workflows', tagline:'Build, manage and monitor multi-agent workflows', defaultSubview:'all',
     sidebar:[
       {items:[{id:'overview', label:'Overview'}]},
-      {title:'WORKFLOWS', add:{label:'Create workflow', fn:'createNewWorkflow'}, items:[{id:'all',label:'All Workflows'},{id:'active',label:'Active'},{id:'draft',label:'Drafts'},{id:'scheduled',label:'Scheduled'},{id:'completed',label:'Completed'},{id:'failed',label:'Failed'}]},
+      {title:'WORKFLOWS', add:{label:'Create workflow', fn:'createNewWorkflow'}, items:[{id:'all',label:'All Workflows'},{id:'my-workflows',label:'My Workflows'},{id:'active',label:'Active'},{id:'draft',label:'Drafts'},{id:'scheduled',label:'Scheduled'},{id:'completed',label:'Completed'},{id:'failed',label:'Failed'}]},
       {title:'WORKFLOW LIBRARY', items:['Procurement','Finance','Sales','Supply Chain','Operations','HR','IT','Compliance','Custom'].map(x=>({id:'lib-'+x.toLowerCase(), label:x}))},
       {title:'AUTOMATION', items:[{id:'auto-event',label:'Event Triggers'},{id:'auto-sched',label:'Scheduled'},{id:'auto-cond',label:'Conditional'},{id:'auto-appr',label:'Approval-Based'}]},
     ],
