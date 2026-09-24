@@ -2842,12 +2842,30 @@ function wfDrawArrows(){
     }
   });
   if(editingWfMode){
-    const last = editingNodes[editingNodes.length-1];
-    if(last){
-      const lastPos = last.branches ? null : wfPortPos(last,'out');
-      if(lastPos){
-        const addX = 2020, addY = 400;
-        paths += `<path class="wf-arrow-path" d="M ${lastPos.x} ${lastPos.y} C ${lastPos.x+60} ${lastPos.y}, ${addX-60} ${addY}, ${addX} ${addY}" stroke="#0F172A" stroke-width="2.4" fill="none" stroke-dasharray="7 5" opacity="0.7" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`;
+    const addEl = document.getElementById('wfAddBlock');
+    if(addEl){
+      const addPos = {x: addEl.offsetLeft, y: addEl.offsetTop + addEl.offsetHeight/2};
+      const lastIdx = editingNodes.length-1;
+      const last = editingNodes[lastIdx];
+      const drawToAdd = (fromPos)=>{
+        paths += `<path class="wf-arrow-path" d="M ${fromPos.x} ${fromPos.y} C ${fromPos.x+60} ${fromPos.y}, ${addPos.x-60} ${addPos.y}, ${addPos.x} ${addPos.y}" stroke="#0F172A" stroke-width="2.4" fill="none" stroke-dasharray="7 5" opacity="0.85" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)" style="cursor:pointer;" onclick="document.getElementById('wfAddBlock').scrollIntoView({behavior:'smooth',block:'center'})"/>`;
+      };
+      if(last && last.branches){
+        const yesNodes = last.branches.yes||[], noNodes = last.branches.no||[];
+        if(yesNodes.length){
+          const aPos = wfGetPortCoords(`wfNode-${lastIdx}-yes-${yesNodes.length-1}`,'out') || wfPortPos(yesNodes[yesNodes.length-1],'out');
+          drawToAdd(aPos);
+        } else if(!yesNodes.length && !noNodes.length){
+          const sPos = wfGetPortCoords(`wfNode-${lastIdx}`,'out') || wfPortPos(last,'out');
+          drawToAdd(sPos);
+        }
+        if(noNodes.length){
+          const aPos2 = wfGetPortCoords(`wfNode-${lastIdx}-no-${noNodes.length-1}`,'out') || wfPortPos(noNodes[noNodes.length-1],'out');
+          drawToAdd(aPos2);
+        }
+      } else if(last){
+        const lastPos = wfGetPortCoords(`wfNode-${lastIdx}`,'out') || wfPortPos(last,'out');
+        drawToAdd(lastPos);
       }
     }
   }
@@ -2867,8 +2885,8 @@ function renderWfCanvas(){
     }
   });
   if(editingWfMode){
-    html += `<div class="wf-node-add" style="position:absolute; right:32px; top:50%; transform:translateY(-50%);" ondragover="wfDragOver(event)" ondrop="wfDropAtEnd()" title="Drop here to add at the end">
-      <div class="wf-port in" style="left:-7px; top:50%;"></div>
+    html += `<div class="wf-node-add" id="wfAddBlock" style="position:absolute; right:48px; top:50%; transform:translateY(-50%);" ondragover="wfDragOver(event)" ondrop="wfDropAtEnd()" title="Drop here to add at the end">
+      <div class="wf-port in" id="wfAddPort" style="left:-7px; top:50%; position:absolute; width:14px; height:14px; border-radius:50%; background:#fff; border:2.5px solid #0F172A; transform:translateY(-50%); cursor:crosshair;"></div>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
     </div>`;
   }
