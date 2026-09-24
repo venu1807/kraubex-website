@@ -1440,7 +1440,7 @@
 
 <script>
 const agents = [
-  {name:'Procurement Manager', status:'active', color:'#B83E01', tag:'Orchestration', tasks:512, rating:4.9,
+  {name:'Procurement Domain Agent', status:'active', color:'#B83E01', tag:'Orchestration', tasks:512, rating:4.9,
    desc:'Overall procurement orchestration across all agents and workflows.', task:'Coordinate procurement workflow', group:'domain'},
   {name:'Supplier Intelligence Agent', status:'active', color:'#002642', tag:'Sourcing intelligence', tasks:241, rating:4.6,
    desc:'Understand suppliers and their capabilities.', task:'Supplier intelligence report', group:'skill'},
@@ -1524,7 +1524,7 @@ function procurementDeptHTML(){
       <div class="domain-line"></div>
       <div class="skill-box">
         <h4>Skill agents</h4>
-        <div style="display:flex; flex-direction:column; gap:10px;">${skillCards}</div>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">${skillCards}</div>
       </div>
     </div>`;
 }
@@ -1752,14 +1752,14 @@ function genericDeptHTML(dept){
       <div class="domain-card">
         <p class="domain-card-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h2l2.4 12.2a2 2 0 002 1.8h8.6a2 2 0 002-1.6L21 7H6"/></svg>
-          ${dept.name} Manager
+          ${dept.name} Domain Agent
         </p>
         <p class="domain-sub">${dept.desc}</p>
       </div>
       <div class="domain-line"></div>
       <div class="skill-box">
         <h4>Skill agents</h4>
-        <div style="display:flex; flex-direction:column; gap:10px;">
+        <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px;">
           ${skillAgents.map((a,i)=>deptAgentCardHTML(a, deptSlug(dept.name), i)).join('')}
         </div>
       </div>
@@ -1782,7 +1782,7 @@ function renderAIWorkforceBody(subview){
           <div class="dept-card" onclick="selectSubviewAndSidebar('ai-workforce','dept-${deptSlug(d.name)}')">
             <h5>${d.name}</h5>
             <p>${d.desc}</p>
-            <p class="dept-count">${d.builtin ? '1 manager + 14 skill agents' : '1 manager + ' + d.skills.length + ' skill agents'}</p>
+            <p class="dept-count">${d.builtin ? '1 domain agent + 14 skill agents' : '1 domain agent + ' + d.skills.length + ' skill agents'}</p>
           </div>`).join('')}
       </div>`;
     return;
@@ -2268,15 +2268,28 @@ function handleConnectorAction(){
 function renderTasksBody(subview){
   const body = document.getElementById('secBody-tasks');
   const tasks = [
-    {name:'Review SteelSphere contract renewal', agent:'Contract Life Cycle Management Agent', status:'In progress', type:'Decision'},
-    {name:'Benchmark copper pricing', agent:'Price optimizer', status:'Waiting for data', type:'Research'},
-    {name:'Screen 4 new candidates', agent:'Human Resources', status:'Running', type:'Analysis'},
-    {name:'Draft Q3 ESG report', agent:'ESG & Sustainability', status:'Completed', type:'Document'},
-    {name:'Reconcile March invoices', agent:'Finance', status:'Failed', type:'Action'},
+    {name:'Review SteelSphere contract renewal', agent:'Contract Life Cycle Management Agent', status:'In progress', type:'Decision', createdBy:'Sarah Chen', createdAt:'2h ago'},
+    {name:'Benchmark copper pricing', agent:'Price Optimizer Agent', status:'Waiting for data', type:'Research', createdBy:'Marcus Weber', createdAt:'5h ago'},
+    {name:'Screen 4 new candidates', agent:'Human Resources Domain Agent', status:'Running', type:'Analysis', createdBy:'Nadia Hoffmann', createdAt:'1d ago'},
+    {name:'Draft Q3 ESG report', agent:'ESG & Sustainability Domain Agent', status:'Completed', type:'Document', createdBy:'Fatima Al-Sayed', createdAt:'3d ago'},
+    {name:'Reconcile March invoices', agent:'Finance Domain Agent', status:'Failed', type:'Action', createdBy:'David Schulz', createdAt:'6h ago'},
+    {name:'Approve Q2 vendor payments', agent:'Finance Domain Agent', status:'In progress', type:'Approval', createdBy:'Elena Fischer', createdAt:'4h ago'},
+    {name:'Onboard new steel supplier', agent:'Contract Life Cycle Management Agent', status:'Waiting for data', type:'Onboarding', createdBy:'Priya Patel', createdAt:'1d ago'},
   ];
   const filtered = !subview || subview==='all' ? tasks : tasks.filter(t=>t.status.toLowerCase().replace(/\s+/g,'-')===subview);
-  body.innerHTML = `<table><thead><tr><th>Task</th><th>Agent</th><th>Type</th><th>Status</th></tr></thead>
-    <tbody>${filtered.map(t=>`<tr><td>${t.name}</td><td>${t.agent}</td><td>${t.type}</td><td><span class="tag ${t.status==='Completed'?'tag-active':t.status==='Failed'?'tag-expired':'tag-upcoming'}">${t.status}</span></td></tr>`).join('')}</tbody></table>`;
+  const grouped = {};
+  filtered.forEach(t=>{ if(!grouped[t.agent]) grouped[t.agent]=[]; grouped[t.agent].push(t); });
+  if(filtered.length===0){ body.innerHTML='<p style="font-size:13px; color:var(--text-muted); padding:16px;">No tasks in this view.</p>'; return; }
+  body.innerHTML = Object.entries(grouped).map(([agent, list])=>`
+    <div style="margin-bottom:20px;">
+      <h4 style="font-size:14px; font-weight:700; color:var(--subhead); margin:0 0 10px; display:flex; align-items:center; gap:8px;">
+        <span style="background:var(--headline); color:#fff; width:28px; height:28px; border-radius:7px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;">${agent.slice(0,2).toUpperCase()}</span>
+        ${agent} <span style="font-weight:400; color:var(--text-muted); font-size:12px;">(${list.length})</span>
+      </h4>
+      <table><thead><tr><th>Task</th><th>Type</th><th>Status</th><th>Created by</th></tr></thead>
+      <tbody>${list.map(t=>`<tr><td>${t.name}</td><td>${t.type}</td><td><span class="tag ${t.status==='Completed'?'tag-active':t.status==='Failed'?'tag-expired':'tag-upcoming'}">${t.status}</span></td><td><span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:22px; height:22px; border-radius:50%; background:var(--bg); border:1px solid var(--border); display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:var(--subhead);">${t.createdBy.split(' ').map(s=>s[0]).join('').slice(0,2)}</span>${t.createdBy} <span style="color:var(--text-muted); font-size:11px;">• ${t.createdAt}</span></span></td></tr>`).join('')}</tbody></table>
+    </div>
+  `).join('');
 }
 
 function renderApprovalsBody(subview){
