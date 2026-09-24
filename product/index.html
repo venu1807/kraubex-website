@@ -1472,6 +1472,24 @@ const agents = [
    desc:'KPIs, forecasting, and procurement insights.', task:'Analytics report', group:'skill'},
 ];
 
+const kraubexModels = [
+  {id:'gpt-4o', name:'GPT-4o', provider:'OpenAI', desc:'Flagship multimodal'},
+  {id:'gpt-4o-mini', name:'GPT-4o mini', provider:'OpenAI', desc:'Cost-efficient'},
+  {id:'claude-3.5-sonnet', name:'Claude 3.5 Sonnet', provider:'Anthropic', desc:'Reasoning & coding'},
+  {id:'claude-3-haiku', name:'Claude 3 Haiku', provider:'Anthropic', desc:'Fast lightweight'},
+  {id:'gemini-1.5-pro', name:'Gemini 1.5 Pro', provider:'Google', desc:'2M context'},
+  {id:'gemini-1.5-flash', name:'Gemini 1.5 Flash', provider:'Google', desc:'Speed-optimized'},
+  {id:'llama-3.1-405b', name:'Llama 3.1 405B', provider:'Meta', desc:'Open 405B'},
+  {id:'mistral-large-2', name:'Mistral Large 2', provider:'Mistral', desc:'Multilingual'},
+  {id:'command-r-plus', name:'Command R+', provider:'Cohere', desc:'RAG-optimized'},
+  {id:'kraubex-ft', name:'Kraubex FT', provider:'Kraubex AI', desc:'Procurement fine-tune'},
+];
+const agentModels = {};
+function getAgentModel(name){ return agentModels[name] || 'gpt-4o'; }
+function setAgentModel(name, modelId){ agentModels[name]=modelId; }
+function modelOptionsHtml(selectedId){
+  return kraubexModels.map(m=>`<option value="${m.id}" ${m.id===selectedId?'selected':''}>${m.name} — ${m.provider}</option>`).join('');
+}
 function iconFor(a){
   return `<div class="agent-icon" style="background:${a.color};">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 9h.01M15 9h.01M8 15c1 1 2.5 1.5 4 1.5s3-.5 4-1.5"/></svg>
@@ -1481,7 +1499,7 @@ function domainIconFor(deptName, color){
   const c = color || deptColors[hashStr(deptName) % deptColors.length];
   const icons = {
     'Procurement':'<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h2l2.4 12.2a2 2 0 002 1.8h8.6a2 2 0 002-1.6L21 7H6"/>',
-    'Finance':'<path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/><path d="M6 7h2"/><path d="M16 7h2"/>',
+    'Finance':'<path d="M14 9a6 6 0 00-8.2 0"/><path d="M14 15a6 6 0 01-8.2 0"/><path d="M8 10h8"/><path d="M8 14h8"/><path d="M9 9H7"/><path d="M9 15H7"/>',
     'Sales':'<path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-9"/>',
     'Marketing':'<path d="M3 11l18-5v12L3 14v-3z"/><path d="M11 11v6a2 2 0 002 2h2"/>',
     'Supply Chain':'<path d="M14 18V6a2 2 0 00-2-2H5a2 2 0 00-2 2v11a1 1 0 001 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 001-1v-3.83a1 1 0 00-.37-.77L18 9V18"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
@@ -1498,6 +1516,7 @@ function domainIconFor(deptName, color){
   return `<div class="agent-icon" style="background:${c};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${svg}</svg></div>`;
 }
 function domainAgentCardHTML(dept, domainAgent){
+  const sel = getAgentModel(domainAgent.name);
   return `
     <div class="agent-card domain-agent-card" style="cursor:pointer; border:2px solid var(--headline); background:linear-gradient(135deg, var(--card) 0%, var(--bg) 100%);" onclick="openAssignModalObj({name:'${domainAgent.name.replace(/'/g,"\\'")}', desc:'${domainAgent.desc.replace(/'/g,"\\'")}', tag:'${domainAgent.tag}', color:'${domainAgent.color}'})">
       <div class="agent-card-top">
@@ -1520,10 +1539,17 @@ function domainAgentCardHTML(dept, domainAgent){
           ${domainAgent.rating}
         </span>
       </div>
+      <div style="margin-top:10px; padding-top:8px; border-top:1px solid var(--border);" onclick="event.stopPropagation()">
+        <label style="font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.04em; text-transform:uppercase;">Model</label>
+        <select style="width:100%; margin-top:4px; font-size:11px; padding:5px 6px; border:1px solid var(--border); border-radius:6px; background:var(--card); color:var(--subhead);" onchange="setAgentModel('${domainAgent.name.replace(/'/g,"\\'")}', this.value)" onclick="event.stopPropagation()">
+          ${modelOptionsHtml(sel)}
+        </select>
+      </div>
     </div>`;
 }
 
 function agentCardHTML(a, i){
+  const sel = getAgentModel(a.name);
   return `
     <div class="agent-card" style="cursor:pointer;" onclick="openAssignModal(${i})">
       <div class="agent-card-top">
@@ -1547,6 +1573,12 @@ function agentCardHTML(a, i){
           ${a.rating}
         </span>
       </div>
+      <div style="margin-top:10px; padding-top:8px; border-top:1px solid var(--border);" onclick="event.stopPropagation()">
+        <label style="font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.04em; text-transform:uppercase;">Model</label>
+        <select style="width:100%; margin-top:4px; font-size:11px; padding:5px 6px; border:1px solid var(--border); border-radius:6px; background:var(--card); color:var(--subhead);" onchange="setAgentModel('${a.name.replace(/'/g,"\\'")}', this.value)" onclick="event.stopPropagation()">
+          ${modelOptionsHtml(sel)}
+        </select>
+      </div>
     </div>`;
 }
 
@@ -1561,6 +1593,10 @@ function procurementDeptHTML(){
     <div class="domain-section" style="padding:0;">
       <p class="domain-eyebrow">Business domain agent</p>
       ${domainAgentCardHTML(domainDept, domain)}
+      <div style="margin:14px 0 0; display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+        <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Available models (${kraubexModels.length}):</span>
+        ${kraubexModels.map(m=>`<span style="font-size:10px; background:var(--bg); border:1px solid var(--border); padding:3px 7px; border-radius:12px; color:var(--subhead);">${m.provider} · ${m.name}</span>`).join('')}
+      </div>
       <div class="domain-line"></div>
       <div class="skill-box">
         <h4>Skill agents</h4>
@@ -1761,6 +1797,7 @@ function openDeptAgent(slug, idx){
 }
 
 function deptAgentCardHTML(a, slug, i){
+  const sel = getAgentModel(a.name);
   return `
     <div class="agent-card" style="cursor:pointer;" onclick="openDeptAgent('${slug}', ${i})">
       <div class="agent-card-top">
@@ -1782,6 +1819,12 @@ function deptAgentCardHTML(a, slug, i){
           ${a.rating}
         </span>
       </div>
+      <div style="margin-top:10px; padding-top:8px; border-top:1px solid var(--border);" onclick="event.stopPropagation()">
+        <label style="font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.04em; text-transform:uppercase;">Model</label>
+        <select style="width:100%; margin-top:4px; font-size:11px; padding:5px 6px; border:1px solid var(--border); border-radius:6px; background:var(--card); color:var(--subhead);" onchange="setAgentModel('${a.name.replace(/'/g,"\\'")}', this.value)" onclick="event.stopPropagation()">
+          ${modelOptionsHtml(sel)}
+        </select>
+      </div>
     </div>`;
 }
 function genericDeptHTML(dept){
@@ -1800,6 +1843,10 @@ function genericDeptHTML(dept){
     <div class="domain-section" style="padding:0;">
       <p class="domain-eyebrow">Business domain agent</p>
       ${domainAgentCardHTML(dept, domainAgent)}
+      <div style="margin:14px 0 0; display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+        <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Available models (${kraubexModels.length}):</span>
+        ${kraubexModels.map(m=>`<span style="font-size:10px; background:var(--bg); border:1px solid var(--border); padding:3px 7px; border-radius:12px; color:var(--subhead);">${m.provider} · ${m.name}</span>`).join('')}
+      </div>
       <div class="domain-line"></div>
       <div class="skill-box">
         <h4>Skill agents</h4>
