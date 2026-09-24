@@ -2770,6 +2770,13 @@ function wfNodeHtml(n, i, isBranch, branchKey, branchIdx){
       ${n.owner ? `<p class="wf-node-meta"><span class="wf-meta-dot"></span>${n.owner}</p>` : ''}
     </div>`;
 }
+function wfPortPos(node, port){
+  const W=200, H=110;
+  if(port==='in') return {x:(node.x||0), y:(node.y||0)+H/2};
+  if(port==='yes') return {x:(node.x||0)+W, y:(node.y||0)+H*0.34};
+  if(port==='no') return {x:(node.x||0)+W, y:(node.y||0)+H*0.66};
+  return {x:(node.x||0)+W, y:(node.y||0)+H/2};
+}
 function wfDrawArrows(){
   const svg = document.getElementById('wfArrows');
   if(!svg) return;
@@ -2778,9 +2785,9 @@ function wfDrawArrows(){
   const W=200, H=110;
   if(window.wfPortDrag && window.wfPortDrag.active){
     const s = window.wfPortDrag;
-    const sx = s.sx, sy=s.sy, tx=s.tx, ty=s.ty;
     const col = s.port==='yes'?'#1D9E75': s.port==='no'?'#791F1F':'#0F172A';
-    paths += `<path class="wf-arrow-path wf-temp-arrow" d="M ${sx} ${sy} C ${sx+60} ${sy}, ${tx-60} ${ty}, ${tx} ${ty}" stroke="${col}" stroke-width="2.4" fill="none" stroke-dasharray="8 6" opacity="0.9" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`;
+    paths += `<path class="wf-arrow-path wf-temp-arrow" d="M ${s.sx} ${s.sy} C ${s.sx+60} ${s.sy}, ${s.tx-60} ${s.ty}, ${s.tx} ${s.ty}" stroke="${col}" stroke-width="2.4" fill="none" stroke-dasharray="8 6" opacity="0.9" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`;
+    paths += `<circle cx="${s.sx}" cy="${s.sy}" r="4" fill="${col}" stroke="#fff" stroke-width="1.5"/><circle cx="${s.tx}" cy="${s.ty}" r="4" fill="#fff" stroke="${col}" stroke-width="1.8"/>`;
   }
   const getNextPos = (idx)=>{
     if(idx+1 < editingNodes.length) return editingNodes[idx+1];
@@ -2791,35 +2798,51 @@ function wfDrawArrows(){
     if(n.branches){
       const yesNodes = n.branches.yes||[];
       const noNodes = n.branches.no||[];
-      const sx = (n.x||0)+W, sy=(n.y||0)+H/2;
+      const sYes = wfPortPos(n,'yes'), sNo = wfPortPos(n,'no');
       if(yesNodes.length){
-        const tx = (yesNodes[0].x||0), ty=(yesNodes[0].y||0)+H/2;
-        paths += `<path class="wf-arrow-path" d="M ${sx} ${sy} C ${sx+60} ${sy}, ${tx-60} ${ty}, ${tx} ${ty}" stroke="#1D9E75" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/><text x="${(sx+tx)/2}" y="${(sy+ty)/2-10}" font-size="10.5" font-weight="800" fill="#1D9E75" text-anchor="middle" style="paint-order:stroke; stroke:#F3F0E6; stroke-width:3px;">Yes</text>`;
+        const t = wfPortPos(yesNodes[0],'in');
+        paths += `<path class="wf-arrow-path" d="M ${sYes.x} ${sYes.y} C ${sYes.x+50} ${sYes.y}, ${t.x-50} ${t.y}, ${t.x} ${t.y}" stroke="#1D9E75" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/><text x="${(sYes.x+t.x)/2}" y="${(sYes.y+t.y)/2-10}" font-size="10.5" font-weight="800" fill="#1D9E75" text-anchor="middle" style="paint-order:stroke; stroke:#F3F0E6; stroke-width:3px;">Yes</text>`;
+        paths += `<circle cx="${sYes.x}" cy="${sYes.y}" r="3.5" fill="#1D9E75" stroke="#fff" stroke-width="1.2"/><circle cx="${t.x}" cy="${t.y}" r="3.5" fill="#fff" stroke="#1D9E75" stroke-width="1.6"/>`;
       }
       if(noNodes.length){
-        const tx2=(noNodes[0].x||0), ty2=(noNodes[0].y||0)+H/2;
-        paths += `<path class="wf-arrow-path" d="M ${sx} ${sy} C ${sx+60} ${sy}, ${tx2-60} ${ty2}, ${tx2} ${ty2}" stroke="#791F1F" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/><text x="${(sx+tx2)/2}" y="${(sy+ty2)/2-10}" font-size="10.5" font-weight="800" fill="#791F1F" text-anchor="middle" style="paint-order:stroke; stroke:#F3F0E6; stroke-width:3px;">No</text>`;
+        const t2 = wfPortPos(noNodes[0],'in');
+        paths += `<path class="wf-arrow-path" d="M ${sNo.x} ${sNo.y} C ${sNo.x+50} ${sNo.y}, ${t2.x-50} ${t2.y}, ${t2.x} ${t2.y}" stroke="#791F1F" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/><text x="${(sNo.x+t2.x)/2}" y="${(sNo.y+t2.y)/2-10}" font-size="10.5" font-weight="800" fill="#791F1F" text-anchor="middle" style="paint-order:stroke; stroke:#F3F0E6; stroke-width:3px;">No</text>`;
+        paths += `<circle cx="${sNo.x}" cy="${sNo.y}" r="3.5" fill="#791F1F" stroke="#fff" stroke-width="1.2"/><circle cx="${t2.x}" cy="${t2.y}" r="3.5" fill="#fff" stroke="#791F1F" stroke-width="1.6"/>`;
       }
       ;[yesNodes,noNodes].forEach(arr=>{
         for(let k=0;k<arr.length-1;k++){
           const a=arr[k], b=arr[k+1];
-          const ax=(a.x||0)+W, ay=(a.y||0)+H/2, bx=(b.x||0), by=(b.y||0)+H/2;
-          paths += `<path class="wf-arrow-path" d="M ${ax} ${ay} C ${ax+50} ${ay}, ${bx-50} ${by}, ${bx} ${by}" stroke="#334155" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`;
+          const aPos = wfPortPos(a,'out'), bPos = wfPortPos(b,'in');
+          paths += `<path class="wf-arrow-path" d="M ${aPos.x} ${aPos.y} C ${aPos.x+50} ${aPos.y}, ${bPos.x-50} ${bPos.y}, ${bPos.x} ${bPos.y}" stroke="#334155" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`;
+          paths += `<circle cx="${aPos.x}" cy="${aPos.y}" r="3" fill="#334155" stroke="#fff" stroke-width="1.2"/><circle cx="${bPos.x}" cy="${bPos.y}" r="3" fill="#fff" stroke="#334155" stroke-width="1.4"/>`;
         }
       });
       if(next){
         const lastYes = yesNodes[yesNodes.length-1], lastNo=noNodes[noNodes.length-1];
-        const nx=(next.x||0), ny=(next.y||0)+H/2;
-        if(lastYes){ const ax=(lastYes.x||0)+W, ay=(lastYes.y||0)+H/2; paths += `<path class="wf-arrow-path" d="M ${ax} ${ay} C ${ax+60} ${ay}, ${nx-60} ${ny}, ${nx} ${ny}" stroke="#334155" stroke-width="2.4" fill="none" stroke-dasharray="7 5" opacity="0.95" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`; }
-        if(lastNo){ const ax2=(lastNo.x||0)+W, ay2=(lastNo.y||0)+H/2; paths += `<path class="wf-arrow-path" d="M ${ax2} ${ay2} C ${ax2+60} ${ay2}, ${nx-60} ${ny}, ${nx} ${ny}" stroke="#334155" stroke-width="2.4" fill="none" stroke-dasharray="7 5" opacity="0.95" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`; }
+        const nPos = wfPortPos(next,'in');
+        if(lastYes){ const aPos=wfPortPos(lastYes,'out'); paths += `<path class="wf-arrow-path" d="M ${aPos.x} ${aPos.y} C ${aPos.x+60} ${aPos.y}, ${nPos.x-60} ${nPos.y}, ${nPos.x} ${nPos.y}" stroke="#334155" stroke-width="2.4" fill="none" stroke-dasharray="7 5" opacity="0.95" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`; paths += `<circle cx="${aPos.x}" cy="${aPos.y}" r="3" fill="#334155" stroke="#fff" stroke-width="1.2"/><circle cx="${nPos.x}" cy="${nPos.y}" r="3" fill="#fff" stroke="#334155" stroke-width="1.4"/>`; }
+        if(lastNo){ const aPos2=wfPortPos(lastNo,'out'); paths += `<path class="wf-arrow-path" d="M ${aPos2.x} ${aPos2.y} C ${aPos2.x+60} ${aPos2.y}, ${nPos.x-60} ${nPos.y}, ${nPos.x} ${nPos.y}" stroke="#334155" stroke-width="2.4" fill="none" stroke-dasharray="7 5" opacity="0.95" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`; paths += `<circle cx="${aPos2.x}" cy="${aPos2.y}" r="3" fill="#334155" stroke="#fff" stroke-width="1.2"/>`; }
       }
     } else {
       if(next){
-        const sx=(n.x||0)+W, sy=(n.y||0)+H/2, tx=(next.x||0), ty=(next.y||0)+H/2;
-        paths += `<path class="wf-arrow-path" d="M ${sx} ${sy} C ${sx+70} ${sy}, ${tx-70} ${ty}, ${tx} ${ty}" stroke="#0F172A" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`;
+        const sPos=wfPortPos(n,'out'), tPos=wfPortPos(next,'in');
+        paths += `<path class="wf-arrow-path" d="M ${sPos.x} ${sPos.y} C ${sPos.x+70} ${sPos.y}, ${tPos.x-70} ${tPos.y}, ${tPos.x} ${tPos.y}" stroke="#0F172A" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`;
+        paths += `<circle cx="${sPos.x}" cy="${sPos.y}" r="3.5" fill="#0F172A" stroke="#fff" stroke-width="1.3"/><circle cx="${tPos.x}" cy="${tPos.y}" r="3.5" fill="#fff" stroke="#0F172A" stroke-width="1.6"/>`;
       }
     }
   });
+  // Add-block arrow in edit mode: from last node to add button
+  if(editingWfMode){
+    const last = editingNodes[editingNodes.length-1];
+    if(last){
+      const lastPos = last.branches ? null : wfPortPos(last,'out');
+      if(lastPos){
+        const addX = 2020, addY = 400;
+        paths += `<path class="wf-arrow-path" d="M ${lastPos.x} ${lastPos.y} C ${lastPos.x+60} ${lastPos.y}, ${addX-60} ${addY}, ${addX} ${addY}" stroke="#0F172A" stroke-width="2.4" fill="none" stroke-dasharray="7 5" opacity="0.7" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`;
+        paths += `<circle cx="${lastPos.x}" cy="${lastPos.y}" r="3.5" fill="#0F172A" stroke="#fff" stroke-width="1.3"/><circle cx="${addX}" cy="${addY}" r="5" fill="#fff" stroke="#0F172A" stroke-width="1.8"/>`;
+      }
+    }
+  }
   svg.innerHTML = paths;
 }
 function renderWfCanvas(){
@@ -2899,8 +2922,11 @@ function wfPortDragStart(e,i,branchKey,branchIdx,port){
   const node = isBranch ? (editingNodes[i] && editingNodes[i].branches && editingNodes[i].branches[branchKey] && editingNodes[i].branches[branchKey][branchIdx]) : editingNodes[i];
   if(!node) return;
   const W=200, H=110;
-  const sx = (node.x||0)+(port==='in'?0:W);
-  const sy = (node.y||0)+H/2;
+  let sx, sy;
+  if(port==='yes'){ sx=(node.x||0)+W; sy=(node.y||0)+H*0.34; }
+  else if(port==='no'){ sx=(node.x||0)+W; sy=(node.y||0)+H*0.66; }
+  else if(port==='in'){ sx=(node.x||0); sy=(node.y||0)+H/2; }
+  else { sx=(node.x||0)+W; sy=(node.y||0)+H/2; }
   window.wfPortDrag = {active:true, fromI:i, fromBranchKey:branchKey||'', fromBranchIdx: isBranch?branchIdx:-1, port, sx, sy, tx:sx, ty:sy};
   const portEl = e.currentTarget;
   if(portEl) portEl.classList.add('dragging');
