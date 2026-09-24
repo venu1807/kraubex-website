@@ -486,8 +486,12 @@
   .usage-bar-fill.near{background:#EF9F27;}
   .usage-bar-fill.over{background:#791F1F;}
 
-  .connector-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:12px;}
-  .connector-card{background:var(--card); border-radius:10px; padding:14px; display:flex; align-items:center; gap:12px; min-width:0; overflow:hidden;}
+  .connector-grid{display:grid; grid-template-columns:repeat(4, 1fr); gap:12px;}
+  @media (max-width:1200px){ .connector-grid{grid-template-columns:repeat(3, 1fr);} }
+  @media (max-width:900px){ .connector-grid{grid-template-columns:repeat(2, 1fr);} }
+  @media (max-width:640px){ .connector-grid{grid-template-columns:1fr;} }
+  .connector-card{background:var(--card); border-radius:10px; padding:14px; display:flex; align-items:center; gap:12px; min-width:0; overflow:hidden; cursor:pointer; transition:box-shadow .15s, transform .15s;}
+  .connector-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08); transform:translateY(-1px);}
   .connector-card .c-icon{width:36px; height:36px; border-radius:9px; background:var(--subhead); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0;}
   .connector-card .c-mid{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; overflow:hidden;}
   .connector-card .c-name{font-size:14px; font-weight:700; color:var(--subhead); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
@@ -503,6 +507,19 @@
   .connector-fence.fence-warn{background:#EF9F27; box-shadow:0 0 10px rgba(239,159,39,.6); animation:fencePulse 1.2s ease-in-out infinite;}
   .connector-fence.fence-down{background:#B3261E; box-shadow:0 0 12px rgba(179,38,30,.7); animation:fencePulse .8s ease-in-out infinite;}
   @keyframes fencePulse{0%,100%{opacity:1} 50%{opacity:.55}}
+  .connector-detail-overlay{position:fixed; inset:0; background:rgba(0,20,35,.45); z-index:70; display:none; align-items:center; justify-content:center; padding:20px;}
+  .connector-detail-overlay.show{display:flex;}
+  .connector-detail-modal{background:var(--card); border-radius:12px; width:520px; max-width:90vw; max-height:88vh; overflow-y:auto; box-shadow:0 16px 40px rgba(0,0,0,.22);}
+  .connector-detail-head{display:flex; align-items:center; gap:12px; padding:18px 20px; border-bottom:1px solid var(--border);}
+  .connector-detail-head .c-icon{width:40px; height:40px; border-radius:10px; background:var(--subhead); color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; flex-shrink:0;}
+  .connector-detail-head h3{margin:0; font-size:16px; font-weight:700; color:var(--subhead);}
+  .connector-detail-head p{margin:2px 0 0; font-size:12px; color:var(--text-muted);}
+  .connector-detail-body{padding:18px 20px;}
+  .connector-detail-row{display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--bg); font-size:13px;}
+  .connector-detail-row:last-child{border-bottom:none;}
+  .connector-detail-row span:first-child{color:var(--text-muted);}
+  .connector-detail-row span:last-child{color:var(--subhead); font-weight:600;}
+  .connector-detail-actions{display:flex; gap:10px; justify-content:flex-end; padding:16px 20px; border-top:1px solid var(--border);}
 
   .appr-card{background:var(--card); border-radius:10px; padding:14px; margin-bottom:10px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
   .appr-card .appr-info{flex:1; min-width:180px;}
@@ -1078,6 +1095,23 @@
     <h3>New message</h3>
     <input type="text" class="search" id="newMsgSearch" placeholder="Search colleagues..." oninput="pendingChannelForMember ? renderDirectoryListForChannel(this.value) : renderDirectoryList(this.value)" style="width:100%;">
     <div class="newmsg-list" id="newMsgList"></div>
+  </div>
+</div>
+
+<div class="connector-detail-overlay" id="connectorDetailOverlay" onclick="if(event.target===this) closeConnectorDetail()">
+  <div class="connector-detail-modal">
+    <div class="connector-detail-head">
+      <div class="c-icon" id="cdIcon"></div>
+      <div>
+        <h3 id="cdName"></h3>
+        <p id="cdStatus"></p>
+      </div>
+    </div>
+    <div class="connector-detail-body" id="cdBody"></div>
+    <div class="connector-detail-actions">
+      <button class="btn btn-ghost" onclick="closeConnectorDetail()">Close</button>
+      <button class="btn btn-primary" id="cdActionBtn" onclick="handleConnectorAction()"></button>
+    </div>
   </div>
 </div>
 
@@ -2074,11 +2108,94 @@ function renderConnectBody(subview){
   if(disconnectedCount>0) fenceStatus = disconnectedCount>=3 ? 'down' : 'warn';
   const fenceHtml = fenceOn ? `<div class="connector-fence fence-${fenceStatus}" id="connectorFence" title="Fence: ${fenceStatus} — ${disconnectedCount} disconnected"></div>` : '';
   body.innerHTML = `${fenceHtml}<div class="connector-grid">${list.map(c=>`
-    <div class="connector-card">
+    <div class="connector-card" onclick="openConnectorDetail('${c.n.replace(/'/g,"\\'")}')">
       <div class="c-icon">${c.n.slice(0,2).toUpperCase()}</div>
       <div class="c-mid"><p class="c-name">${c.n}</p><p class="c-status ${c.c?'connected':'notconnected'}">${c.c?'● Connected':'○ Not connected'}</p><p class="c-desc">${c.d}</p><div class="c-meta"><span class="c-cat">${c.cat}</span><span>${c.meta}</span></div></div>
-      <button class="btn ${c.c?'btn-ghost':'btn-primary'}" onclick="alert('${c.c?'Manage':'Connect'} ${c.n}')">${c.c?'Manage':'Connect'}</button>
+      <button class="btn ${c.c?'btn-ghost':'btn-primary'}" onclick="event.stopPropagation(); handleConnectorCardAction('${c.n.replace(/'/g,"\\'")}')">${c.c?'Manage':'Connect'}</button>
     </div>`).join('')}</div>`;
+}
+let activeConnector = null;
+function canUserConnect(){
+  return currentUserProfile && currentUserProfile.authority === 'Admin';
+}
+function findConnectorByName(name){
+  const allGroups = {
+    enterprise: [
+      {n:'SAP',c:true,d:'ERP — S/4HANA Finance & Procurement',cat:'Enterprise',meta:'Synced 2h ago'},
+      {n:'Microsoft Dynamics',c:true,d:'ERP & CRM — Dynamics 365',cat:'Enterprise',meta:'Synced 5h ago'},
+      {n:'Salesforce',c:false,d:'CRM — Sales & Customer Data',cat:'Enterprise',meta:'Not configured'},
+      {n:'Oracle',c:false,d:'ERP — Oracle Cloud Financials',cat:'Enterprise',meta:'Not configured'},
+      {n:'PLM',c:false,d:'Product Lifecycle — Teamcenter',cat:'Enterprise',meta:'Not configured'},
+      {n:'MES',c:false,d:'Manufacturing Execution — Shop Floor',cat:'Enterprise',meta:'Not configured'}
+    ],
+    m365: [
+      {n:'SharePoint',c:true,d:'Intranet & Docs — Sites & Libraries',cat:'M365',meta:'Synced 1h ago'},
+      {n:'OneDrive',c:true,d:'Cloud Storage — File Sync',cat:'M365',meta:'Synced 30m ago'},
+      {n:'Teams',c:true,d:'Collaboration — Chat & Meetings',cat:'M365',meta:'Synced 10m ago'},
+      {n:'Outlook',c:false,d:'Email & Calendar — Exchange Online',cat:'M365',meta:'Not configured'}
+    ],
+    db: [
+      {n:'SQL Server',c:true,d:'Relational DB — Primary Warehouse',cat:'Database',meta:'Synced 15m ago'},
+      {n:'PostgreSQL',c:false,d:'Analytics — Open Source DB',cat:'Database',meta:'Not configured'},
+      {n:'MySQL',c:false,d:'Web DB — MySQL 8.0',cat:'Database',meta:'Not configured'},
+      {n:'MongoDB',c:false,d:'NoSQL — Document Store',cat:'Database',meta:'Not configured'},
+      {n:'SAP HANA',c:false,d:'In-Memory — SAP Analytics',cat:'Database',meta:'Not configured'}
+    ],
+    mcp: [
+      {n:'Procurement MCP',c:true,d:'Agent — Source-to-Pay Workflows',cat:'MCP',meta:'Active · 12 agents'},
+      {n:'Finance MCP',c:false,d:'Agent — Invoice & Spend',cat:'MCP',meta:'Idle'},
+      {n:'HR MCP',c:false,d:'Agent — People & Payroll',cat:'MCP',meta:'Idle'},
+      {n:'SAP MCP',c:true,d:'Agent — SAP Connector',cat:'MCP',meta:'Active · 8 agents'},
+      {n:'CRM MCP',c:false,d:'Agent — Customer 360',cat:'MCP',meta:'Idle'},
+      {n:'Custom MCP',c:false,d:'Agent — Your Custom MCP',cat:'MCP',meta:'Not configured'}
+    ],
+  };
+  for(const k in allGroups){ const f = allGroups[k].find(x=>x.n===name); if(f) return f; }
+  return null;
+}
+function openConnectorDetail(name){
+  const c = findConnectorByName(name);
+  if(!c) return;
+  activeConnector = c;
+  document.getElementById('cdIcon').textContent = c.n.slice(0,2).toUpperCase();
+  document.getElementById('cdName').textContent = c.n;
+  document.getElementById('cdStatus').textContent = c.c ? '● Connected' : '○ Not connected';
+  document.getElementById('cdStatus').style.color = c.c ? '#27500A' : 'var(--text-muted)';
+  const canConnect = canUserConnect();
+  const roleMsg = canConnect ? '' : '<p style="font-size:12px; color:#B3261E; margin:8px 0 0;">⚠ Only Admin can connect/manage. Your role: '+(currentUserProfile.authority||'Viewer')+' — request IAM role <code>connector:write</code>.</p>';
+  document.getElementById('cdBody').innerHTML = `
+    <div class="connector-detail-row"><span>Category</span><span><span class="c-cat">${c.cat}</span></span></div>
+    <div class="connector-detail-row"><span>Description</span><span>${c.d}</span></div>
+    <div class="connector-detail-row"><span>Status</span><span style="color:${c.c?'#27500A':'var(--text-muted)'}">${c.c?'● Connected':'○ Not connected'}</span></div>
+    <div class="connector-detail-row"><span>Sync / State</span><span>${c.meta}</span></div>
+    <div class="connector-detail-row"><span>Access</span><span>${canConnect?'Admin — Full access':'Restricted — Admin only'}</span></div>
+    ${roleMsg}
+  `;
+  const btn = document.getElementById('cdActionBtn');
+  btn.textContent = c.c ? 'Manage' : 'Connect';
+  btn.disabled = !canConnect;
+  btn.style.opacity = canConnect ? '1' : '0.5';
+  btn.style.cursor = canConnect ? 'pointer' : 'not-allowed';
+  btn.title = canConnect ? '' : 'Requires Admin / IAM connector:write';
+  document.getElementById('connectorDetailOverlay').classList.add('show');
+}
+function closeConnectorDetail(){
+  document.getElementById('connectorDetailOverlay').classList.remove('show');
+  activeConnector = null;
+}
+function handleConnectorCardAction(name){
+  if(!canUserConnect()){
+    alert('Access denied — only Admin can connect/manage connectors.\nYour role: '+(currentUserProfile.authority||'Viewer')+'\nRequired IAM: connector:write — contact your administrator.');
+    return;
+  }
+  const c = findConnectorByName(name);
+  if(!c) return;
+  alert((c.c?'Manage ':'Connect ')+c.n);
+}
+function handleConnectorAction(){
+  if(!activeConnector) return;
+  handleConnectorCardAction(activeConnector.n);
+  if(canUserConnect()) closeConnectorDetail();
 }
 
 function renderTasksBody(subview){
