@@ -487,13 +487,14 @@
   .usage-bar-fill.over{background:#791F1F;}
 
   .connector-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:12px;}
-  .connector-card{background:var(--card); border-radius:10px; padding:14px; display:flex; align-items:center; gap:12px;}
+  .connector-card{background:var(--card); border-radius:10px; padding:14px; display:flex; align-items:center; gap:12px; min-width:0; overflow:hidden;}
   .connector-card .c-icon{width:36px; height:36px; border-radius:9px; background:var(--subhead); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0;}
-  .connector-card .c-name{font-size:14px; font-weight:700; color:var(--subhead); margin:0;}
-  .connector-card .c-status{font-size:12px; margin:2px 0 0;}
+  .connector-card .c-mid{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; overflow:hidden;}
+  .connector-card .c-name{font-size:14px; font-weight:700; color:var(--subhead); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .connector-card .c-status{font-size:12px; margin:2px 0 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .connector-card .c-status.connected{color:#27500A;}
   .connector-card .c-status.notconnected{color:var(--text-muted);}
-  .connector-card button{margin-left:auto; flex-shrink:0;}
+  .connector-card button{margin-left:auto; flex-shrink:0; white-space:nowrap; padding:8px 14px; font-size:13px;}
   .connector-fence{height:4px; border-radius:2px; margin:0 0 14px 0; background:var(--border); transition:background .3s, box-shadow .3s, opacity .3s;}
   .connector-fence.fence-ok{background:#27500A; box-shadow:0 0 6px rgba(39,80,10,.35);}
   .connector-fence.fence-warn{background:#EF9F27; box-shadow:0 0 10px rgba(239,159,39,.6); animation:fencePulse 1.2s ease-in-out infinite;}
@@ -2047,7 +2048,7 @@ function renderConnectBody(subview){
   body.innerHTML = `${fenceHtml}<div class="connector-grid">${list.map(c=>`
     <div class="connector-card">
       <div class="c-icon">${c.n.slice(0,2).toUpperCase()}</div>
-      <div><p class="c-name">${c.n}</p><p class="c-status ${c.c?'connected':'notconnected'}">${c.c?'● Connected':'○ Not connected'}</p></div>
+      <div class="c-mid"><p class="c-name">${c.n}</p><p class="c-status ${c.c?'connected':'notconnected'}">${c.c?'● Connected':'○ Not connected'}</p></div>
       <button class="btn ${c.c?'btn-ghost':'btn-primary'}" onclick="alert('${c.c?'Manage':'Connect'} ${c.n}')">${c.c?'Manage':'Connect'}</button>
     </div>`).join('')}</div>`;
 }
