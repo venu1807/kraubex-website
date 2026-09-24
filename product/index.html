@@ -617,6 +617,26 @@
   .wf-node-label{font-size:13.5px; font-weight:700; color:var(--subhead); line-height:1.3;}
   .wf-arrow{width:34px; height:2px; background:var(--subhead); flex-shrink:0; position:relative;}
   .wf-arrow::after{content:''; position:absolute; right:-1px; top:50%; width:0; height:0; transform:translateY(-50%); border-top:6px solid transparent; border-bottom:6px solid transparent; border-left:8px solid var(--subhead);}
+  .wf-node{cursor:pointer;}
+  .wf-node:hover{box-shadow:0 4px 12px rgba(0,0,0,.1); transform:translateY(-1px);}
+  .wf-branch-wrap{display:flex; gap:16px; align-items:flex-start; margin:0 8px; flex-shrink:0;}
+  .wf-branch{background:var(--bg); border:1px dashed var(--border); border-radius:10px; padding:12px 10px 10px; min-width:190px; position:relative;}
+  .wf-branch-label{position:absolute; top:-8px; left:12px; font-size:10px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; padding:2px 8px; border-radius:10px; background:var(--card); border:1px solid var(--border);}
+  .wf-branch-label.yes{background:#EAF3DE; color:#27500A; border-color:#C5E0A8;}
+  .wf-branch-label.no{background:#FCEBEB; color:#791F1F; border-color:#F7C1C1;}
+  .wf-branch-nodes{display:flex; align-items:center; gap:0;}
+  .wf-merge-dot{width:10px; height:10px; border-radius:50%; background:var(--subhead); flex-shrink:0; margin:0 4px;}
+  .wf-node-detail-overlay{position:fixed; inset:0; background:rgba(0,20,35,.45); z-index:75; display:none; align-items:center; justify-content:center; padding:20px;}
+  .wf-node-detail-overlay.show{display:flex;}
+  .wf-node-detail-modal{background:var(--card); border-radius:12px; width:480px; max-width:92vw; max-height:88vh; overflow-y:auto; box-shadow:0 16px 40px rgba(0,0,0,.22);}
+  .wf-node-detail-head{display:flex; align-items:center; gap:12px; padding:18px 20px; border-bottom:1px solid var(--border);}
+  .wf-node-detail-head .wf-node-icon{width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0; margin:0;}
+  .wf-node-detail-body{padding:18px 20px;}
+  .wf-node-detail-row{display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--bg); font-size:13px;}
+  .wf-node-detail-row:last-child{border-bottom:none;}
+  .wf-node-detail-row span:first-child{color:var(--text-muted);}
+  .wf-node-detail-row span:last-child{color:var(--subhead); font-weight:600; text-align:right; max-width:62%;}
+  .wf-node-detail-desc{font-size:13px; color:var(--subhead); line-height:1.5; margin:10px 0; background:var(--bg); padding:10px 12px; border-radius:8px;}
   .wf-palette-wrap{border-top:1px solid var(--border); background:var(--bg); padding:14px 20px; max-height:220px; overflow-y:auto;}
   .wf-palette-hint{font-size:11px; color:var(--text-muted); margin:0 0 10px;}
   .wf-palette{display:flex; flex-direction:column; gap:10px;}
@@ -1080,6 +1100,20 @@
       <span><i style="background:#378ADD;"></i>Action</span>
       <span><i style="background:#D4537E;"></i>Human in the loop</span>
     </div>
+  </div>
+</div>
+
+<div class="wf-node-detail-overlay" id="wfNodeDetailOverlay" onclick="if(event.target===this) closeWfNodeDetail()">
+  <div class="wf-node-detail-modal">
+    <div class="wf-node-detail-head">
+      <div class="wf-node-icon" id="wfNodeDetailIcon"></div>
+      <div>
+        <h3 id="wfNodeDetailLabel" style="margin:0; font-size:15px; font-weight:700; color:var(--subhead);"></h3>
+        <p id="wfNodeDetailSub" style="margin:2px 0 0; font-size:12px; color:var(--text-muted);"></p>
+      </div>
+      <button class="wf-close" onclick="closeWfNodeDetail()" aria-label="Close" style="margin-left:auto;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="wf-node-detail-body" id="wfNodeDetailBody"></div>
   </div>
 </div>
 
@@ -1902,55 +1936,70 @@ function renderObservabilityBody(body){
 
 const workflows = [
   {name:'PO auto-approval under €5K', dept:'Procurement', status:'Active', lastRun:'2h ago', nodes:[
-    {type:'trigger', label:'New PO created', sub:'Trigger'},
-    {type:'condition', label:'Amount < €5,000?', sub:'Condition'},
-    {type:'agent', label:'Purchase Agent', sub:'Validate PO against policy'},
-    {type:'action', label:'Auto-approve PO', sub:'Action'},
-    {type:'human', label:'Marcus Weber', sub:'Human review if ≥ €5,000'},
-    {type:'action', label:'Notify requester', sub:'Action'},
+    {type:'trigger', label:'New PO created', sub:'Trigger', detail:'Fires when a PO is created in SAP/Dynamics. Filters: dept=Procurement.', owner:'System', config:'Event PO.created • Dept = Procurement'},
+    {type:'condition', label:'Amount < €5,000?', sub:'Condition', detail:'Checks PO total against auto-approval threshold. Evaluates PO.amount < 5000.', config:'Expression: PO.amount < 5000 • Threshold = €5,000', branches:{
+      yes: [
+        {type:'agent', label:'Purchase Agent', sub:'Validate PO against policy', detail:'Agent validates vendor, budget, tax and compliance rules.', owner:'Purchase Agent', config:'Policy: Procurement-P01 • Budget check: yes'},
+        {type:'action', label:'Auto-approve PO', sub:'Action', detail:'Posts approval to ERP and releases PO for fulfillment.', config:'ERP API: PO.approve • Notify: requester'}
+      ],
+      no: [
+        {type:'human', label:'Marcus Weber', sub:'Human review if ≥ €5,000', detail:'Finance manager reviews high-value POs over threshold.', owner:'Marcus Weber • Finance', config:'SLA: 24h • Approval required'}
+      ]
+    }},
+    {type:'action', label:'Notify requester', sub:'Action', detail:'Sends notification with approval outcome and next steps.', config:'Channel: Email + Teams • Template: PO_Notify'},
   ]},
   {name:'Supplier onboarding', dept:'Procurement', status:'Active', lastRun:'1d ago', nodes:[
-    {type:'trigger', label:'New supplier submitted', sub:'Trigger'},
-    {type:'agent', label:'Supplier Intelligence Agent', sub:'Gather company data'},
-    {type:'agent', label:'Supplier Risk Agent', sub:'Run risk screening'},
-    {type:'condition', label:'Risk score acceptable?', sub:'Condition'},
-    {type:'human', label:'Sarah Chen', sub:'Approves new supplier'},
-    {type:'action', label:'Add to approved suppliers', sub:'Action'},
+    {type:'trigger', label:'New supplier submitted', sub:'Trigger', detail:'Supplier intake form submitted via portal.', owner:'System', config:'Source: Supplier Portal • Form: Onboard_v2'},
+    {type:'agent', label:'Supplier Intelligence Agent', sub:'Gather company data', detail:'Collects firmographic, certifications, and references.', owner:'Supplier Intelligence Agent', config:'Sources: Dun & Bradstreet, Web, ERP'},
+    {type:'agent', label:'Supplier Risk Agent', sub:'Run risk screening', detail:'Scores financial, compliance, geo and ESG risk.', owner:'Supplier Risk Agent', config:'Model: Risk-v3 • Threshold: 65'},
+    {type:'condition', label:'Risk score acceptable?', sub:'Condition', detail:'Branches on risk score. <65 = auto-reject path.', config:'Condition: risk.score >= 65', branches:{
+      yes: [
+        {type:'human', label:'Sarah Chen', sub:'Approves new supplier', detail:'Category manager approves low-risk suppliers.', owner:'Sarah Chen • Procurement', config:'SLA: 48h'},
+        {type:'action', label:'Add to approved suppliers', sub:'Action', detail:'Creates supplier record and invites to RFQ.', config:'ERP: Supplier.create • Notify: onboarding'}
+      ],
+      no: [
+        {type:'action', label:'Auto-reject supplier', sub:'Action', detail:'Sends rejection with reason and re-apply guidance.', owner:'System', config:'Template: Reject_HighRisk'},
+        {type:'human', label:'David Schulz', sub:'Review rejected case', detail:'Risk owner reviews high-risk rejections for audit.', owner:'David Schulz • Risk', config:'Review: post-reject audit'}
+      ]
+    }},
   ]},
   {name:'Invoice 3-way match', dept:'Finance', status:'Active', lastRun:'35m ago', nodes:[
-    {type:'trigger', label:'Invoice received', sub:'Trigger'},
-    {type:'agent', label:'Finance Agent', sub:'Match invoice, PO, and GRN'},
-    {type:'condition', label:'All three match?', sub:'Condition'},
-    {type:'action', label:'Schedule payment', sub:'Action'},
-    {type:'human', label:'Marcus Weber', sub:'Reviews flagged discrepancy'},
+    {type:'trigger', label:'Invoice received', sub:'Trigger', detail:'Inbound invoice via email or EDI.', owner:'System', config:'Channel: Email/EDI • Parse: OCR'},
+    {type:'agent', label:'Finance Agent', sub:'Match invoice, PO, and GRN', detail:'Validates price, quantity and receipt against PO/GRN.', owner:'Finance Agent', config:'Match tolerance: 2% / Qty exact'},
+    {type:'condition', label:'All three match?', sub:'Condition', detail:'Branches on 3-way match result.', config:'Rule: invoice==PO==GRN', branches:{
+      yes: [{type:'action', label:'Schedule payment', sub:'Action', detail:'Schedules payment per terms and notifies AP.', owner:'System', config:'Terms: Net 30 • Auto-pay'}],
+      no: [{type:'human', label:'Marcus Weber', sub:'Reviews flagged discrepancy', detail:'Finance reviews mismatches and resolves.', owner:'Marcus Weber • Finance', config:'SLA: 24h • Escalation: CFO if >€10K'}]
+    }},
   ]},
   {name:'Contract renewal alert', dept:'Legal & Contracts', status:'Scheduled', lastRun:'—', nodes:[
-    {type:'trigger', label:'90 days before expiry', sub:'Scheduled trigger'},
-    {type:'agent', label:'Contract Life Cycle Management Agent', sub:'Review contract terms'},
-    {type:'action', label:'Draft renewal request', sub:'Action'},
-    {type:'human', label:'Elena Fischer', sub:'Reviews and signs off'},
-    {type:'action', label:'Notify contract owner', sub:'Action'},
+    {type:'trigger', label:'90 days before expiry', sub:'Scheduled trigger', detail:'Scheduled check scans contracts 90 days before end date.', owner:'System', config:'Cron: 0 9 * * * • Lookahead: 90d'},
+    {type:'agent', label:'Contract Life Cycle Management Agent', sub:'Review contract terms', detail:'Analyzes terms, pricing, and renewal clauses.', owner:'Contract Life Cycle Management Agent', config:'Model: CLM-v2 • Sources: Contracts DB'},
+    {type:'action', label:'Draft renewal request', sub:'Action', detail:'Generates renewal draft for legal review.', owner:'System', config:'Template: Renewal_Request_v1'},
+    {type:'human', label:'Elena Fischer', sub:'Reviews and signs off', detail:'Legal counsel reviews and approves draft.', owner:'Elena Fischer • Legal', config:'SLA: 5 days • Sign-off required'},
+    {type:'action', label:'Notify contract owner', sub:'Action', detail:'Notifies owner of renewal status.', owner:'System', config:'Channel: Email • CC: Legal'},
   ]},
   {name:'Candidate screening', dept:'Human Resources', status:'Draft', lastRun:'—', nodes:[
-    {type:'trigger', label:'New application received', sub:'Trigger'},
-    {type:'agent', label:'Recruiting Agent', sub:'Screen resume against role'},
-    {type:'condition', label:'Meets minimum criteria?', sub:'Condition'},
-    {type:'human', label:'Nadia Hoffmann', sub:'Conducts interview'},
-    {type:'action', label:'Send rejection email', sub:'Action'},
+    {type:'trigger', label:'New application received', sub:'Trigger', detail:'ATS event when candidate applies.', owner:'System', config:'ATS: Workday • Event: Application.created'},
+    {type:'agent', label:'Recruiting Agent', sub:'Screen resume against role', detail:'Screens CV against JD using LLM scoring.', owner:'Recruiting Agent', config:'Model: Recruit-v1 • Threshold: 70'},
+    {type:'condition', label:'Meets minimum criteria?', sub:'Condition', detail:'Pass/fail on screening score.', config:'Threshold: score >= 70', branches:{
+      yes: [{type:'human', label:'Nadia Hoffmann', sub:'Conducts interview', detail:'Hiring manager interviews qualified candidate.', owner:'Nadia Hoffmann • HR', config:'Stage: Interview • Calendar: auto-schedule'}],
+      no: [{type:'action', label:'Send rejection email', sub:'Action', detail:'Sends polite rejection with feedback.', owner:'System', config:'Template: Reject_Candidate'}]
+    }},
   ]},
   {name:'Quarterly ESG report', dept:'ESG & Sustainability', status:'Completed', lastRun:'3d ago', nodes:[
-    {type:'trigger', label:'Quarter end', sub:'Scheduled trigger'},
-    {type:'agent', label:'Sustainability Reporting Agent', sub:'Compile emissions & metrics'},
-    {type:'agent', label:'Procurement Analytics Agent', sub:'Add spend-based ESG data'},
-    {type:'action', label:'Generate report draft', sub:'Action'},
-    {type:'human', label:'Fatima Al-Sayed', sub:'Signs off on final report'},
+    {type:'trigger', label:'Quarter end', sub:'Scheduled trigger', detail:'Fires at quarter-end close.', owner:'System', config:'Cron: 0 0 1 */3 *'},
+    {type:'agent', label:'Sustainability Reporting Agent', sub:'Compile emissions & metrics', detail:'Aggregates carbon, waste, water metrics.', owner:'Sustainability Reporting Agent', config:'Sources: ESG DB, IoT'},
+    {type:'agent', label:'Procurement Analytics Agent', sub:'Add spend-based ESG data', detail:'Adds supplier spend ESG weighting.', owner:'Procurement Analytics Agent', config:'Model: ESG-Spend-v1'},
+    {type:'action', label:'Generate report draft', sub:'Action', detail:'Renders PDF draft with charts.', owner:'System', config:'Template: ESG_Q_Report'},
+    {type:'human', label:'Fatima Al-Sayed', sub:'Signs off on final report', detail:'CSO reviews and signs final ESG report.', owner:'Fatima Al-Sayed • ESG', config:'Sign-off: required • Publish: intranet'},
   ]},
   {name:'Vendor risk re-score', dept:'Risk', status:'Failed', lastRun:'6h ago', nodes:[
-    {type:'trigger', label:'Weekly schedule', sub:'Scheduled trigger'},
-    {type:'agent', label:'Supplier Risk Agent', sub:'Re-score all active vendors'},
-    {type:'condition', label:'Score dropped significantly?', sub:'Condition'},
-    {type:'human', label:'David Schulz', sub:'Alerted as category manager'},
-    {type:'action', label:'Log to risk register', sub:'Action'},
+    {type:'trigger', label:'Weekly schedule', sub:'Scheduled trigger', detail:'Weekly batch re-scores all active vendors.', owner:'System', config:'Cron: 0 6 * * 1'},
+    {type:'agent', label:'Supplier Risk Agent', sub:'Re-score all active vendors', detail:'Re-runs risk models for active supplier base.', owner:'Supplier Risk Agent', config:'Batch: all active • Model: Risk-v3'},
+    {type:'condition', label:'Score dropped significantly?', sub:'Condition', detail:'Flags vendors with >15% drop.', config:'Condition: drop > 15%', branches:{
+      yes: [{type:'human', label:'David Schulz', sub:'Alerted as category manager', detail:'Category manager investigates flagged vendor.', owner:'David Schulz • Risk', config:'Priority: High • SLA: 12h'}, {type:'action', label:'Log to risk register', sub:'Action', detail:'Logs finding to risk register and notifies compliance.', owner:'System', config:'Register: Risk_Log • Notify: Compliance'}],
+      no: [{type:'action', label:'Update risk dashboard', sub:'Action', detail:'Updates dashboard with latest scores, no alert.', owner:'System', config:'Dashboard: Risk_Overview'}]
+    }},
   ]},
 ];
 function renderWorkflowsBody(subview){
@@ -2657,21 +2706,79 @@ function renderWfModalHead(){
   document.getElementById('wfPaletteWrap').style.display = editingWfMode ? 'block' : 'none';
   if(editingWfMode) renderWfPalette();
 }
-function renderWfCanvas(){
-  const canvas = document.getElementById('wfCanvas');
-  canvas.innerHTML = editingNodes.map((n,i)=>`
-    ${i>0 ? '<div class="wf-arrow"></div>' : ''}
-    <div class="wf-node ${n.type}" ${editingWfMode ? `draggable="true" ondragstart="wfNodeDragStart(${i})" ondragover="wfDragOver(event)" ondrop="wfDrop(${i})" ondragend="wfDragEnd()"` : ''}>
-      ${editingWfMode ? `<svg class="wf-node-remove" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="removeWfNode(${i})"><path d="M6 6l12 12M18 6L6 18"/></svg>` : ''}
+function wfNodeHtml(n, i, isBranch, branchKey, branchIdx){
+  const clickHandler = isBranch ? `onclick="openWfBranchNodeDetail(${i},'${branchKey}',${branchIdx})"` : `onclick="openWfNodeDetail(${i})"`;
+  const removeHandler = isBranch ? `onclick="event.stopPropagation(); removeWfBranchNode(${i},'${branchKey}',${branchIdx})"` : `onclick="event.stopPropagation(); removeWfNode(${i})"`;
+  const dragAttrs = (!isBranch && editingWfMode) ? `draggable="true" ondragstart="wfNodeDragStart(${i})" ondragover="wfDragOver(event)" ondrop="wfDrop(${i})" ondragend="wfDragEnd()"` : '';
+  return `<div class="wf-node ${n.type}" ${dragAttrs} ${clickHandler}>
+      ${editingWfMode ? `<svg class="wf-node-remove" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ${removeHandler}><path d="M6 6l12 12M18 6L6 18"/></svg>` : ''}
       <div class="wf-node-icon">${wfNodeIcon(n.type)}</div>
       <p class="wf-node-type">${n.sub}</p>
       <p class="wf-node-label">${n.label}</p>
-    </div>
-  `).join('') + (editingWfMode ? `
+    </div>`;
+}
+function renderWfCanvas(){
+  const canvas = document.getElementById('wfCanvas');
+  const arrow = '<div class="wf-arrow"></div>';
+  canvas.innerHTML = editingNodes.map((n,i)=>{
+    let html = `${i>0 ? arrow : ''}${wfNodeHtml(n,i,false)}`;
+    if(n.branches){
+      const yesNodes = n.branches.yes || [];
+      const noNodes = n.branches.no || [];
+      html += `${arrow}<div class="wf-branch-wrap">
+        <div class="wf-branch">
+          <span class="wf-branch-label yes">Yes</span>
+          <div class="wf-branch-nodes">${yesNodes.map((bn,bi)=>`${bi>0?arrow:''}${wfNodeHtml(bn,i,true,'yes',bi)}`).join('')}</div>
+        </div>
+        <div class="wf-branch">
+          <span class="wf-branch-label no">No</span>
+          <div class="wf-branch-nodes">${noNodes.map((bn,bi)=>`${bi>0?arrow:''}${wfNodeHtml(bn,i,true,'no',bi)}`).join('')}</div>
+        </div>
+      </div><div class="wf-merge-dot" title="Merge"></div>`;
+    }
+    return html;
+  }).join('') + (editingWfMode ? `
     <div class="wf-arrow"></div>
     <div class="wf-node-add" ondragover="wfDragOver(event)" ondrop="wfDropAtEnd()" title="Drop here to add at the end">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
     </div>` : '');
+}
+
+function openWfNodeDetail(i){
+  const n = editingNodes[i];
+  if(!n) return;
+  showWfNodeDetail(n);
+}
+function openWfBranchNodeDetail(parentIdx, branchKey, branchIdx){
+  const parent = editingNodes[parentIdx];
+  if(!parent || !parent.branches || !parent.branches[branchKey]) return;
+  const n = parent.branches[branchKey][branchIdx];
+  if(!n) return;
+  showWfNodeDetail(n);
+}
+function showWfNodeDetail(n){
+  const colorMap = {trigger:'#1D9E75',condition:'#EF9F27',agent:'var(--headline)',action:'#378ADD',human:'#D4537E'};
+  document.getElementById('wfNodeDetailIcon').innerHTML = wfNodeIcon(n.type);
+  document.getElementById('wfNodeDetailIcon').style.background = colorMap[n.type] || '#378ADD';
+  document.getElementById('wfNodeDetailLabel').textContent = n.label;
+  document.getElementById('wfNodeDetailSub').textContent = n.sub + (n.owner ? ' • ' + n.owner : '');
+  document.getElementById('wfNodeDetailBody').innerHTML = `
+    <div class="wf-node-detail-desc">${n.detail || 'No additional details for this step.'}</div>
+    ${n.owner ? `<div class="wf-node-detail-row"><span>Owner</span><span>${n.owner}</span></div>` : ''}
+    ${n.config ? `<div class="wf-node-detail-row"><span>Config</span><span>${n.config}</span></div>` : ''}
+    <div class="wf-node-detail-row"><span>Type</span><span style="text-transform:capitalize;">${n.type}</span></div>
+    <div class="wf-node-detail-row"><span>Category</span><span>${n.sub}</span></div>
+  `;
+  document.getElementById('wfNodeDetailOverlay').classList.add('show');
+}
+function closeWfNodeDetail(){
+  document.getElementById('wfNodeDetailOverlay').classList.remove('show');
+}
+function removeWfBranchNode(parentIdx, branchKey, branchIdx){
+  const parent = editingNodes[parentIdx];
+  if(!parent || !parent.branches || !parent.branches[branchKey]) return;
+  parent.branches[branchKey].splice(branchIdx,1);
+  renderWfCanvas();
 }
 
 const wfPaletteTemplates = {
