@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Kraubex AI - Your Multi Agent Procurement System</title>
+<title>Kraubex — Supplier contract management</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -83,7 +83,13 @@
 
   .assign-overlay{position:fixed; inset:0; background:rgba(0,20,35,.4); z-index:60; display:none; align-items:center; justify-content:center;}
   .assign-overlay.show{display:flex;}
-  .assign-modal{background:var(--card); border-radius:12px; width:400px; max-width:90vw; padding:20px; box-shadow:0 12px 32px rgba(0,0,0,.18);}
+  .assign-modal{background:var(--card); border-radius:12px; width:460px; max-width:90vw; max-height:86vh; overflow-y:auto; padding:20px; box-shadow:0 12px 32px rgba(0,0,0,.18);}
+  .agent-instr{background:var(--bg); border-radius:8px; padding:12px 14px; margin-bottom:16px;}
+  .agent-instr h4{font-size:12.5px; font-weight:700; color:var(--subhead); margin:0 0 8px;}
+  .agent-instr .instr-label{font-size:11px; font-weight:700; color:var(--headline); margin:10px 0 4px;}
+  .agent-instr .instr-label:first-of-type{margin-top:0;}
+  .agent-instr ul{margin:0; padding-left:18px; font-size:12px; color:var(--subhead); line-height:1.6;}
+  .agent-instr .instr-example{background:var(--card); border-left:3px solid var(--headline); border-radius:0 6px 6px 0; padding:8px 10px; font-size:12px; color:var(--text-muted); font-style:italic; line-height:1.5;}
   .assign-modal h3{font-size:17px; font-weight:700; color:var(--subhead); margin:0 0 4px;}
   .assign-modal .assign-sub{font-size:13px; color:var(--text-muted); margin:0 0 16px;}
   .assign-field label{font-size:13px; font-weight:500; color:var(--subhead); display:block; margin-bottom:6px;}
@@ -199,8 +205,8 @@
   .cd-rating-text b{color:var(--subhead);}
   .cd-panels{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px;}
   .cd-panel{border-radius:10px; padding:16px;}
-  .cd-panel.overview{background:#FCEBEB;}
-  .cd-panel.contact{background:#E6EEF2;}
+  .cd-panel.overview{background:var(--bg);}
+  .cd-panel.contact{background:var(--bg);}
   .cd-panel h4{font-size:15px; font-weight:700; margin:0 0 12px; text-align:center;}
   .cd-panel.overview h4{color:var(--headline);}
   .cd-panel.contact h4{color:var(--subhead);}
@@ -214,9 +220,9 @@
   .cd-link{color:var(--headline); text-decoration:underline;}
   .cd-accordion{border:1px solid var(--border); border-radius:8px; margin-bottom:10px; overflow:hidden;}
   .cd-acc-head{display:flex; align-items:center; justify-content:space-between; padding:11px 14px; cursor:pointer; font-size:14px; font-weight:700;}
-  .cd-acc-head.products{background:#EAF3DE; color:#27500A;}
-  .cd-acc-head.certs{background:#FAEEDA; color:#633806;}
-  .cd-acc-head.notes{background:#EEEDFE; color:#3C3489;}
+  .cd-acc-head.products{background:var(--bg); color:var(--subhead);}
+  .cd-acc-head.certs{background:var(--bg); color:var(--subhead);}
+  .cd-acc-head.notes{background:var(--bg); color:var(--subhead);}
   .cd-acc-head svg.chev{transition:transform .15s ease;}
   .cd-accordion.open .cd-acc-head svg.chev{transform:rotate(180deg);}
   .cd-acc-body{display:none; padding:12px 14px; font-size:13px; color:var(--subhead);}
@@ -246,9 +252,9 @@
   .doc-row-actions{display:flex; align-items:center; gap:6px; flex-shrink:0;}
   .doc-row-actions svg{cursor:pointer; color:var(--text-muted);}
   .doc-row-actions svg:hover{color:var(--headline);}
-  .award-card{background:#EEEDFE; border-radius:8px; padding:14px 10px; text-align:center; font-size:13px; color:#3C3489;}
+  .award-card{background:var(--card); border:1px solid var(--border); border-radius:8px; padding:14px 10px; text-align:center; font-size:13px; color:var(--subhead);}
   .award-card .a-title{font-weight:700; margin-bottom:2px;}
-  .photo-card{background:#EEEDFE; border-radius:8px; padding:14px; text-align:center; font-size:13px; font-weight:600; color:#3C3489;}
+  .photo-card{background:var(--card); border:1px solid var(--border); border-radius:8px; padding:14px; text-align:center; font-size:13px; font-weight:600; color:var(--subhead);}
 
   .up-overlay{position:fixed; inset:0; background:rgba(0,20,35,.45); z-index:80; display:none; align-items:flex-start; justify-content:center; padding:40px 16px; overflow-y:auto;}
   .up-overlay.show{display:flex;}
@@ -475,15 +481,18 @@
   .dept-card h5{font-size:14px; font-weight:700; margin:0 0 3px; color:var(--subhead);}
   .dept-card p{font-size:12px; color:var(--text-muted); margin:0;}
   .dept-card .dept-count{font-size:11px; color:var(--headline); font-weight:600; margin-top:6px;}
+  .usage-bar{width:80px; height:7px; border-radius:4px; background:var(--bg); overflow:hidden; margin:0 auto;}
+  .usage-bar-fill{height:100%; background:#27500A; border-radius:4px;}
+  .usage-bar-fill.near{background:#EF9F27;}
+  .usage-bar-fill.over{background:#791F1F;}
 
   .connector-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:12px;}
   .connector-card{background:var(--card); border-radius:10px; padding:14px; display:flex; align-items:center; gap:12px;}
   .connector-card .c-icon{width:36px; height:36px; border-radius:9px; background:var(--subhead); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0;}
-  .connector-card .c-mid{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
-  .connector-card .c-name{font-size:14px; font-weight:700; color:var(--subhead); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .connector-card .c-status{font-size:12px; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .connector-card .c-name{font-size:14px; font-weight:700; color:var(--subhead); margin:0;}
+  .connector-card .c-status{font-size:12px; margin:2px 0 0;}
   .connector-card .c-status.connected{color:#27500A;}
-  .connector-card .c-status.notconnected{color:#B3261E;}
+  .connector-card .c-status.notconnected{color:var(--text-muted);}
   .connector-card button{margin-left:auto; flex-shrink:0;}
 
   .appr-card{background:var(--card); border-radius:10px; padding:14px; margin-bottom:10px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
@@ -602,7 +611,7 @@
   <!-- MAIN SIDEBAR -->
   <div class="main-sidebar" id="mainSidebar">
     <div class="ms-header">
-      <a href="../" class="logo-dot" id="logoDot" title="Go to Kraubex home"></a>
+      <div class="logo-dot" id="logoDot" onclick="document.getElementById('logoFileInput').click()" title="Change logo"></div>
       <input type="file" id="logoFileInput" accept="image/*" style="display:none" onchange="handleLogoUpload(event)">
       <span>Kraubex AI</span>
       <button class="sb-toggle" onclick="toggleMain()" aria-label="Collapse main sidebar">
@@ -611,7 +620,7 @@
     </div>
     <ul class="nav-list">
       <li class="nav-item active" id="navHome" onclick="switchMainSection('home', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7M5 10v9h5v-6h4v6h5v-9"/></svg><span>Home</span></li>
-      <li class="nav-item" id="navSupplierSearch" onclick="switchMainSection('supplier-search', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg><span>Supplier search</span></li>
+      <li class="nav-item" id="navSupplierSearch" onclick="switchMainSection('supplier-search', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg><span>Supplier Arena</span></li>
       <li class="nav-item" id="navAIWorkforce" onclick="switchMainSection('ai-workforce', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg><span>AI Workforce</span></li>
       <li class="nav-item" id="navWorkflows" onclick="switchMainSection('workflows', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="6" r="2.2"/><circle cx="19" cy="6" r="2.2"/><circle cx="12" cy="18" r="2.2"/><path d="M6.8 7.6L11 16M17.2 7.6L13 16M7.2 6h9.6"/></svg><span>Agentic Workflows</span></li>
       <li class="nav-item" id="navKnowledge" onclick="switchMainSection('knowledge', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5.5A2.5 2.5 0 016.5 3H20v15H6.5A2.5 2.5 0 004 15.5z"/><path d="M4 15.5A2.5 2.5 0 006.5 18H20"/></svg><span>Knowledge</span></li>
@@ -662,7 +671,7 @@
     <div id="subSidebarSupplierSearch">
     <div class="ss-head">
       <div>
-        <p class="ss-title">Suppliers search</p>
+        <p class="ss-title">Supplier Arena</p>
         <p class="ss-sub">Select a view</p>
       </div>
     </div>
@@ -674,6 +683,14 @@
     <div class="feature active" onclick="switchFeature('contracts', this)">
       <div class="feature-top"><span class="feature-name">Contracts</span></div>
       <p class="feature-desc">Location, industry, certification</p>
+    </div>
+    <div class="feature" onclick="switchFeature('rfq', this)">
+      <div class="feature-top"><span class="feature-name">RFQ/RFI</span></div>
+      <p class="feature-desc">Requests for quotation and information</p>
+    </div>
+    <div class="feature" onclick="switchFeature('po', this)">
+      <div class="feature-top"><span class="feature-name">Purchase orders</span></div>
+      <p class="feature-desc">Track and manage purchase orders</p>
     </div>
     <div class="feature" onclick="switchFeature('directory', this)">
       <div class="feature-top"><span class="feature-name">Supplier directory</span></div>
@@ -708,7 +725,7 @@
     <div class="page" id="page-contracts">
     <div class="page-head">
       <div>
-        <h1>Multi Agent System</h1>
+        <h1>Supplier contract management</h1>
         <p>Manage supplier contracts, renewals, and compliance</p>
       </div>
       <div style="display:flex; gap:8px;">
@@ -772,6 +789,54 @@
       </table>
     </div>
     <p class="hint">Select one or more contracts to assign them to an agent or run a multi-contract analysis.</p>
+    </div>
+
+    <div class="page" id="page-rfq">
+      <div class="page-head">
+        <div>
+          <h1>RFQ/RFI</h1>
+          <p>Requests for quotation and requests for information</p>
+        </div>
+        <button class="btn btn-primary" onclick="createNewRfq()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          New RFQ/RFI
+        </button>
+      </div>
+      <div class="stats" id="rfqStatsRow"></div>
+      <div class="tabs" id="rfqTabs"></div>
+      <div class="toolbar">
+        <input class="search" id="rfqSearchInput" placeholder="Search by title or supplier..." oninput="renderRfqTable(rfqActiveTab)">
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Title</th><th>Type</th><th>Suppliers invited</th><th>Status</th><th>Due date</th><th>Actions</th></tr></thead>
+          <tbody id="rfqTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="page" id="page-po">
+      <div class="page-head">
+        <div>
+          <h1>Purchase orders</h1>
+          <p>Track and manage purchase orders</p>
+        </div>
+        <button class="btn btn-primary" onclick="createNewPo()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          New purchase order
+        </button>
+      </div>
+      <div class="stats" id="poStatsRow"></div>
+      <div class="tabs" id="poTabs"></div>
+      <div class="toolbar">
+        <input class="search" id="poSearchInput" placeholder="Search by PO number or supplier..." oninput="renderPoTable(poActiveTab)">
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>PO number</th><th>Supplier</th><th>Category</th><th>Value</th><th>Status</th><th>Order date</th><th>Actions</th></tr></thead>
+          <tbody id="poTableBody"></tbody>
+        </table>
+      </div>
     </div>
 
     <div class="page" id="page-keyword">
@@ -991,6 +1056,7 @@
   <div class="assign-modal">
     <h3 id="assignTitle">Assign task to agent</h3>
     <p class="assign-sub">This agent will pick up the selected contract(s) and report back with results.</p>
+    <div class="agent-instr" id="agentInstructions"></div>
     <div class="assign-field">
       <label>Task type</label>
       <textarea id="assignTaskInput" rows="4"></textarea>
@@ -1204,7 +1270,7 @@
 
       <div class="cd-accordion" id="accProducts">
         <div class="cd-acc-head products" onclick="toggleAcc('accProducts')">
-          <span>🏭&nbsp; Products and services</span>
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="vertical-align:-2px; margin-right:5px;"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>Products and services</span>
           <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
         </div>
         <div class="cd-acc-body" id="cdProductsBody"></div>
@@ -1212,7 +1278,7 @@
 
       <div class="cd-accordion" id="accCerts">
         <div class="cd-acc-head certs" onclick="toggleAcc('accCerts')">
-          <span>🏅&nbsp; Certifications and compliance</span>
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="vertical-align:-2px; margin-right:5px;"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5L7 21l5-3 5 3-1.5-8.5"/></svg>Certifications and compliance</span>
           <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
         </div>
         <div class="cd-acc-body" id="cdCertsBody"></div>
@@ -1220,7 +1286,7 @@
 
       <div class="cd-accordion" id="accNotes">
         <div class="cd-acc-head notes" onclick="toggleAcc('accNotes')">
-          <span>📄&nbsp; Additional notes</span>
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="vertical-align:-2px; margin-right:5px;"><path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5"/><path d="M9 13h6M9 17h4"/></svg>Additional notes</span>
           <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
         </div>
         <div class="cd-acc-body">
@@ -1230,8 +1296,8 @@
       </div>
 
       <div class="cd-accordion" id="accReviews">
-        <div class="cd-acc-head" style="background:#E6EEF2; color:var(--subhead);" onclick="toggleAcc('accReviews')">
-          <span id="cdReviewsHeadLabel">⭐&nbsp; Reviews</span>
+        <div class="cd-acc-head" style="background:var(--bg); color:var(--subhead);" onclick="toggleAcc('accReviews')">
+          <span id="cdReviewsHeadLabel"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align:-2px; margin-right:5px;"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 16.9 5.8 20.3l1.6-6.8L2.2 8.9l6.9-.6z"/></svg>Reviews</span>
           <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
         </div>
         <div class="cd-acc-body">
@@ -1617,7 +1683,158 @@ function renderAIWorkforceBody(subview){
     const dept = departments.find(d=>deptSlug(d.name)===slug);
     if(!dept){ body.innerHTML=''; return; }
     body.innerHTML = dept.builtin ? procurementDeptHTML() : genericDeptHTML(dept);
+    return;
   }
+  if(subview==='usage'){
+    renderUsageCostBody(body);
+    return;
+  }
+  if(subview==='observability'){
+    renderObservabilityBody(body);
+    return;
+  }
+}
+
+const agentTokenLimits = {};
+function getAgentCostData(a){
+  const h = hashStr(a.name);
+  const tokensPerTask = 800 + (h % 1400);
+  const tokensUsed = a.tasks * tokensPerTask;
+  const costPer1k = 0.012;
+  const cost = (tokensUsed/1000) * costPer1k;
+  if(!(a.name in agentTokenLimits)) agentTokenLimits[a.name] = Math.round((tokensUsed * 1.4)/10000)*10000;
+  return {tokensUsed, cost, limit: agentTokenLimits[a.name]};
+}
+function renderUsageCostBody(body){
+  const rows = agents.filter(a=>a.group!=='domain').map(a=>{
+    const {tokensUsed, cost, limit} = getAgentCostData(a);
+    const pct = Math.min(100, Math.round((tokensUsed/limit)*100));
+    const over = tokensUsed > limit;
+    const near = !over && pct >= 80;
+    return {a, tokensUsed, cost, limit, pct, over, near};
+  });
+  const totalCost = rows.reduce((s,r)=>s+r.cost, 0);
+  const totalTokens = rows.reduce((s,r)=>s+r.tokensUsed, 0);
+  const totalTasks = rows.reduce((s,r)=>s+r.a.tasks, 0);
+  const overCount = rows.filter(r=>r.over).length;
+
+  body.innerHTML = `
+    <div class="kpi-strip">
+      <div class="stat"><p>Total cost (this month)</p><p>€${totalCost.toFixed(2)}</p></div>
+      <div class="stat"><p>Total tokens used</p><p>${(totalTokens/1000).toFixed(0)}K</p></div>
+      <div class="stat"><p>Total tasks run</p><p>${totalTasks}</p></div>
+      <div class="stat"><p>Agents over limit</p><p style="color:${overCount ? 'var(--headline)' : 'var(--subhead)'};">${overCount}</p></div>
+      <div class="stat"><p>Avg. cost / task</p><p>€${(totalCost/Math.max(totalTasks,1)).toFixed(3)}</p></div>
+    </div>
+    <p class="domain-eyebrow" style="padding:0;">Per-agent usage and token limits</p>
+    <div class="table-wrap">
+    <table><thead><tr><th>Agent</th><th>Tasks</th><th>Tokens used</th><th>Cost</th><th>Token limit</th><th>Usage</th><th>Status</th></tr></thead>
+    <tbody>${rows.map(r=>`
+      <tr>
+        <td style="text-align:left;">${r.a.name}</td>
+        <td>${r.a.tasks}</td>
+        <td>${(r.tokensUsed/1000).toFixed(1)}K</td>
+        <td>€${r.cost.toFixed(2)}</td>
+        <td>
+          <input type="number" class="filter-select" style="width:90px; text-align:center;" value="${r.limit}" step="10000" onchange="updateAgentLimit('${r.a.name.replace(/'/g,"\\'")}', this.value)">
+        </td>
+        <td>
+          <div class="usage-bar"><div class="usage-bar-fill ${r.over?'over':r.near?'near':''}" style="width:${r.pct}%;"></div></div>
+        </td>
+        <td><span class="tag ${r.over?'tag-expired':r.near?'tag-expiring':'tag-active'}">${r.over?'Over limit':r.near?'Near limit':'OK'}</span></td>
+      </tr>`).join('')}</tbody></table>
+    </div>
+    <p class="hint">Token limits are per agent, per month. Editing a limit updates the usage bar and status immediately.</p>`;
+}
+function updateAgentLimit(agentName, value){
+  const num = parseInt(value, 10);
+  if(!isNaN(num) && num > 0) agentTokenLimits[agentName] = num;
+  renderUsageCostBody(document.getElementById('secBody-ai-workforce'));
+}
+
+function getAgentHealthData(a){
+  const h = hashStr(a.name);
+  const successRate = 90 + (h % 95) / 10;
+  const avgLatency = 350 + (h % 1800);
+  const p95Latency = Math.round(avgLatency * (1.5 + (h % 5)/10));
+  const errors24h = h % 7;
+  const retries24h = h % 5;
+  const lastActiveMins = 1 + (h % 180);
+  const lastActive = lastActiveMins < 60 ? `${lastActiveMins}m ago` : `${Math.round(lastActiveMins/60)}h ago`;
+  let status = 'healthy';
+  if(successRate < 93 || errors24h >= 5) status = 'down';
+  else if(successRate < 97 || errors24h >= 2) status = 'degraded';
+  const trend = Array.from({length:7}, (_,i)=> 20 + ((h*(i+3)) % 80));
+  return {successRate, avgLatency, p95Latency, errors24h, retries24h, lastActive, status, trend};
+}
+const incidentTemplates = [
+  {agent:'Supplier Risk Agent', msg:'Rate limit exceeded (429) calling market data API', when:'2h ago'},
+  {agent:'Purchase Agent', msg:'Timeout calling ERP connector after 30s', when:'5h ago'},
+  {agent:'RFQ/RFP Agent', msg:'Retried 3x before succeeding', when:'9h ago'},
+  {agent:'Contract Life Cycle Management Agent', msg:'Document parsing failed — malformed PDF', when:'1d ago'},
+  {agent:'Procurement Compliance Agent', msg:'Elevated latency — model provider degraded', when:'1d ago'},
+  {agent:'Spend Intelligence Agent', msg:'Task cancelled — exceeded token budget', when:'2d ago'},
+];
+function renderObservabilityBody(body){
+  const skillAgents = agents.filter(a=>a.group!=='domain');
+  const rows = skillAgents.map(a => ({a, ...getAgentHealthData(a)}));
+  const avgSuccess = rows.reduce((s,r)=>s+r.successRate,0)/rows.length;
+  const avgLatency = Math.round(rows.reduce((s,r)=>s+r.avgLatency,0)/rows.length);
+  const totalErrors = rows.reduce((s,r)=>s+r.errors24h,0);
+  const healthyCount = rows.filter(r=>r.status==='healthy').length;
+  const degradedCount = rows.filter(r=>r.status==='degraded').length;
+  const downCount = rows.filter(r=>r.status==='down').length;
+  const overallTrend = Array.from({length:7}, (_,i)=> rows.reduce((s,r)=>s+r.trend[i],0));
+  const maxTrend = Math.max(...overallTrend);
+
+  const statusTagMap = {healthy:'tag-active', degraded:'tag-expiring', down:'tag-expired'};
+  const statusLabelMap = {healthy:'Healthy', degraded:'Degraded', down:'Down'};
+
+  body.innerHTML = `
+    <div class="kpi-strip">
+      <div class="stat"><p>Overall success rate</p><p>${avgSuccess.toFixed(1)}%</p></div>
+      <div class="stat"><p>Avg. latency</p><p>${avgLatency}ms</p></div>
+      <div class="stat"><p>Errors (24h)</p><p style="color:${totalErrors>5?'var(--headline)':'var(--subhead)'};">${totalErrors}</p></div>
+      <div class="stat"><p>Healthy / Degraded / Down</p><p style="font-size:15px;">${healthyCount} / ${degradedCount} / ${downCount}</p></div>
+      <div class="stat"><p>Uptime (30d)</p><p>99.7%</p></div>
+    </div>
+
+    <p class="domain-eyebrow" style="padding:0;">Task volume — last 7 days</p>
+    <div class="doc-box" style="margin-bottom:20px;">
+      <div style="display:flex; align-items:flex-end; gap:10px; height:90px; padding:0 4px;">
+        ${overallTrend.map((v,i)=>`
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;">
+            <div style="width:100%; max-width:28px; height:${Math.round((v/maxTrend)*70)}px; background:var(--headline); border-radius:4px 4px 0 0;"></div>
+            <span style="font-size:9.5px; color:var(--text-muted);">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <p class="domain-eyebrow" style="padding:0;">Per-agent health</p>
+    <div class="table-wrap" style="margin-bottom:20px;">
+      <table><thead><tr><th>Agent</th><th>Status</th><th>Success rate</th><th>Avg latency</th><th>P95 latency</th><th>Errors (24h)</th><th>Retries (24h)</th><th>Last active</th></tr></thead>
+      <tbody>${rows.map(r=>`
+        <tr>
+          <td style="text-align:left;">${r.a.name}</td>
+          <td><span class="tag ${statusTagMap[r.status]}">${statusLabelMap[r.status]}</span></td>
+          <td>${r.successRate.toFixed(1)}%</td>
+          <td>${r.avgLatency}ms</td>
+          <td>${r.p95Latency}ms</td>
+          <td style="color:${r.errors24h>2?'#791F1F':'var(--subhead)'};">${r.errors24h}</td>
+          <td>${r.retries24h}</td>
+          <td style="color:var(--text-muted);">${r.lastActive}</td>
+        </tr>`).join('')}</tbody></table>
+    </div>
+
+    <p class="domain-eyebrow" style="padding:0;">Recent incidents</p>
+    <div class="dept-list">
+      ${incidentTemplates.map(inc=>`
+        <div class="dept-card" style="cursor:default;">
+          <h5>${inc.agent}</h5>
+          <p>${inc.msg}</p>
+          <p class="dept-count" style="color:var(--text-muted);">${inc.when}</p>
+        </div>`).join('')}
+    </div>`;
 }
 
 const workflows = [
@@ -1707,17 +1924,85 @@ function createNewWorkflow(){
   openWorkflowTemplate(newWf.name, true);
 }
 
+const knowledgeFabricItems = [
+  {name:'Company', desc:'Org chart, policies, legal entities, and business configuration.'},
+  {name:'People & Organization', desc:'Employees, teams, roles, and reporting lines.'},
+  {name:'Products', desc:'Product catalog, specs, and lifecycle data.'},
+  {name:'Suppliers', desc:'Supplier profiles, certifications, and performance history.'},
+  {name:'Customers', desc:'Customer accounts, contracts, and account history.'},
+  {name:'Materials', desc:'Raw materials, specifications, and sourcing data.'},
+  {name:'Assets', desc:'Equipment, facilities, and maintenance records.'},
+  {name:'Contracts', desc:'Active and historical contracts across departments.'},
+  {name:'Projects', desc:'Project plans, milestones, and status.'},
+  {name:'Business Processes', desc:'Documented workflows and standard operating procedures.'},
+];
+const knowledgeSourceItems = [
+  {name:'Documents', desc:'PDFs, Word files, and scanned documents.'},
+  {name:'Databases', desc:'SQL and NoSQL databases connected via Connect.'},
+  {name:'ERP Data', desc:'SAP, Dynamics, and other ERP system records.'},
+  {name:'CRM Data', desc:'Salesforce and other CRM system records.'},
+  {name:'Emails', desc:'Indexed email threads relevant to procurement and operations.'},
+  {name:'SharePoint / M365', desc:'SharePoint sites, OneDrive files, and Teams content.'},
+  {name:'External Sources', desc:'Market data, regulatory feeds, and other external inputs.'},
+];
 function renderKnowledgeBody(subview){
   const body = document.getElementById('secBody-knowledge');
-  const items = ['Company','People & Organization','Products','Suppliers','Customers','Materials','Assets','Contracts','Projects','Business Processes'];
-  const sources = ['Documents','Databases','ERP Data','CRM Data','Emails','SharePoint / M365','External Sources'];
-  const list = subview==='sources' ? sources : items;
+
+  if(subview==='search'){
+    body.innerHTML = `
+      <div class="kw-card">
+        <label class="kw-label">Search the knowledge fabric</label>
+        <div class="kw-search-row"><input class="search" id="knowledgeSearchInput" placeholder="Search collections, sources, and entities..." oninput="renderKnowledgeSearchResults()"></div>
+      </div>
+      <div id="knowledgeSearchResults"></div>`;
+    renderKnowledgeSearchResults();
+    return;
+  }
+  if(subview==='ask'){
+    body.innerHTML = `
+      <div class="kw-card">
+        <label class="kw-label">Ask knowledge</label>
+        <div class="kw-search-row"><input class="search" id="knowledgeAskInput" placeholder="Ask a question about your company data..."><button class="btn btn-primary" onclick="askKnowledgeQuestion()">Ask</button></div>
+      </div>
+      <div id="knowledgeAskAnswer"></div>`;
+    return;
+  }
+  if(subview==='health'){
+    body.innerHTML = `
+      <div class="kpi-strip">
+        <div class="stat"><p>Collections indexed</p><p>${knowledgeFabricItems.length}/${knowledgeFabricItems.length}</p></div>
+        <div class="stat"><p>Sources connected</p><p>4/${knowledgeSourceItems.length}</p></div>
+        <div class="stat"><p>Freshness</p><p>92%</p></div>
+        <div class="stat"><p>Coverage gaps</p><p style="color:var(--headline);">2</p></div>
+      </div>
+      <p class="domain-eyebrow" style="padding:0;">Coverage gaps</p>
+      <div class="dept-list">
+        <div class="dept-card"><h5>Customers</h5><p>No source connected yet — CRM Data source is not linked.</p></div>
+        <div class="dept-card"><h5>Emails</h5><p>Last indexed 14 days ago — reconnect recommended.</p></div>
+      </div>`;
+    return;
+  }
+
+  const list = subview==='sources' ? knowledgeSourceItems : knowledgeFabricItems;
   body.innerHTML = `
-    <div class="kw-card">
-      <label class="kw-label">Ask knowledge</label>
-      <div class="kw-search-row"><input class="search" placeholder="Ask a question about your company data..."><button class="btn btn-primary">Ask</button></div>
-    </div>
-    <div class="dept-list">${list.map(k=>`<div class="dept-card"><h5>${k}</h5><p>${subview==='sources'?'Connected source':'Knowledge collection'}</p></div>`).join('')}</div>`;
+    <div class="dept-list">${list.map(k=>`<div class="dept-card"><h5>${k.name}</h5><p>${k.desc}</p></div>`).join('')}</div>`;
+}
+function renderKnowledgeSearchResults(){
+  const q = (document.getElementById('knowledgeSearchInput')?.value || '').toLowerCase().trim();
+  const el = document.getElementById('knowledgeSearchResults');
+  if(!q){ el.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">Start typing to search across knowledge collections and sources.</p>'; return; }
+  const all = [...knowledgeFabricItems.map(k=>({...k, kind:'Collection'})), ...knowledgeSourceItems.map(k=>({...k, kind:'Source'}))];
+  const matches = all.filter(k=>k.name.toLowerCase().includes(q) || k.desc.toLowerCase().includes(q));
+  el.innerHTML = matches.length ? `
+    <p class="domain-eyebrow" style="padding:0;">${matches.length} result${matches.length!==1?'s':''}</p>
+    <div class="dept-list">${matches.map(k=>`<div class="dept-card"><h5>${k.name} <span class="tag tag-cat" style="margin-left:6px;">${k.kind}</span></h5><p>${k.desc}</p></div>`).join('')}</div>
+  ` : '<p style="font-size:12px; color:var(--text-muted);">No matches.</p>';
+}
+function askKnowledgeQuestion(){
+  const q = document.getElementById('knowledgeAskInput').value.trim();
+  const el = document.getElementById('knowledgeAskAnswer');
+  if(!q){ el.innerHTML=''; return; }
+  el.innerHTML = `<div class="dept-card" style="cursor:default;"><h5>Answer</h5><p>Based on your knowledge fabric, here's what I found relevant to "${q}" — this would pull from connected collections and sources once fully wired up.</p></div>`;
 }
 
 function renderConnectBody(subview){
@@ -1729,11 +2014,10 @@ function renderConnectBody(subview){
     mcp: [{n:'Procurement MCP',c:true},{n:'Finance MCP',c:false},{n:'HR MCP',c:false},{n:'SAP MCP',c:true},{n:'CRM MCP',c:false},{n:'Custom MCP',c:false}],
   };
   const list = groups[subview] || groups.enterprise;
-  body.innerHTML = `
-  <div class="connector-grid">${list.map(c=>`
+  body.innerHTML = `<div class="connector-grid">${list.map(c=>`
     <div class="connector-card">
       <div class="c-icon">${c.n.slice(0,2).toUpperCase()}</div>
-      <div class="c-mid"><p class="c-name">${c.n}</p><p class="c-status ${c.c?'connected':'notconnected'}">${c.c?'● Connected':'○ Not connected'}</p></div>
+      <div><p class="c-name">${c.n}</p><p class="c-status ${c.c?'connected':'notconnected'}">${c.c?'● Connected':'○ Not connected'}</p></div>
       <button class="btn ${c.c?'btn-ghost':'btn-primary'}" onclick="alert('${c.c?'Manage':'Connect'} ${c.n}')">${c.c?'Manage':'Connect'}</button>
     </div>`).join('')}</div>`;
 }
@@ -2322,6 +2606,8 @@ const sectionConfig = {
     title:'AI Workforce', tagline:'All Main Agents and their Skill Agents', defaultSubview:'overview',
     sidebar:[
       {items:[{id:'overview', label:'Overview'}]},
+      {title:'USAGE & COST', items:[{id:'usage', label:'Usage & Cost'}]},
+      {title:'OBSERVABILITY', items:[{id:'observability', label:'Agent Health & Performance'}]},
       {title:'MY WORKFORCE', items:[{id:'active',label:'Active Agents'},{id:'running',label:'Running'},{id:'attention',label:'Needs Attention'},{id:'completed',label:'Completed'}]},
       {title:'DEPARTMENTS', items: departments.map(d=>({id:'dept-'+deptSlug(d.name), label:d.name}))},
     ],
@@ -2344,7 +2630,7 @@ const sectionConfig = {
       {title:'KNOWLEDGE FABRIC', items:[{id:'fabric', label:'All Collections'}]},
       {title:'SOURCES', items:[{id:'sources', label:'All Sources'}]},
       {title:'KNOWLEDGE MANAGEMENT', items:[{id:'collections',label:'Knowledge Collections'},{id:'entities',label:'Entities'},{id:'relationships',label:'Relationships'},{id:'policies',label:'Policies & Rules'},{id:'memory',label:'Company Memory'},{id:'provenance',label:'Data Provenance'}]},
-      {title:'AI', items:[{id:'search',label:'Search Knowledge'},{id:'ask',label:'Ask Knowledge'},{id:'health',label:'Knowledge Health'}]},
+      {title:'SEARCH FABRIC', items:[{id:'search',label:'Search Knowledge'},{id:'ask',label:'Ask Knowledge'},{id:'health',label:'Knowledge Health'}]},
     ],
     render: renderKnowledgeBody,
   },
@@ -2475,6 +2761,9 @@ function switchMainSection(key, el){
     const featureName = match ? match[1] : 'contracts';
     const targetPage = document.getElementById('page-'+featureName);
     if(targetPage) targetPage.classList.add('active');
+    if(featureName==='directory') renderSupplierDirectory();
+    if(featureName==='rfq') renderRfqTable('all');
+    if(featureName==='po') renderPoTable('all');
   } else if(key==='home'){
     document.getElementById('subSidebarSupplierSearch').style.display = 'none';
     document.getElementById('subSidebarGeneric').style.display = 'block';
@@ -2822,6 +3111,16 @@ function sendClaudeMessage(){
   }, 500);
 }
 let pendingAgent = null;
+function generateAgentInstructions(agent){
+  const describe = [
+    `<b>Role and goal:</b> ${agent.desc}`,
+    `<b>Scope:</b> Primarily works within ${agent.tag}; hands off unrelated requests to the appropriate department agent.`,
+    `<b>Tone:</b> Professional, concise, and data-driven.`,
+    `<b>When to ask or escalate:</b> Asks a human when a decision falls outside its authority, requires a policy exception, or key information is missing.`,
+  ];
+  const example = `You are the ${agent.name}. ${agent.desc} Stay within ${agent.tag.toLowerCase()} scope, keep responses concise and actionable, and escalate to a human reviewer whenever a task needs approval beyond your authority or the information provided is incomplete.`;
+  return {describe, example};
+}
 function openAssignModalObj(agentObj){
   pendingAgent = agentObj;
   document.getElementById('assignTitle').textContent = `Assign task to ${pendingAgent.name}`;
@@ -2830,6 +3129,13 @@ function openAssignModalObj(agentObj){
   document.getElementById('assignContext').textContent = idx.length
     ? `${idx.length} contract(s) selected: ${idx.map(n=>contracts[n].id).join(', ')}`
     : 'No contracts selected — the agent will run on the full supplier set.';
+  const instr = generateAgentInstructions(pendingAgent);
+  document.getElementById('agentInstructions').innerHTML = `
+    <h4>Instructions</h4>
+    <p class="instr-label">Describe</p>
+    <ul>${instr.describe.map(d=>`<li>${d}</li>`).join('')}</ul>
+    <p class="instr-label">Example</p>
+    <div class="instr-example">${instr.example}</div>`;
   document.getElementById('assignOverlay').classList.add('show');
 }
 function openAssignModal(i){
@@ -3114,6 +3420,8 @@ function switchFeature(name, el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   if(name==='directory') renderSupplierDirectory();
+  if(name==='rfq') renderRfqTable('all');
+  if(name==='po') renderPoTable('all');
   if(isMobileView()) closeMobileDrawers();
 }
 
@@ -3174,6 +3482,145 @@ const suppliers = [
    products:['Structural engineering','On-site steel erection','Construction steel supply'],
    notes:'Contract renewal in progress — flagged as expired in the contracts module.'},
 ];
+
+const rfqs = [
+  {id:'RFQ-2026-014', title:'Structural steel beams — Q3 batch', type:'RFQ', suppliers:['SteelSphere GmbH','Industrial Metals Ltd','MetalWorks Industries'], status:'Open', due:'28 Oct 2026'},
+  {id:'RFI-2026-009', title:'Cloud ERP hosting capabilities', type:'RFI', suppliers:['TechVision Solutions'], status:'Awaiting response', due:'15 Oct 2026'},
+  {id:'RFQ-2026-013', title:'Solar panel installation — Bielefeld site', type:'RFQ', suppliers:['GreenEnergy Partners'], status:'Awaiting response', due:'2 Nov 2026'},
+  {id:'RFQ-2026-012', title:'Precision machined engine components', type:'RFQ', suppliers:['AutoParts Excellence','Precision Steel Co.'], status:'Closed', due:'20 Sep 2026'},
+  {id:'RFI-2026-008', title:'Construction steel supply capacity 2027', type:'RFI', suppliers:['Deutsche Stahlbau','SteelSphere GmbH'], status:'Open', due:'5 Nov 2026'},
+  {id:'RFQ-2026-011', title:'Sheet metal fabrication — new product line', type:'RFQ', suppliers:['MetalWorks Industries'], status:'Closed', due:'10 Sep 2026'},
+];
+let rfqActiveTab = 'all';
+function rfqStatusTag(v){
+  const map = {'Open':'tag-active','Awaiting response':'tag-upcoming','Closed':'tag-normal'};
+  return `<span class="tag ${map[v]||'tag-normal'}">${v}</span>`;
+}
+function renderRfqStats(){
+  document.getElementById('rfqStatsRow').innerHTML = `
+    <div class="stat"><p>Total RFQ/RFI</p><p>${rfqs.length}</p></div>
+    <div class="stat"><p>Open</p><p>${rfqs.filter(r=>r.status==='Open').length}</p></div>
+    <div class="stat"><p>Awaiting response</p><p>${rfqs.filter(r=>r.status==='Awaiting response').length}</p></div>
+    <div class="stat"><p>Closed</p><p>${rfqs.filter(r=>r.status==='Closed').length}</p></div>`;
+}
+function renderRfqTabs(){
+  const tabs = [
+    {id:'all', label:'All', count: rfqs.length},
+    {id:'open', label:'Open', count: rfqs.filter(r=>r.status==='Open').length},
+    {id:'awaiting response', label:'Awaiting response', count: rfqs.filter(r=>r.status==='Awaiting response').length},
+    {id:'closed', label:'Closed', count: rfqs.filter(r=>r.status==='Closed').length},
+  ];
+  document.getElementById('rfqTabs').innerHTML = tabs.map(t=>`
+    <button class="tab ${rfqActiveTab===t.id?'active':''}" onclick="rfqActiveTab='${t.id}'; renderRfqTabs(); renderRfqTable('${t.id}');">${t.label} (${t.count})</button>
+  `).join('');
+}
+function renderRfqTable(tab){
+  renderRfqStats();
+  renderRfqTabs();
+  const q = (document.getElementById('rfqSearchInput')?.value || '').toLowerCase().trim();
+  const filtered = rfqs.filter(r=>{
+    if(tab!=='all' && r.status.toLowerCase()!==tab) return false;
+    if(q && !(r.title.toLowerCase().includes(q) || r.suppliers.some(s=>s.toLowerCase().includes(q)))) return false;
+    return true;
+  });
+  document.getElementById('rfqTableBody').innerHTML = filtered.map(r=>`
+    <tr>
+      <td>${r.id}</td>
+      <td>${r.title}</td>
+      <td><span class="tag tag-cat">${r.type}</span></td>
+      <td>${r.suppliers.join(', ')}</td>
+      <td>${rfqStatusTag(r.status)}</td>
+      <td style="color:var(--text-muted);">${r.due}</td>
+      <td class="actions" style="justify-content:center;">
+        <button class="icon-btn" title="View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        <button class="icon-btn" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
+        <button class="icon-btn danger" title="Delete" onclick="deleteRfq('${r.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/></svg></button>
+      </td>
+    </tr>`).join('');
+}
+function createNewRfq(){
+  const title = prompt('RFQ/RFI title:');
+  if(!title || !title.trim()) return;
+  const type = (prompt('Type: RFQ or RFI', 'RFQ') || 'RFQ').toUpperCase();
+  const num = String(rfqs.length + 15).padStart(3,'0');
+  rfqs.unshift({id:`${type==='RFI'?'RFI':'RFQ'}-2026-${num}`, title:title.trim(), type: type==='RFI'?'RFI':'RFQ', suppliers:[], status:'Open', due:'—'});
+  renderRfqTable('all');
+}
+function deleteRfq(id){
+  const idx = rfqs.findIndex(r=>r.id===id);
+  if(idx>-1) rfqs.splice(idx,1);
+  renderRfqTable(rfqActiveTab);
+}
+
+const purchaseOrders = [
+  {id:'PO-2026-1042', supplier:'SteelSphere GmbH', category:'Raw materials', value:'€450.000', status:'Completed', orderDate:'12 Aug 2026'},
+  {id:'PO-2026-1058', supplier:'AutoParts Excellence', category:'Precision machining', value:'€18.200', status:'Pending approval', orderDate:'2 Oct 2026'},
+  {id:'PO-2026-1057', supplier:'MetalWorks Industries', category:'Fabrication services', value:'€76.500', status:'Open', orderDate:'28 Sep 2026'},
+  {id:'PO-2026-1049', supplier:'GreenEnergy Partners', category:'Solar installation', value:'€132.000', status:'Open', orderDate:'15 Sep 2026'},
+  {id:'PO-2026-1033', supplier:'Deutsche Stahlbau', category:'Construction steel', value:'€890.000', status:'Cancelled', orderDate:'3 Jul 2026'},
+  {id:'PO-2026-1061', supplier:'Precision Steel Co.', category:'CNC machining', value:'€24.750', status:'Pending approval', orderDate:'5 Oct 2026'},
+];
+let poActiveTab = 'all';
+function poStatusTag(v){
+  const map = {'Open':'tag-active','Pending approval':'tag-upcoming','Completed':'tag-normal','Cancelled':'tag-expired'};
+  return `<span class="tag ${map[v]||'tag-normal'}">${v}</span>`;
+}
+function renderPoStats(){
+  document.getElementById('poStatsRow').innerHTML = `
+    <div class="stat"><p>Total POs</p><p>${purchaseOrders.length}</p></div>
+    <div class="stat"><p>Open</p><p>${purchaseOrders.filter(p=>p.status==='Open').length}</p></div>
+    <div class="stat"><p>Pending approval</p><p>${purchaseOrders.filter(p=>p.status==='Pending approval').length}</p></div>
+    <div class="stat"><p>Completed</p><p>${purchaseOrders.filter(p=>p.status==='Completed').length}</p></div>`;
+}
+function renderPoTabs(){
+  const tabs = [
+    {id:'all', label:'All', count: purchaseOrders.length},
+    {id:'open', label:'Open', count: purchaseOrders.filter(p=>p.status==='Open').length},
+    {id:'pending approval', label:'Pending approval', count: purchaseOrders.filter(p=>p.status==='Pending approval').length},
+    {id:'completed', label:'Completed', count: purchaseOrders.filter(p=>p.status==='Completed').length},
+  ];
+  document.getElementById('poTabs').innerHTML = tabs.map(t=>`
+    <button class="tab ${poActiveTab===t.id?'active':''}" onclick="poActiveTab='${t.id}'; renderPoTabs(); renderPoTable('${t.id}');">${t.label} (${t.count})</button>
+  `).join('');
+}
+function renderPoTable(tab){
+  renderPoStats();
+  renderPoTabs();
+  const q = (document.getElementById('poSearchInput')?.value || '').toLowerCase().trim();
+  const filtered = purchaseOrders.filter(p=>{
+    if(tab!=='all' && p.status.toLowerCase()!==tab) return false;
+    if(q && !(p.id.toLowerCase().includes(q) || p.supplier.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  document.getElementById('poTableBody').innerHTML = filtered.map(p=>`
+    <tr>
+      <td>${p.id}</td>
+      <td>${p.supplier}</td>
+      <td><span class="tag tag-cat">${p.category}</span></td>
+      <td>${p.value}</td>
+      <td>${poStatusTag(p.status)}</td>
+      <td style="color:var(--text-muted);">${p.orderDate}</td>
+      <td class="actions" style="justify-content:center;">
+        <button class="icon-btn" title="View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        <button class="icon-btn" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
+        <button class="icon-btn danger" title="Delete" onclick="deletePo('${p.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/></svg></button>
+      </td>
+    </tr>`).join('');
+}
+function createNewPo(){
+  const supplier = prompt('Supplier name:');
+  if(!supplier || !supplier.trim()) return;
+  const category = prompt('Category:', 'General');
+  const value = prompt('Value (e.g. €10.000):', '€0');
+  const num = 1062 + purchaseOrders.length;
+  purchaseOrders.unshift({id:`PO-2026-${num}`, supplier:supplier.trim(), category: category||'General', value: value||'€0', status:'Open', orderDate:'Today'});
+  renderPoTable('all');
+}
+function deletePo(id){
+  const idx = purchaseOrders.findIndex(p=>p.id===id);
+  if(idx>-1) purchaseOrders.splice(idx,1);
+  renderPoTable(poActiveTab);
+}
 
 function renderSupplierDirectory(){
   const byIndustry = {};
@@ -3365,11 +3812,11 @@ function renderCompanyModal(){
       </div>
     </div>
     <div class="doc-box" style="margin-bottom:10px;">
-      <p class="doc-box-title">🖼️ Project gallery</p>
+      <p class="doc-box-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px; margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Project gallery</p>
       <div class="gallery-row">${s.galleryItems.map(g=>`<div class="gallery-card">${g}</div>`).join('')}</div>
     </div>
     <div class="doc-box">
-      <p class="doc-box-title">📄 Documentation</p>
+      <p class="doc-box-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px; margin-right:4px;"><path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5"/><path d="M9 13h6M9 17h4"/></svg>Documentation</p>
       ${s.productDocs.map(f=>docRow(f)).join('')}
     </div>`;
 
@@ -3386,11 +3833,11 @@ function renderCompanyModal(){
     </div>
     <div class="cd-acc-grid">
       <div class="doc-box">
-        <p class="doc-box-title">📄 Certificates</p>
+        <p class="doc-box-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px; margin-right:4px;"><path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5"/><path d="M9 13h6M9 17h4"/></svg>Certificates</p>
         ${s.certFiles.map(f=>docRow(f)).join('')}
       </div>
       <div class="doc-box">
-        <p class="doc-box-title">🖼️ Documentation</p>
+        <p class="doc-box-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px; margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Documentation</p>
         ${s.certDocs.map(f=>docRow(f)).join('')}
       </div>
     </div>`;
@@ -3400,13 +3847,13 @@ function renderCompanyModal(){
     <h5 style="color:var(--headline);">Company highlights</h5>
     <ul>${s.companyHighlights.map(h=>`<li>${h}</li>`).join('')}</ul>
     <div class="doc-box" style="margin-bottom:12px;">
-      <p class="doc-box-title">🖼️ Awards &amp; recognition</p>
+      <p class="doc-box-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px; margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Awards &amp; recognition</p>
       <div class="gallery-row">${s.awards.map(a=>`<div class="award-card"><div class="a-title">${a.title}</div>${a.sub}</div>`).join('')}</div>
     </div>
     <h5 style="color:var(--headline);">Recent projects</h5>
     <ul>${s.recentProjects.map(p=>`<li>${p}</li>`).join('')}</ul>
     <div class="doc-box">
-      <p class="doc-box-title">📄 Project documentation</p>
+      <p class="doc-box-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px; margin-right:4px;"><path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5"/><path d="M9 13h6M9 17h4"/></svg>Project documentation</p>
       ${s.projectDocs.map(f=>docRow(f)).join('')}
       <div class="photo-card">${s.projectPhotosLabel}</div>
     </div>`;
@@ -3426,7 +3873,7 @@ function renderStarPicker(){
 function renderReviews(){
   const s = currentSupplier;
   if(!s) return;
-  document.getElementById('cdReviewsHeadLabel').innerHTML = `⭐&nbsp; Reviews (${s.reviewsList.length})`;
+  document.getElementById('cdReviewsHeadLabel').innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align:-2px; margin-right:5px;"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 16.9 5.8 20.3l1.6-6.8L2.2 8.9l6.9-.6z"/></svg>Reviews (${s.reviewsList.length})`;
   document.getElementById('cdReviewsList').innerHTML = s.reviewsList.map(r=>`
     <div class="review-card">
       <div class="review-top">
