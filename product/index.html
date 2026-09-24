@@ -586,16 +586,16 @@
   .newmsg-modal h3{font-size:16px; font-weight:700; color:var(--subhead); margin:0 0 12px;}
   .newmsg-list{max-height:280px; overflow-y:auto; margin-top:10px;}
 
-  .wf-overlay{position:fixed; inset:0; background:rgba(0,20,35,.45); z-index:96; display:none; align-items:center; justify-content:center; padding:24px;}
+  .wf-overlay{position:fixed; inset:0; background:rgba(0,20,35,.55); z-index:96; display:none; align-items:center; justify-content:center; padding:16px;}
   .wf-overlay.show{display:flex;}
-  .wf-modal{background:var(--card); border-radius:14px; width:920px; max-width:100%; max-height:88vh; box-shadow:0 20px 48px rgba(0,0,0,.25); display:flex; flex-direction:column; overflow:hidden;}
-  .wf-modal-head{display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border);}
+  .wf-modal{background:var(--card); border-radius:14px; width:96vw; max-width:1440px; height:92vh; max-height:92vh; box-shadow:0 24px 60px rgba(0,0,0,.3); display:flex; flex-direction:column; overflow:hidden;}
+  .wf-modal-head{display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); flex-shrink:0;}
   .wf-modal-head h3{font-size:16px; font-weight:700; color:var(--headline); margin:0;}
   .wf-modal-head p{font-size:13px; color:var(--text-muted); margin:2px 0 0;}
   .wf-close{background:none; border:none; cursor:pointer; color:var(--text-muted);}
   .wf-close:hover{color:var(--subhead);}
-  .wf-canvas{display:flex; align-items:center; overflow-x:auto; padding:36px 24px; background:#F3F0E6;}
-  .wf-node{background:var(--card); border:2px solid var(--border); border-radius:10px; padding:12px 14px; min-width:160px; max-width:170px; flex-shrink:0; box-shadow:0 2px 6px rgba(0,0,0,.06); position:relative;}
+  .wf-canvas{flex:1; display:flex; align-items:center; overflow:auto; padding:48px 32px; background:#F3F0E6; background-image: radial-gradient(circle, rgba(0,0,0,.08) 1.5px, transparent 1.5px); background-size:22px 22px; min-height:520px;}
+  .wf-node{background:var(--card); border:2px solid var(--border); border-radius:10px; padding:14px 14px 12px; min-width:190px; max-width:220px; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,.07); position:relative;}
   .wf-node[draggable="true"]{cursor:grab;}
   .wf-node[draggable="true"]:active{cursor:grabbing; opacity:.7;}
   .wf-node-remove{position:absolute; top:6px; right:6px; color:var(--text-muted); cursor:pointer; background:var(--bg); border-radius:50%; padding:2px;}
@@ -615,8 +615,11 @@
   .wf-node.human .wf-node-icon{background:#D4537E;}
   .wf-node-type{font-size:10.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; color:var(--text-muted); margin:0 0 2px;}
   .wf-node-label{font-size:13.5px; font-weight:700; color:var(--subhead); line-height:1.3;}
-  .wf-arrow{width:34px; height:2px; background:var(--subhead); flex-shrink:0; position:relative;}
-  .wf-arrow::after{content:''; position:absolute; right:-1px; top:50%; width:0; height:0; transform:translateY(-50%); border-top:6px solid transparent; border-bottom:6px solid transparent; border-left:8px solid var(--subhead);}
+  .wf-node-desc{font-size:11.5px; color:var(--text-muted); line-height:1.4; margin:6px 0 0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:32px;}
+  .wf-node-meta{font-size:11px; color:var(--text-muted); margin:6px 0 0; display:flex; align-items:center; gap:6px;}
+  .wf-node-meta .wf-meta-dot{width:6px; height:6px; border-radius:50%; background:var(--headline); flex-shrink:0;}
+  .wf-arrow{width:42px; height:2px; background:var(--subhead); flex-shrink:0; position:relative;}
+  .wf-arrow::after{content:''; position:absolute; right:-1px; top:50%; width:0; height:0; transform:translateY(-50%); border-top:7px solid transparent; border-bottom:7px solid transparent; border-left:9px solid var(--subhead);}
   .wf-node{cursor:pointer;}
   .wf-node:hover{box-shadow:0 4px 12px rgba(0,0,0,.1); transform:translateY(-1px);}
   .wf-branch-wrap{display:flex; gap:16px; align-items:flex-start; margin:0 8px; flex-shrink:0;}
@@ -2715,6 +2718,8 @@ function wfNodeHtml(n, i, isBranch, branchKey, branchIdx){
       <div class="wf-node-icon">${wfNodeIcon(n.type)}</div>
       <p class="wf-node-type">${n.sub}</p>
       <p class="wf-node-label">${n.label}</p>
+      ${n.detail ? `<p class="wf-node-desc">${n.detail}</p>` : ''}
+      ${n.owner ? `<p class="wf-node-meta"><span class="wf-meta-dot"></span>${n.owner}</p>` : ''}
     </div>`;
 }
 function renderWfCanvas(){
