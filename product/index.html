@@ -494,6 +494,11 @@
   .connector-card .c-status.connected{color:#27500A;}
   .connector-card .c-status.notconnected{color:var(--text-muted);}
   .connector-card button{margin-left:auto; flex-shrink:0;}
+  .connector-fence{height:4px; border-radius:2px; margin:0 0 14px 0; background:var(--border); transition:background .3s, box-shadow .3s, opacity .3s;}
+  .connector-fence.fence-ok{background:#27500A; box-shadow:0 0 6px rgba(39,80,10,.35);}
+  .connector-fence.fence-warn{background:#EF9F27; box-shadow:0 0 10px rgba(239,159,39,.6); animation:fencePulse 1.2s ease-in-out infinite;}
+  .connector-fence.fence-down{background:#B3261E; box-shadow:0 0 12px rgba(179,38,30,.7); animation:fencePulse .8s ease-in-out infinite;}
+  @keyframes fencePulse{0%,100%{opacity:1} 50%{opacity:.55}}
 
   .appr-card{background:var(--card); border-radius:10px; padding:14px; margin-bottom:10px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
   .appr-card .appr-info{flex:1; min-width:180px;}
@@ -633,8 +638,6 @@
   <div class="main-sidebar" id="mainSidebar">
     <div class="ms-header">
       <a href="../" class="logo-dot" id="logoDot" title="Go to Kraubex home"></a>
-      <button class="logo-edit" onclick="document.getElementById('logoFileInput').click()" title="Change logo" aria-label="Change logo"></button>
-      <input type="file" id="logoFileInput" accept="image/*" style="display:none" onchange="handleLogoUpload(event)">
       <span>Kraubex AI</span>
       <button class="sb-toggle" onclick="toggleMain()" aria-label="Collapse main sidebar">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
@@ -1100,7 +1103,7 @@
   <div class="claude-window" id="claudeWindow">
     <div class="claude-titlebar" id="claudeTitlebar">
       <div class="claude-titlebar-left">
-        <div class="logo-dot" style="width:24px; height:24px; border-radius:7px;" onclick="document.getElementById('logoFileInput').click()" title="Change logo"></div>
+        <div class="logo-dot" style="width:24px; height:24px; border-radius:7px;"></div>
         Kraubex AI
       </div>
       <div class="claude-titlebar-actions">
@@ -1127,7 +1130,7 @@
           <span class="claude-agent-acronym" id="claudeAgentAcronym" title="Active agent"></span>
         </div>
         <div class="claude-welcome" id="claudeWelcome">
-          <div class="logo-dot claude-welcome-icon" onclick="document.getElementById('logoFileInput').click()" title="Change logo"></div>
+          <div class="logo-dot claude-welcome-icon"></div>
           <h1>Kraubex AI</h1>
           <p class="tagline">Your smart procurement specialist</p>
           <h2>How can I help you today?</h2>
@@ -2036,7 +2039,12 @@ function renderConnectBody(subview){
     mcp: [{n:'Procurement MCP',c:true},{n:'Finance MCP',c:false},{n:'HR MCP',c:false},{n:'SAP MCP',c:true},{n:'CRM MCP',c:false},{n:'Custom MCP',c:false}],
   };
   const list = groups[subview] || groups.enterprise;
-  body.innerHTML = `<div class="connector-grid">${list.map(c=>`
+  const fenceOn = window.fenceEnabled !== false;
+  const disconnectedCount = list.filter(c=>!c.c).length;
+  let fenceStatus = 'ok';
+  if(disconnectedCount>0) fenceStatus = disconnectedCount>=3 ? 'down' : 'warn';
+  const fenceHtml = fenceOn ? `<div class="connector-fence fence-${fenceStatus}" id="connectorFence" title="Fence: ${fenceStatus} — ${disconnectedCount} disconnected"></div>` : '';
+  body.innerHTML = `${fenceHtml}<div class="connector-grid">${list.map(c=>`
     <div class="connector-card">
       <div class="c-icon">${c.n.slice(0,2).toUpperCase()}</div>
       <div><p class="c-name">${c.n}</p><p class="c-status ${c.c?'connected':'notconnected'}">${c.c?'● Connected':'○ Not connected'}</p></div>
