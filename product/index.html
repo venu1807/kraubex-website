@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Kraubex — Supplier contract management</title>
+<title>Kraubex AI - Multi Agent Procurement System</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -602,6 +602,27 @@
   .wf-legend{display:flex; gap:16px; padding:12px 20px; border-top:1px solid var(--border); font-size:12px; color:var(--text-muted); flex-wrap:wrap;}
   .wf-legend span{display:inline-flex; align-items:center; gap:5px;}
   .wf-legend i{width:9px; height:9px; border-radius:3px; display:inline-block;}
+  /* Kraubex AI: accessibility text bump — larger fonts so it's readable for older users */
+  body{font-size:16.5px;}
+  #secBody-main h1{font-size:34px;}
+  #secBody-main h2{font-size:26px;}
+  .page-head h1{font-size:30px;}
+  .page-head p{font-size:16.5px;}
+  .page p{font-size:14.5px; line-height:1.65;}
+  table td{font-size:14.5px;}
+  table th{font-size:13.5px;}
+  .ms-header span{font-size:17px;}
+  .nav-item span{font-size:15px;}
+  .btn{font-size:14.5px;}
+  .search{font-size:14.5px;}
+  .tag{font-size:13px;}
+  .connector-card .c-name{font-size:17px;}
+  .connector-card .c-status{font-size:14px;}
+  .c-icon{font-size:24px;}
+  .stat p{font-size:14.5px;}
+  .stat p:last-child{font-size:24px;}
+  .kw-label,.domain-eyebrow,.eyebrow{font-size:13.5px;}
+  .doc-box-title{font-size:14px;}
 </style>
 </head>
 <body>
@@ -611,7 +632,8 @@
   <!-- MAIN SIDEBAR -->
   <div class="main-sidebar" id="mainSidebar">
     <div class="ms-header">
-      <div class="logo-dot" id="logoDot" onclick="document.getElementById('logoFileInput').click()" title="Change logo"></div>
+      <a href="../" class="logo-dot" id="logoDot" title="Go to Kraubex home"></a>
+      <button class="logo-edit" onclick="document.getElementById('logoFileInput').click()" title="Change logo" aria-label="Change logo"></button>
       <input type="file" id="logoFileInput" accept="image/*" style="display:none" onchange="handleLogoUpload(event)">
       <span>Kraubex AI</span>
       <button class="sb-toggle" onclick="toggleMain()" aria-label="Collapse main sidebar">
