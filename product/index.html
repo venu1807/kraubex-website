@@ -3190,7 +3190,7 @@ function renderWfModalHead(){
   `;
   document.getElementById('wfPaletteWrap').style.display = editingWfMode ? 'block' : 'none';
   const wfHintEl2 = document.getElementById('wfHint');
-  if(wfHintEl2) wfHintEl2.textContent = editingWfMode ? 'Click a block to select · drag selected block to move · drag between dots to connect · click an arrow to annotate · scroll to zoom' : 'Click a block to inspect · click an arrow to annotate · scroll to zoom · switch to Edit to move or rewire';
+  if(wfHintEl2) wfHintEl2.textContent = editingWfMode ? 'Click a block to select · drag selected block to move · drag between dots to connect · click an arrow to annotate · Esc deselects · scroll to zoom' : 'Read-only — switch to Edit to change anything · click a block to inspect · Esc deselects · scroll to zoom';
   if(editingWfMode) renderWfPalette();
 }
 let wfDragState = null;
@@ -3473,6 +3473,13 @@ function wfBindCanvasView(){
     const c = document.getElementById('wfCanvas');
     if(c) c.classList.remove('panning');
   });
+  window.addEventListener('keydown', (e)=>{
+    if(e.key!=='Escape' && e.key!=='Esc') return;
+    window.wfSelectedId = null;
+    document.querySelectorAll('.wf-node.selected').forEach(el=>el.classList.remove('selected'));
+    closeWfInspector();
+    closeWfEdgeCard();
+  });
   canvas.addEventListener('dragover', (e)=>{ if(editingWfMode) e.preventDefault(); });
   canvas.addEventListener('drop', (e)=>{
     if(!editingWfMode) return;
@@ -3559,6 +3566,7 @@ function wfDragStart(e,i,branchKey,branchIdx){
     if(selEl) selEl.classList.add('selected');
     return;
   }
+  if(!editingWfMode) return;
   const touch = e.touches && e.touches[0];
   const cx = touch? touch.clientX : e.clientX;
   const cy = touch? touch.clientY : e.clientY;
@@ -3723,6 +3731,10 @@ function openWfInspector(i, branchKey, branchIdx){
   document.getElementById('wfInspOwner').value = n.owner || '';
   document.getElementById('wfInspDetail').value = n.detail || '';
   document.getElementById('wfInspConfig').value = n.config || '';
+  const roI = !editingWfMode;
+  ['wfInspLabel','wfInspOwner','wfInspDetail','wfInspConfig'].forEach(id=>{ document.getElementById(id).disabled = roI; });
+  const inspApplyBtn = document.querySelector('#wfInspector .btn-primary');
+  if(inspApplyBtn) inspApplyBtn.style.display = roI ? 'none' : '';
   document.getElementById('wfInspector').classList.add('open');
 }
 function closeWfInspector(){
@@ -3730,6 +3742,7 @@ function closeWfInspector(){
   window.wfInspecting = null;
 }
 function applyWfInspector(){
+  if(!editingWfMode) return;
   const n = wfInspectTarget();
   if(!n) return;
   n.label = document.getElementById('wfInspLabel').value;
@@ -3764,7 +3777,12 @@ function openWfEdgeCard(e, key){
   document.getElementById('wfEdgeRoute').textContent = wfEdgeName(fromId) + (port && port!=='out' ? ' ('+port+')' : '') + ' → ' + wfEdgeName(toId);
   document.getElementById('wfEdgeLabel').value = nt.label||'';
   document.getElementById('wfEdgeCond').value = nt.cond||'';
-  document.getElementById('wfEdgeDeleteBtn').style.display = (kind==='c') ? '' : 'none';
+  const roE = !editingWfMode;
+  document.getElementById('wfEdgeLabel').disabled = roE;
+  document.getElementById('wfEdgeCond').disabled = roE;
+  document.getElementById('wfEdgeDeleteBtn').style.display = (kind==='c' && editingWfMode) ? '' : 'none';
+  const edgeSaveBtn = document.querySelector('#wfEdgePop .btn-primary');
+  if(edgeSaveBtn) edgeSaveBtn.style.display = roE ? 'none' : '';
   window.wfActiveEdgeKey = key;
   const pop = document.getElementById('wfEdgePop');
   pop.classList.add('show');
@@ -3779,6 +3797,7 @@ function openWfEdgeCard(e, key){
 }
 function closeWfEdgeCard(){ const p=document.getElementById('wfEdgePop'); if(p) p.classList.remove('show'); window.wfActiveEdgeKey = null; }
 function applyWfEdgeCard(){
+  if(!editingWfMode) return;
   const key = window.wfActiveEdgeKey;
   if(!key) return;
   if(!window.wfEdgeNotes) window.wfEdgeNotes = {};
@@ -3790,6 +3809,7 @@ function applyWfEdgeCard(){
   wfDrawArrows();
 }
 function deleteWfEdgeCard(){
+  if(!editingWfMode) return;
   const key = window.wfActiveEdgeKey;
   if(!key) return;
   const parts = String(key).split('|');
