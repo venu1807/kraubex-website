@@ -597,6 +597,16 @@
   .wf-canvas{flex:1; overflow:auto; padding:0; background:#F3F0E6; background-image: radial-gradient(circle, rgba(0,0,0,.08) 1.5px, transparent 1.5px); background-size:22px 22px; min-height:620px; position:relative;}
   .wf-canvas-inner{position:relative; width:2200px; height:900px; min-width:1600px; min-height:600px;}
   .wf-arrows{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1;}
+  .wf-modal-body{display:flex; flex:1; min-height:0; overflow:hidden;}
+  .wf-toolbar{display:flex; align-items:center; gap:8px; padding:8px 16px; border-bottom:1px solid var(--border); background:var(--card); flex-shrink:0; flex-wrap:wrap;}
+  .wf-toolbar .wf-tool-btn{border:1px solid var(--border); background:var(--card); color:var(--subhead); border-radius:7px; padding:5px 10px; font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:5px;}
+  .wf-toolbar .wf-tool-btn:hover{border-color:var(--headline); color:var(--headline);}
+  .wf-zoom-label{font-size:12px; font-weight:700; color:var(--text-muted); min-width:44px; text-align:center;}
+  .wf-toolbar-sep{width:1px; height:20px; background:var(--border);}
+  .wf-toolbar-hint{font-size:11px; color:var(--text-muted); margin-left:auto;}
+  .wf-palette-side{width:230px; flex-shrink:0; border-right:1px solid var(--border); background:var(--bg); overflow-y:auto; padding:14px 12px;}
+  .wf-canvas.panning{cursor:grabbing;}
+  .wf-canvas.panning .wf-node{cursor:grabbing;}
   .wf-node{background:var(--card); border:2px solid var(--border); border-radius:10px; padding:14px 14px 12px; min-width:190px; max-width:220px; box-shadow:0 2px 8px rgba(0,0,0,.07); position:absolute; z-index:2; user-select:none; touch-action:none;}
   .wf-node{cursor:grab;}
   .wf-node:active{cursor:grabbing;}
@@ -1125,10 +1135,23 @@
         </button>
       </div>
     </div>
-    <div class="wf-canvas" id="wfCanvas"></div>
-    <div class="wf-palette-wrap" id="wfPaletteWrap" style="display:none;">
-      <p class="wf-palette-hint">Drag a component onto the canvas to insert it there, or onto the dashed circle to add it at the end.</p>
-      <div class="wf-palette" id="wfPalette"></div>
+    <div class="wf-toolbar" id="wfToolbar">
+      <button class="wf-tool-btn" onclick="wfZoomOut()" title="Zoom out">−</button>
+      <span class="wf-zoom-label" id="wfZoomLabel">100%</span>
+      <button class="wf-tool-btn" onclick="wfZoomIn()" title="Zoom in">+</button>
+      <button class="wf-tool-btn" onclick="wfZoomReset()" title="Reset view">Reset</button>
+      <span class="wf-toolbar-sep"></span>
+      <button class="wf-tool-btn" onclick="wfSaveJson()" title="Download workflow as JSON">Save JSON</button>
+      <button class="wf-tool-btn" onclick="document.getElementById('wfLoadFile').click()" title="Load workflow from JSON">Load JSON</button>
+      <input type="file" id="wfLoadFile" accept="application/json,.json" style="display:none" onchange="wfLoadJsonFile(this)">
+      <span class="wf-toolbar-hint">Drag background to pan • scroll to zoom • drag a dot to connect</span>
+    </div>
+    <div class="wf-modal-body">
+      <aside class="wf-palette-side wf-palette-wrap" id="wfPaletteWrap" style="display:none;">
+        <p class="wf-palette-hint">Drag a component onto the canvas to insert it there, or onto the dashed circle to add it at the end.</p>
+        <div class="wf-palette" id="wfPalette"></div>
+      </aside>
+      <div class="wf-canvas" id="wfCanvas"></div>
     </div>
     <div class="wf-legend">
       <span><i style="background:#1D9E75;"></i>Trigger</span>
@@ -3057,6 +3080,8 @@ function openWorkflowTemplate(name, editMode){
   editingWfName = name;
   editingWfMode = !!editMode;
   editingNodes = wf.nodes.map(n=>({...n}));
+  window.wfLinks = wf.edges ? JSON.parse(JSON.stringify(wf.edges)) : [];
+  wfView = {x:0, y:0, zoom:1};
   document.getElementById('wfModalTitle').textContent = wf.name;
   document.getElementById('wfModalDept').textContent = wf.dept + ' • ' + wf.status;
   renderWfModalHead();
@@ -3222,12 +3247,131 @@ function wfDrawArrows(){
       }
     }
   }
+  (window.wfLinks||[]).forEach(L=>{
+    if(!L || !L.from || !L.to) return;
+    const s = wfFindNodeById(L.from.id), t = wfFindNodeById(L.to.id);
+    if(!s || !t) return;
+    const sPos = wfPortPos(s.node, L.from.port||'out'), tPos = wfPortPos(t.node, 'in');
+    const col = (L.from.port==='yes') ? '#1D9E75' : (L.from.port==='no' ? '#791F1F' : '#0F172A');
+    paths += `<path class="wf-arrow-path" d="M ${sPos.x} ${sPos.y} C ${sPos.x+60} ${sPos.y}, ${tPos.x-60} ${tPos.y}, ${tPos.x} ${tPos.y}" stroke="${col}" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`;
+  });
   svg.innerHTML = paths;
+}
+/* ===== Workflow canvas engine: nodes array is source of truth, SVG links layer, pan/zoom ===== */
+let wfView = {x:0, y:0, zoom:1};
+if(!window.wfLinks) window.wfLinks = [];
+let wfIdSeq = 1;
+function ensureWfIds(){
+  editingNodes.forEach((n,i)=>{
+    if(!n.id) n.id = 'wf-n'+(wfIdSeq++)+'-'+i;
+    if(n.branches){
+      ['yes','no'].forEach(bk=>{
+        (n.branches[bk]||[]).forEach((bn,bi)=>{ if(!bn.id) bn.id = n.id+'-'+bk+'-'+bi; });
+      });
+    }
+  });
+}
+function wfFindNodeById(id){
+  for(let i=0;i<editingNodes.length;i++){
+    const n = editingNodes[i];
+    if(n.id===id) return {node:n, domId:`wfNode-${i}`};
+    if(n.branches){
+      for(const bk of ['yes','no']){
+        const arr = n.branches[bk]||[];
+        for(let bi=0;bi<arr.length;bi++){
+          if(arr[bi].id===id) return {node:arr[bi], domId:`wfNode-${i}-${bk}-${bi}`};
+        }
+      }
+    }
+  }
+  return null;
+}
+function applyWfView(){
+  const w = document.getElementById('wfWorld');
+  if(w) w.style.transform = `translate(${wfView.x}px,${wfView.y}px) scale(${wfView.zoom})`;
+  const lbl = document.getElementById('wfZoomLabel');
+  if(lbl) lbl.textContent = Math.round(wfView.zoom*100)+'%';
+}
+function wfZoomIn(){ wfView.zoom = Math.min(1.6, +(wfView.zoom*1.15).toFixed(3)); applyWfView(); }
+function wfZoomOut(){ wfView.zoom = Math.max(0.5, +(wfView.zoom/1.15).toFixed(3)); applyWfView(); }
+function wfZoomReset(){ wfView = {x:0, y:0, zoom:1}; applyWfView(); }
+function wfClientToWorld(cx, cy){
+  const canvas = document.getElementById('wfCanvas');
+  const rect = canvas.getBoundingClientRect();
+  const contentX = cx - rect.left + canvas.scrollLeft;
+  const contentY = cy - rect.top + canvas.scrollTop;
+  return {x:(contentX - wfView.x)/wfView.zoom, y:(contentY - wfView.y)/wfView.zoom};
+}
+let wfPanState = null;
+function wfBindCanvasView(){
+  const canvas = document.getElementById('wfCanvas');
+  if(!canvas || canvas.dataset.wfBound) return;
+  canvas.dataset.wfBound = '1';
+  canvas.addEventListener('mousedown', (e)=>{
+    const t = e.target;
+    if(t.closest && (t.closest('.wf-node') || t.closest('.wf-port') || t.closest('button') || t.closest('.wf-node-add') || t.closest('input') || t.closest('select'))) return;
+    wfPanState = {startX:e.clientX, startY:e.clientY, origX:wfView.x, origY:wfView.y};
+    canvas.classList.add('panning');
+  });
+  window.addEventListener('mousemove', (e)=>{
+    if(!wfPanState) return;
+    wfView.x = wfPanState.origX + (e.clientX - wfPanState.startX);
+    wfView.y = wfPanState.origY + (e.clientY - wfPanState.startY);
+    applyWfView();
+  });
+  window.addEventListener('mouseup', ()=>{
+    if(!wfPanState) return;
+    wfPanState = null;
+    const c = document.getElementById('wfCanvas');
+    if(c) c.classList.remove('panning');
+  });
+  canvas.addEventListener('wheel', (e)=>{
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const contentX = e.clientX - rect.left + canvas.scrollLeft;
+    const contentY = e.clientY - rect.top + canvas.scrollTop;
+    const wx = (contentX - wfView.x)/wfView.zoom;
+    const wy = (contentY - wfView.y)/wfView.zoom;
+    const factor = e.deltaY < 0 ? 1.1 : 1/1.1;
+    const nz = Math.max(0.5, Math.min(1.6, wfView.zoom*factor));
+    wfView.x = contentX - wx*nz;
+    wfView.y = contentY - wy*nz;
+    wfView.zoom = +nz.toFixed(3);
+    applyWfView();
+  }, {passive:false});
+}
+function wfSaveJson(){
+  const data = {name: editingWfName, nodes: editingNodes, edges: window.wfLinks||[]};
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (editingWfName||'workflow').replace(/[^a-z0-9-_]+/gi,'-') + '.workflow.json';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+function wfLoadJsonFile(input){
+  const f = input.files && input.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const data = JSON.parse(r.result);
+      if(!data.nodes || !Array.isArray(data.nodes)) throw new Error('bad file');
+      editingNodes = data.nodes;
+      window.wfLinks = Array.isArray(data.edges) ? data.edges : [];
+      if(data.name){ editingWfName = data.name; document.getElementById('wfModalTitle').textContent = data.name; }
+      wfView = {x:0, y:0, zoom:1};
+      renderWfCanvas();
+    }catch(err){ alert('Could not load workflow JSON: ' + err.message); }
+    input.value='';
+  };
+  r.readAsText(f);
 }
 function renderWfCanvas(){
   ensureWfPositions();
+  ensureWfIds();
   const canvas = document.getElementById('wfCanvas');
-  let html = '<div class="wf-canvas-inner" id="wfCanvasInner"><svg class="wf-arrows" id="wfArrows"></svg>';
+  let html = '<div class="wf-canvas-inner" id="wfCanvasInner"><div id="wfWorld" style="position:absolute;top:0;left:0;width:2200px;height:900px;transform-origin:0 0;"><svg class="wf-arrows" id="wfArrows"></svg>';
   editingNodes.forEach((n,i)=>{
     html += wfNodeHtml(n,i,false);
   });
@@ -3243,8 +3387,10 @@ function renderWfCanvas(){
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
     </div>`;
   }
-  html += '</div>';
+  html += '</div></div>';
   canvas.innerHTML = html;
+  applyWfView();
+  wfBindCanvasView();
   requestAnimationFrame(()=>wfDrawArrows());
 }
 function wfDragStart(e,i,branchKey,branchIdx){
@@ -3269,9 +3415,9 @@ function wfDragMove(e){
   const touch = e.touches && e.touches[0];
   const cx = touch? touch.clientX : e.clientX;
   const cy = touch? touch.clientY : e.clientY;
-  const dx = cx - wfDragState.startX;
-  const dy = cy - wfDragState.startY;
-  if(Math.abs(dx)>4 || Math.abs(dy)>4) window.wfDragMoved=true;
+  const dx = (cx - wfDragState.startX)/wfView.zoom;
+  const dy = (cy - wfDragState.startY)/wfView.zoom;
+  if(Math.abs(cx - wfDragState.startX)>4 || Math.abs(cy - wfDragState.startY)>4) window.wfDragMoved=true;
   const node = wfDragState.node;
   node.x = wfDragState.origX + dx;
   node.y = wfDragState.origY + dy;
@@ -3327,10 +3473,9 @@ function wfPortDragMove(e){
   const touch = e.touches && e.touches[0];
   const cx = touch? touch.clientX : e.clientX;
   const cy = touch? touch.clientY : e.clientY;
-  const canvas = document.getElementById('wfCanvas');
-  const rect = canvas.getBoundingClientRect();
-  const tx = cx - rect.left + canvas.scrollLeft;
-  const ty = cy - rect.top + canvas.scrollTop;
+  const wpt = wfClientToWorld(cx, cy);
+  const tx = wpt.x;
+  const ty = wpt.y;
   window.wfPortDrag.tx = tx;
   window.wfPortDrag.ty = ty;
   wfDrawArrows();
@@ -3369,29 +3514,20 @@ function wfPortDragEnd(e){
     targetNode=editingNodes[tInfo.i];
   }
   if(!targetNode){ window.wfPortDrag=null; return; }
-  if(tInfo.branchKey){
-    editingNodes[tInfo.i].branches[tInfo.branchKey].splice(tInfo.branchIdx,1);
+  let srcNode=null;
+  if(drag.fromBranchKey){
+    const par=editingNodes[drag.fromI];
+    if(par && par.branches && par.branches[drag.fromBranchKey]) srcNode=par.branches[drag.fromBranchKey][drag.fromBranchIdx];
   } else {
-    editingNodes.splice(tInfo.i,1);
-    if(!drag.fromBranchKey && tInfo.i < drag.fromI) drag.fromI--;
+    srcNode=editingNodes[drag.fromI];
   }
-  if(drag.port==='yes' || drag.port==='no'){
-    const src=editingNodes[drag.fromI];
-    if(!src || !src.branches){ editingNodes.splice(drag.fromI+1,0,targetNode); }
-    else {
-      if(!src.branches[drag.port]) src.branches[drag.port]=[];
-      src.branches[drag.port].push(targetNode);
-      targetNode.x=(src.x||0)+260;
-      targetNode.y=(src.y||0)+(drag.port==='yes'?-130:130);
-    }
-  } else {
-    editingNodes.splice(drag.fromI+1,0,targetNode);
-    const src=editingNodes[drag.fromI];
-    targetNode.x=(src.x||0)+260;
-    targetNode.y=src.y||0;
+  if(srcNode && targetNode && srcNode.id && targetNode.id && srcNode.id!==targetNode.id){
+    if(!window.wfLinks) window.wfLinks=[];
+    const exists = window.wfLinks.some(L=>L.from.id===srcNode.id && L.from.port===drag.port && L.to.id===targetNode.id);
+    if(!exists) window.wfLinks.push({from:{id:srcNode.id, port:drag.port}, to:{id:targetNode.id, port:'in'}});
   }
   window.wfPortDrag=null;
-  renderWfCanvas();
+  wfDrawArrows();
 }
 
 function openWfNodeDetail(i){
@@ -3507,7 +3643,7 @@ function removeWfNode(i){
 }
 function saveWfEdit(){
   const wf = workflows.find(w=>w.name===editingWfName);
-  if(wf) wf.nodes = editingNodes.map(n=>({...n}));
+  if(wf){ wf.nodes = editingNodes.map(n=>({...n})); wf.edges = JSON.parse(JSON.stringify(window.wfLinks||[])); }
   editingWfMode = false;
   renderWfModalHead();
   renderWfCanvas();
@@ -3516,6 +3652,7 @@ function saveWfEdit(){
 function cancelWfEdit(){
   const wf = workflows.find(w=>w.name===editingWfName);
   editingNodes = wf ? wf.nodes.map(n=>({...n})) : [];
+  window.wfLinks = (wf && wf.edges) ? JSON.parse(JSON.stringify(wf.edges)) : [];
   editingWfMode = false;
   renderWfModalHead();
   renderWfCanvas();
