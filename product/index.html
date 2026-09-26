@@ -2272,7 +2272,7 @@ function renderObservabilityBody(body){
 }
 
 const workflows = [
-  {name:'PO auto-approval under €5K', dept:'Procurement', status:'Active', lastRun:'2h ago', createdBy:'You', nodes:[
+  {id:'WF-001', name:'PO auto-approval under €5K', dept:'Procurement', status:'Active', lastRun:'2h ago', createdBy:'You', nodes:[
     {type:'trigger', label:'New PO created', sub:'Trigger', detail:'Fires when a PO is created in SAP/Dynamics. Filters: dept=Procurement.', owner:'System', config:'Event PO.created • Dept = Procurement'},
     {type:'condition', label:'Amount < €5,000?', sub:'Condition', detail:'Checks PO total against auto-approval threshold. Evaluates PO.amount < 5000.', config:'Expression: PO.amount < 5000 • Threshold = €5,000', branches:{
       yes: [
@@ -2285,7 +2285,7 @@ const workflows = [
     }},
     {type:'action', label:'Notify requester', sub:'Action', detail:'Sends notification with approval outcome and next steps.', config:'Channel: Email + Teams • Template: PO_Notify'},
   ]},
-  {name:'Supplier onboarding', dept:'Procurement', status:'Active', lastRun:'1d ago', createdBy:'Sarah Chen', nodes:[
+  {id:'WF-002', name:'Supplier onboarding', dept:'Procurement', status:'Active', lastRun:'1d ago', createdBy:'Sarah Chen', nodes:[
     {type:'trigger', label:'New supplier submitted', sub:'Trigger', detail:'Supplier intake form submitted via portal.', owner:'System', config:'Source: Supplier Portal • Form: Onboard_v2'},
     {type:'agent', label:'Supplier Intelligence Agent', sub:'Gather company data', detail:'Collects firmographic, certifications, and references.', owner:'Supplier Intelligence Agent', config:'Sources: Dun & Bradstreet, Web, ERP'},
     {type:'agent', label:'Supplier Risk Agent', sub:'Run risk screening', detail:'Scores financial, compliance, geo and ESG risk.', owner:'Supplier Risk Agent', config:'Model: Risk-v3 • Threshold: 65'},
@@ -2300,7 +2300,7 @@ const workflows = [
       ]
     }},
   ]},
-  {name:'Invoice 3-way match', dept:'Finance', status:'Active', lastRun:'35m ago', createdBy:'Marcus Weber', nodes:[
+  {id:'WF-003', name:'Invoice 3-way match', dept:'Finance', status:'Active', lastRun:'35m ago', createdBy:'Marcus Weber', nodes:[
     {type:'trigger', label:'Invoice received', sub:'Trigger', detail:'Inbound invoice via email or EDI.', owner:'System', config:'Channel: Email/EDI • Parse: OCR'},
     {type:'agent', label:'Finance Agent', sub:'Match invoice, PO, and GRN', detail:'Validates price, quantity and receipt against PO/GRN.', owner:'Finance Agent', config:'Match tolerance: 2% / Qty exact'},
     {type:'condition', label:'All three match?', sub:'Condition', detail:'Branches on 3-way match result.', config:'Rule: invoice==PO==GRN', branches:{
@@ -2308,14 +2308,14 @@ const workflows = [
       no: [{type:'human', label:'Marcus Weber', sub:'Reviews flagged discrepancy', detail:'Finance reviews mismatches and resolves.', owner:'Marcus Weber • Finance', config:'SLA: 24h • Escalation: CFO if >€10K'}]
     }},
   ]},
-  {name:'Contract renewal alert', dept:'Legal & Contracts', status:'Scheduled', lastRun:'—', createdBy:'Elena Fischer', nodes:[
+  {id:'WF-004', name:'Contract renewal alert', dept:'Legal & Contracts', status:'Scheduled', lastRun:'—', createdBy:'Elena Fischer', nodes:[
     {type:'trigger', label:'90 days before expiry', sub:'Scheduled trigger', detail:'Scheduled check scans contracts 90 days before end date.', owner:'System', config:'Cron: 0 9 * * * • Lookahead: 90d'},
     {type:'agent', label:'Contract Life Cycle Management Agent', sub:'Review contract terms', detail:'Analyzes terms, pricing, and renewal clauses.', owner:'Contract Life Cycle Management Agent', config:'Model: CLM-v2 • Sources: Contracts DB'},
     {type:'action', label:'Draft renewal request', sub:'Action', detail:'Generates renewal draft for legal review.', owner:'System', config:'Template: Renewal_Request_v1'},
     {type:'human', label:'Elena Fischer', sub:'Reviews and signs off', detail:'Legal counsel reviews and approves draft.', owner:'Elena Fischer • Legal', config:'SLA: 5 days • Sign-off required'},
     {type:'action', label:'Notify contract owner', sub:'Action', detail:'Notifies owner of renewal status.', owner:'System', config:'Channel: Email • CC: Legal'},
   ]},
-  {name:'Candidate screening', dept:'Human Resources', status:'Draft', lastRun:'—', createdBy:'Nadia Hoffmann', nodes:[
+  {id:'WF-005', name:'Candidate screening', dept:'Human Resources', status:'Draft', lastRun:'—', createdBy:'Nadia Hoffmann', nodes:[
     {type:'trigger', label:'New application received', sub:'Trigger', detail:'ATS event when candidate applies.', owner:'System', config:'ATS: Workday • Event: Application.created'},
     {type:'agent', label:'Recruiting Agent', sub:'Screen resume against role', detail:'Screens CV against JD using LLM scoring.', owner:'Recruiting Agent', config:'Model: Recruit-v1 • Threshold: 70'},
     {type:'condition', label:'Meets minimum criteria?', sub:'Condition', detail:'Pass/fail on screening score.', config:'Threshold: score >= 70', branches:{
@@ -2323,14 +2323,14 @@ const workflows = [
       no: [{type:'action', label:'Send rejection email', sub:'Action', detail:'Sends polite rejection with feedback.', owner:'System', config:'Template: Reject_Candidate'}]
     }},
   ]},
-  {name:'Quarterly ESG report', dept:'ESG & Sustainability', status:'Completed', lastRun:'3d ago', createdBy:'Fatima Al-Sayed', nodes:[
+  {id:'WF-006', name:'Quarterly ESG report', dept:'ESG & Sustainability', status:'Completed', lastRun:'3d ago', createdBy:'Fatima Al-Sayed', nodes:[
     {type:'trigger', label:'Quarter end', sub:'Scheduled trigger', detail:'Fires at quarter-end close.', owner:'System', config:'Cron: 0 0 1 */3 *'},
     {type:'agent', label:'Sustainability Reporting Agent', sub:'Compile emissions & metrics', detail:'Aggregates carbon, waste, water metrics.', owner:'Sustainability Reporting Agent', config:'Sources: ESG DB, IoT'},
     {type:'agent', label:'Procurement Analytics Agent', sub:'Add spend-based ESG data', detail:'Adds supplier spend ESG weighting.', owner:'Procurement Analytics Agent', config:'Model: ESG-Spend-v1'},
     {type:'action', label:'Generate report draft', sub:'Action', detail:'Renders PDF draft with charts.', owner:'System', config:'Template: ESG_Q_Report'},
     {type:'human', label:'Fatima Al-Sayed', sub:'Signs off on final report', detail:'CSO reviews and signs final ESG report.', owner:'Fatima Al-Sayed • ESG', config:'Sign-off: required • Publish: intranet'},
   ]},
-  {name:'Vendor risk re-score', dept:'Risk', status:'Failed', lastRun:'6h ago', createdBy:'You', nodes:[
+  {id:'WF-007', name:'Vendor risk re-score', dept:'Risk', status:'Failed', lastRun:'6h ago', createdBy:'You', nodes:[
     {type:'trigger', label:'Weekly schedule', sub:'Scheduled trigger', detail:'Weekly batch re-scores all active vendors.', owner:'System', config:'Cron: 0 6 * * 1'},
     {type:'agent', label:'Supplier Risk Agent', sub:'Re-score all active vendors', detail:'Re-runs risk models for active supplier base.', owner:'Supplier Risk Agent', config:'Batch: all active • Model: Risk-v3'},
     {type:'condition', label:'Score dropped significantly?', sub:'Condition', detail:'Flags vendors with >15% drop.', config:'Condition: drop > 15%', branches:{
@@ -2380,8 +2380,9 @@ function renderWorkflowsBody(subview){
       </select>
       ${(window.wfFilters.search||window.wfFilters.dept!=='all'||window.wfFilters.creator!=='all') ? `<button class="btn btn-ghost" style="padding:6px 10px; font-size:12px;" onclick="window.wfFilters={search:'',dept:'all',creator:'all'}; renderWorkflowsBody(window.lastWorkflowSubview)">Clear</button>` : ''}
     </div>
-    <table><thead><tr><th>Workflow</th><th>Department</th><th>Status</th><th>Created by</th><th>Last run</th><th>Success rate</th><th>Actions</th></tr></thead>
+    <table><thead><tr><th>ID</th><th>Workflow</th><th>Department</th><th>Status</th><th>Created by</th><th>Last run</th><th>Success rate</th><th>Actions</th></tr></thead>
     <tbody>${filtered.map(w=>`<tr>
+      <td style="color:var(--text-muted); font-size:12px; white-space:nowrap;">${w.id||'—'}</td>
       <td style="cursor:pointer;" onclick="openWorkflowTemplate('${w.name.replace(/'/g,"\\'")}')">${w.name}</td>
       <td>${w.dept}</td>
       <td><span class="tag ${w.status==='Active'?'tag-active':w.status==='Failed'?'tag-expired':'tag-normal'}">${w.status}</span></td>
@@ -2419,7 +2420,7 @@ function createNewWorkflow(){
   const name = prompt('Name your new workflow:');
   if(!name || !name.trim()) return;
   if(workflows.some(w=>w.name===name.trim())){ alert('A workflow with that name already exists.'); return; }
-  const newWf = {name:name.trim(), dept:'Custom', status:'Draft', lastRun:'—', createdBy:'You', nodes:[
+  const newWf = {id:'WF-'+String(Date.now()).slice(-6), name:name.trim(), dept:'Custom', status:'Draft', lastRun:'—', createdBy:'You', nodes:[
     {type:'trigger', label:'Set a trigger', sub:'Trigger'},
   ]};
   workflows.push(newWf);
@@ -2686,20 +2687,20 @@ function renderTasksBody(subview){
   window.lastTasksSubview = subview || 'all';
   const body = document.getElementById('secBody-tasks');
   const tasks = window.tasksList = [
-    {name:'Review SteelSphere contract renewal', agent:'Contract Life Cycle Management Agent', status:'In progress', type:'Decision', createdBy:'Sarah Chen', createdAt:'2h ago', date:'24 Sep 2026', priority:'High', desc:'SteelSphere GmbH €680k contract expires 19 Mar 2026 — review renewal terms.'},
-    {name:'Benchmark copper pricing', agent:'Price Optimizer Agent', status:'Waiting for data', type:'Research', createdBy:'Marcus Weber', createdAt:'5h ago', date:'24 Sep 2026', priority:'Medium', desc:'Compare LME copper pricing across 4 suppliers.'},
-    {name:'Screen 4 new candidates', agent:'Human Resources Domain Agent', status:'Running', type:'Analysis', createdBy:'Nadia Hoffmann', createdAt:'1d ago', date:'23 Sep 2026', priority:'Medium', desc:'Shortlist 4 machinist candidates for the Bielefeld plant.'},
-    {name:'Draft Q3 ESG report', agent:'ESG & Sustainability Domain Agent', status:'Completed', type:'Document', createdBy:'Fatima Al-Sayed', createdAt:'3d ago', date:'21 Sep 2026', priority:'Medium', desc:'Compile Q3 emissions, waste and water metrics.'},
-    {name:'Reconcile March invoices', agent:'Finance Domain Agent', status:'Failed', type:'Action', createdBy:'David Schulz', createdAt:'6h ago', date:'24 Sep 2026', priority:'High', desc:'Match 214 March invoices to POs and receipts.'},
-    {name:'Approve Q2 vendor payments', agent:'Finance Domain Agent', status:'In progress', type:'Approval', createdBy:'Elena Fischer', createdAt:'4h ago', date:'24 Sep 2026', priority:'High', desc:'Release €42,900 payment run for 11 vendors.'},
-    {name:'Onboard new steel supplier', agent:'Contract Life Cycle Management Agent', status:'Waiting for data', type:'Onboarding', createdBy:'Priya Patel', createdAt:'1d ago', date:'23 Sep 2026', priority:'Medium', desc:'Complete qualification for 2 new steel vendors.'},
-    {name:'Negotiate SteelSphere volume discount', agent:'Contract Life Cycle Management Agent', status:'In progress', type:'Negotiation', createdBy:'Praveen Gitta', createdAt:'1h ago', date:'25 Sep 2026', priority:'High', desc:'Target 8% volume discount on the Q4 structural steel batch.'},
-    {name:'Verify copper supplier quotes', agent:'Price Optimizer Agent', status:'Running', type:'Research', createdBy:'Tousif', createdAt:'3h ago', date:'25 Sep 2026', priority:'Medium', desc:'Cross-check top 3 copper quotes against the LME index.'},
-    {name:'Prepare onboarding docs for new hires', agent:'Human Resources Domain Agent', status:'Waiting for data', type:'Document', createdBy:'Anish', createdAt:'7h ago', date:'24 Sep 2026', priority:'Low', desc:'Collect contracts, tax forms and equipment requests.'},
-    {name:'Track Q3 carbon offset purchases', agent:'ESG & Sustainability Domain Agent', status:'In progress', type:'Tracking', createdBy:'Krishna', createdAt:'2d ago', date:'23 Sep 2026', priority:'Medium', desc:'Reconcile offset certificates with the emissions ledger.'},
-    {name:'Approve AutoParts invoice batch', agent:'Finance Domain Agent', status:'Waiting for data', type:'Approval', createdBy:'Marcus Weber', createdAt:'8h ago', date:'24 Sep 2026', priority:'High', desc:'92 invoices totalling €214,500 awaiting release.'},
-    {name:'Renew Deutsche Stahlbau contract', agent:'Contract Life Cycle Management Agent', status:'Failed', type:'Contract', createdBy:'Elena Fischer', createdAt:'2d ago', date:'23 Sep 2026', priority:'High', desc:'Renewal blocked — expired ISO 3834 certificate.'},
-    {name:'Monthly spend consolidation', agent:'Finance Domain Agent', status:'Completed', type:'Report', createdBy:'Priya Patel', createdAt:'4d ago', date:'21 Sep 2026', priority:'Low', desc:'August spend rolled up across 6 cost centers.'},
+    {id:'TSK-001', name:'Review SteelSphere contract renewal', agent:'Contract Life Cycle Management Agent', status:'In progress', type:'Decision', createdBy:'Sarah Chen', createdAt:'2h ago', date:'24 Sep 2026', priority:'High', desc:'SteelSphere GmbH €680k contract expires 19 Mar 2026 — review renewal terms.'},
+    {id:'TSK-002', name:'Benchmark copper pricing', agent:'Price Optimizer Agent', status:'Waiting for data', type:'Research', createdBy:'Marcus Weber', createdAt:'5h ago', date:'24 Sep 2026', priority:'Medium', desc:'Compare LME copper pricing across 4 suppliers.'},
+    {id:'TSK-003', name:'Screen 4 new candidates', agent:'Human Resources Domain Agent', status:'Running', type:'Analysis', createdBy:'Nadia Hoffmann', createdAt:'1d ago', date:'23 Sep 2026', priority:'Medium', desc:'Shortlist 4 machinist candidates for the Bielefeld plant.'},
+    {id:'TSK-004', name:'Draft Q3 ESG report', agent:'ESG & Sustainability Domain Agent', status:'Completed', type:'Document', createdBy:'Fatima Al-Sayed', createdAt:'3d ago', date:'21 Sep 2026', priority:'Medium', desc:'Compile Q3 emissions, waste and water metrics.'},
+    {id:'TSK-005', name:'Reconcile March invoices', agent:'Finance Domain Agent', status:'Failed', type:'Action', createdBy:'David Schulz', createdAt:'6h ago', date:'24 Sep 2026', priority:'High', desc:'Match 214 March invoices to POs and receipts.'},
+    {id:'TSK-006', name:'Approve Q2 vendor payments', agent:'Finance Domain Agent', status:'In progress', type:'Approval', createdBy:'Elena Fischer', createdAt:'4h ago', date:'24 Sep 2026', priority:'High', desc:'Release €42,900 payment run for 11 vendors.'},
+    {id:'TSK-007', name:'Onboard new steel supplier', agent:'Contract Life Cycle Management Agent', status:'Waiting for data', type:'Onboarding', createdBy:'Priya Patel', createdAt:'1d ago', date:'23 Sep 2026', priority:'Medium', desc:'Complete qualification for 2 new steel vendors.'},
+    {id:'TSK-008', name:'Negotiate SteelSphere volume discount', agent:'Contract Life Cycle Management Agent', status:'In progress', type:'Negotiation', createdBy:'Praveen Gitta', createdAt:'1h ago', date:'25 Sep 2026', priority:'High', desc:'Target 8% volume discount on the Q4 structural steel batch.'},
+    {id:'TSK-009', name:'Verify copper supplier quotes', agent:'Price Optimizer Agent', status:'Running', type:'Research', createdBy:'Tousif', createdAt:'3h ago', date:'25 Sep 2026', priority:'Medium', desc:'Cross-check top 3 copper quotes against the LME index.'},
+    {id:'TSK-010', name:'Prepare onboarding docs for new hires', agent:'Human Resources Domain Agent', status:'Waiting for data', type:'Document', createdBy:'Anish', createdAt:'7h ago', date:'24 Sep 2026', priority:'Low', desc:'Collect contracts, tax forms and equipment requests.'},
+    {id:'TSK-011', name:'Track Q3 carbon offset purchases', agent:'ESG & Sustainability Domain Agent', status:'In progress', type:'Tracking', createdBy:'Krishna', createdAt:'2d ago', date:'23 Sep 2026', priority:'Medium', desc:'Reconcile offset certificates with the emissions ledger.'},
+    {id:'TSK-012', name:'Approve AutoParts invoice batch', agent:'Finance Domain Agent', status:'Waiting for data', type:'Approval', createdBy:'Marcus Weber', createdAt:'8h ago', date:'24 Sep 2026', priority:'High', desc:'92 invoices totalling €214,500 awaiting release.'},
+    {id:'TSK-013', name:'Renew Deutsche Stahlbau contract', agent:'Contract Life Cycle Management Agent', status:'Failed', type:'Contract', createdBy:'Elena Fischer', createdAt:'2d ago', date:'23 Sep 2026', priority:'High', desc:'Renewal blocked — expired ISO 3834 certificate.'},
+    {id:'TSK-014', name:'Monthly spend consolidation', agent:'Finance Domain Agent', status:'Completed', type:'Report', createdBy:'Priya Patel', createdAt:'4d ago', date:'21 Sep 2026', priority:'Low', desc:'August spend rolled up across 6 cost centers.'},
   ];
   // preserve toolbar values
   const prevTSearch = document.getElementById('taskSearchInput')?.value;
@@ -2745,8 +2746,9 @@ function renderTasksBody(subview){
     </div>
     <div class="table-wrap">
     <table style="width:100%; table-layout:fixed; border-collapse:collapse;">
-      <colgroup><col style="width:24%"><col style="width:11%"><col style="width:12%"><col style="width:13%"><col style="width:10%"><col style="width:10%"><col style="width:20%"></colgroup>
+      <colgroup><col style="width:7%"><col style="width:22%"><col style="width:10%"><col style="width:11%"><col style="width:12%"><col style="width:9%"><col style="width:9%"><col style="width:20%"></colgroup>
       <thead><tr>
+        <th style="${thStyle}; text-align:center;">ID</th>
         <th style="${thStyle}">Task</th>
         <th style="${thStyle}; text-align:center;">Type</th>
         <th style="${thStyle}; text-align:center;">Status</th>
@@ -2757,7 +2759,7 @@ function renderTasksBody(subview){
       </tr></thead>
       <tbody>
         ${Object.entries(grouped).map(([agent, list])=>`
-          <tr class="task-group-row"><td colspan="7" style="background:var(--bg); padding:10px 12px; border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+          <tr class="task-group-row"><td colspan="8" style="background:var(--bg); padding:10px 12px; border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
             <div style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--subhead);">
               <span style="background:var(--headline); color:#fff; width:26px; height:26px; border-radius:7px; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0;">${agent.slice(0,2).toUpperCase()}</span>
               ${agent} <span style="font-weight:400; color:var(--text-muted); font-size:11px;">(${list.length})</span>
@@ -2765,6 +2767,7 @@ function renderTasksBody(subview){
           </td></tr>
           ${list.map(t=>`
             <tr>
+              <td style="${tdCenter} color:var(--text-muted); font-size:12px; white-space:nowrap;">${t.id||'—'}</td>
               <td style="${tdTask} white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;" onclick="viewTask('${t.name.replace(/'/g,"\\'")}')">${t.name}</td>
               <td style="${tdCenter} color:var(--text-muted);">${t.type}</td>
               <td style="${tdCenter}"><span class="tag ${t.status==='Completed'?'tag-active':t.status==='Failed'?'tag-expired':'tag-upcoming'}">${t.status}</span></td>
@@ -2800,6 +2803,7 @@ function openTaskDetail(name){
     ? `<div class="connector-detail-row"><span>Failure reason</span><span style="font-weight:400; text-align:right;">${oc.failureReason||'—'}</span></div>`
     : `<div class="connector-detail-row"><span>Progress</span><span><span class="usage-bar" style="display:inline-block; vertical-align:middle; width:70px;"><span class="usage-bar-fill" style="display:block; width:${oc.progress||0}%;"></span></span> ${oc.progress||0}%</span></div>`;
   document.getElementById('taskDetailBody').innerHTML = `
+    <div class="connector-detail-row"><span>ID</span><span>${t.id||'—'}</span></div>
     <div class="connector-detail-row"><span>Status</span><span><span class="tag ${tagCls}">${t.status}</span></span></div>
     <div class="connector-detail-row"><span>Priority</span><span><span class="tag ${priCls}">${t.priority||'Medium'}</span></span></div>
     <div class="connector-detail-row"><span>Type</span><span>${t.type}</span></div>
@@ -3248,7 +3252,7 @@ function openWorkflowTemplate(name, editMode){
   wfView = {x:0, y:0, zoom:1};
   window.wfSelectedId = null;
   document.getElementById('wfModalTitle').textContent = wf.name;
-  document.getElementById('wfModalDept').textContent = wf.dept + ' • ' + wf.status;
+  document.getElementById('wfModalDept').textContent = (wf.id ? wf.id + ' • ' : '') + wf.dept + ' • ' + wf.status + ' • ' + (workflowStats[wf.name] ? workflowStats[wf.name].successRate + '% success · ' + workflowStats[wf.name].runs + ' runs · avg ' + workflowStats[wf.name].avgTime : 'no runs yet');
   renderWfModalHead();
   renderWfCanvas();
   document.getElementById('wfOverlay').classList.add('show');
