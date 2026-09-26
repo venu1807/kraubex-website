@@ -681,7 +681,7 @@
   .wf-node-detail-desc{font-size:13px; color:var(--subhead); line-height:1.5; margin:10px 0; background:var(--bg); padding:10px 12px; border-radius:8px;}
   .wf-modal-body{position:relative;}
   .wf-node{width:196px; min-width:0; max-width:none; padding:0;}
-  .wf-node.condition{width:252px;}
+  .wf-node.condition{min-height:170px;}
   .wf-node.condition .wf-node-title{white-space:normal; overflow:visible; text-overflow:clip;}
   .wf-node.condition .wf-node-body{display:block; -webkit-line-clamp:unset; overflow:visible;}
   .wf-node-head{display:flex; align-items:center; gap:8px; padding:9px 10px; border-bottom:1px solid var(--border); border-radius:8px 8px 0 0;}
@@ -3538,7 +3538,9 @@ function renderWfCanvas(){
     }
   });
   html += '</div></div>';
+  const keepSL = canvas.scrollLeft, keepST = canvas.scrollTop;
   canvas.innerHTML = html;
+  canvas.scrollLeft = keepSL; canvas.scrollTop = keepST;
   try{
     applyWfView();
     wfBindCanvasView();
