@@ -2669,7 +2669,7 @@ function renderTasksBody(subview){
   const grouped = {};
   filtered.forEach(t=>{ if(!grouped[t.agent]) grouped[t.agent]=[]; grouped[t.agent].push(t); });
   if(filtered.length===0){ body.innerHTML='<p style="font-size:13px; color:var(--text-muted); padding:16px;">No tasks in this view.</p>'; return; }
-  const thStyle = 'text-align:left; font-size:12px; font-weight:700; color:var(--text-muted); padding:10px 12px; white-space:nowrap;';
+  const thStyle = 'text-align:center; font-size:12.5px; font-weight:700; color:#fff; padding:10px 12px; white-space:nowrap;';
   const tdTask = 'text-align:left; padding:10px 12px; font-size:13px; color:var(--subhead); font-weight:500;';
   const tdCenter = 'text-align:center; padding:10px 12px; font-size:13px;';
   const tdLeft = 'text-align:left; padding:10px 12px; font-size:13px;';
@@ -2814,6 +2814,10 @@ const companyDirectory = [
   {name:'Oliver Braun', role:'Cybersecurity Analyst'},
   {name:'Fatima Al-Sayed', role:'Sustainability Lead'},
   {name:'Noah Becker', role:'Product Manager'},
+  {name:'Praveen Gitta', role:'Procurement Specialist'},
+  {name:'Tousif', role:'Sourcing Analyst'},
+  {name:'Anish', role:'Data Engineer'},
+  {name:'Krishna', role:'QA Analyst'},
 ];
 const teamDMs = companyDirectory.slice(0,4);
 const teamMessages = {};
