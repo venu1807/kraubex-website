@@ -1189,7 +1189,6 @@
       <input type="file" id="wfLoadFile" accept="application/json,.json" style="display:none" onchange="wfLoadJsonFile(this)">
       <button class="wf-tool-btn" onclick="wfRunTest()" title="Pulse through blocks">▶ Run test</button>
       <span class="wf-conn-count" id="wfConnCount"></span>
-      <span class="wf-build-stamp" id="wfBuildStamp">arrows-DOM rev2</span>
       <span class="wf-toolbar-hint">Drag background to pan • scroll to zoom • drag a dot to connect</span>
     </div>
     <div class="wf-modal-body">
@@ -2354,7 +2353,7 @@ function renderWorkflowsBody(subview){
   const creators = [...new Set(workflows.map(w=>w.createdBy))];
   body.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:12px;">
-      <p style="font-size:13px; color:var(--text-muted); margin:0;">Build, manage and monitor multi-agent workflows ${subview==='my-workflows' ? `— <b style="color:var(--subhead);">${myCount} created by you</b>` : ''}</p>
+      ${subview==='my-workflows' ? `<p style="font-size:13px; color:var(--text-muted); margin:0;"><b style="color:var(--subhead);">${myCount} created by you</b></p>` : '<span></span>'}
       <button class="btn btn-primary" onclick="createNewWorkflow()" style="white-space:nowrap;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Create new AI workflow</button>
     </div>
     <div class="toolbar" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
