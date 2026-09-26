@@ -3266,13 +3266,71 @@ function wfEdgeLabelSvg(key, x1, y1, x2, y2, dy){
 function wfDrawArrows(){
   const svg = document.getElementById('wfArrows');
   if(!svg) return;
-  const arrowHead = '<defs><marker id="wfArrowHead" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="9" markerHeight="7" orient="auto"><polygon points="0 0, 9 3.5, 0 7" fill="#0F172A"/></marker><filter id="wfShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity="0.18"/></filter></defs>';
-  let paths = arrowHead;
+  const NS = 'http://www.w3.org/2000/svg';
+  while(svg.firstChild) svg.removeChild(svg.firstChild);
+  const defs = document.createElementNS(NS,'defs');
+  const marker = document.createElementNS(NS,'marker');
+  marker.setAttribute('id','wfArrowHead');
+  marker.setAttribute('viewBox','0 0 10 7');
+  marker.setAttribute('refX','9'); marker.setAttribute('refY','3.5');
+  marker.setAttribute('markerWidth','9'); marker.setAttribute('markerHeight','7');
+  marker.setAttribute('orient','auto');
+  const poly = document.createElementNS(NS,'polygon');
+  poly.setAttribute('points','0 0, 9 3.5, 0 7');
+  poly.setAttribute('fill','#0F172A');
+  marker.appendChild(poly);
+  defs.appendChild(marker);
+  const filt = document.createElementNS(NS,'filter');
+  filt.setAttribute('id','wfShadow');
+  filt.setAttribute('x','-20%'); filt.setAttribute('y','-20%');
+  filt.setAttribute('width','140%'); filt.setAttribute('height','140%');
+  const fe = document.createElementNS(NS,'feDropShadow');
+  fe.setAttribute('dx','0'); fe.setAttribute('dy','1');
+  fe.setAttribute('stdDeviation','1.5'); fe.setAttribute('flood-opacity','0.18');
+  filt.appendChild(fe);
+  defs.appendChild(filt);
+  svg.appendChild(defs);
   const W=200, H=110;
+  function txt(x, y, s, fill){
+    const t = document.createElementNS(NS,'text');
+    t.setAttribute('x',x); t.setAttribute('y',y);
+    t.setAttribute('font-size','10.5'); t.setAttribute('font-weight','800');
+    t.setAttribute('fill',fill); t.setAttribute('text-anchor','middle');
+    t.setAttribute('style','paint-order:stroke; stroke:#F3F0E6; stroke-width:3px;');
+    t.textContent = s;
+    svg.appendChild(t);
+  }
+  function edgeLabel(key, x1, y1, x2, y2, dy){
+    const nt = (window.wfEdgeNotes||{})[key];
+    if(!nt || !nt.label) return;
+    txt(((x1+x2)/2).toFixed(1), ((y1+y2)/2 + (dy===undefined?-12:dy)).toFixed(1), nt.label, '#B83E01');
+  }
+  function arrow(x1, y1, x2, y2, o){
+    o = o || {};
+    const half = (o.half===undefined) ? 60 : o.half;
+    const p = document.createElementNS(NS,'path');
+    p.setAttribute('d', `M ${x1} ${y1} C ${x1+half} ${y1}, ${x2-half} ${y2}, ${x2} ${y2}`);
+    p.setAttribute('class', o.temp ? 'wf-arrow-path wf-temp-arrow' : 'wf-arrow-path');
+    p.setAttribute('stroke', o.color || '#0F172A');
+    p.setAttribute('stroke-width', '2.4');
+    p.setAttribute('fill', 'none');
+    if(o.dashed) p.setAttribute('stroke-dasharray', o.dashed);
+    if(o.opacity!==undefined) p.setAttribute('opacity', o.opacity);
+    p.setAttribute('marker-end', 'url(#wfArrowHead)');
+    p.setAttribute('filter', 'url(#wfShadow)');
+    if(o.key){
+      p.style.cursor = 'pointer';
+      p.addEventListener('click', (ev)=>{ ev.stopPropagation(); openWfEdgeCard(ev, o.key); });
+    }
+    svg.appendChild(p);
+    if(o.tag) txt((x1+x2)/2, (y1+y2)/2-10, o.tag, o.color);
+    if(o.labelKey) edgeLabel(o.labelKey, x1, y1, x2, y2, o.labelDy);
+    return p;
+  }
   if(window.wfPortDrag && window.wfPortDrag.active){
     const s = window.wfPortDrag;
     const col = s.port==='yes'?'#1D9E75': s.port==='no'?'#791F1F':'#0F172A';
-    paths += `<path class="wf-arrow-path wf-temp-arrow" d="M ${s.sx} ${s.sy} C ${s.sx+60} ${s.sy}, ${s.tx-60} ${s.ty}, ${s.tx} ${s.ty}" stroke="${col}" stroke-width="2.4" fill="none" stroke-dasharray="8 6" opacity="0.9" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`;
+    arrow(s.sx, s.sy, s.tx, s.ty, {color:col, half:60, dashed:'8 6', opacity:'0.9', temp:true});
   }
   const getNextPos = (idx)=>{
     if(idx+1 < editingNodes.length) return editingNodes[idx+1];
@@ -3288,12 +3346,12 @@ function wfDrawArrows(){
       if(yesNodes.length){
         const t = wfGetPortCoords(`wfNode-${i}-yes-0`,'in') || wfPortPos(yesNodes[0],'in');
         const ekeyYes = wfEdgeKey('e', n.id||nid, 'yes', yesNodes[0].id||(nid+'-yes-0'));
-        paths += `<path class="wf-arrow-path" d="M ${sYes.x} ${sYes.y} C ${sYes.x+50} ${sYes.y}, ${t.x-50} ${t.y}, ${t.x} ${t.y}" stroke="#1D9E75" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"${wfEdgeClick(ekeyYes)}/><text x="${(sYes.x+t.x)/2}" y="${(sYes.y+t.y)/2-10}" font-size="10.5" font-weight="800" fill="#1D9E75" text-anchor="middle" style="paint-order:stroke; stroke:#F3F0E6; stroke-width:3px;">Yes</text>` + wfEdgeLabelSvg(ekeyYes, sYes.x, sYes.y, t.x, t.y, 16);
+        arrow(sYes.x, sYes.y, t.x, t.y, {color:'#1D9E75', half:50, key:ekeyYes, tag:'Yes', labelKey:ekeyYes, labelDy:16});
       }
       if(noNodes.length){
         const t2 = wfGetPortCoords(`wfNode-${i}-no-0`,'in') || wfPortPos(noNodes[0],'in');
         const ekeyNo = wfEdgeKey('e', n.id||nid, 'no', noNodes[0].id||(nid+'-no-0'));
-        paths += `<path class="wf-arrow-path" d="M ${sNo.x} ${sNo.y} C ${sNo.x+50} ${sNo.y}, ${t2.x-50} ${t2.y}, ${t2.x} ${t2.y}" stroke="#791F1F" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"${wfEdgeClick(ekeyNo)}/><text x="${(sNo.x+t2.x)/2}" y="${(sNo.y+t2.y)/2-10}" font-size="10.5" font-weight="800" fill="#791F1F" text-anchor="middle" style="paint-order:stroke; stroke:#F3F0E6; stroke-width:3px;">No</text>` + wfEdgeLabelSvg(ekeyNo, sNo.x, sNo.y, t2.x, t2.y, 16);
+        arrow(sNo.x, sNo.y, t2.x, t2.y, {color:'#791F1F', half:50, key:ekeyNo, tag:'No', labelKey:ekeyNo, labelDy:16});
       }
       ;[yesNodes,noNodes].forEach(arr=>{
         const key = arr===yesNodes?'yes':'no';
@@ -3301,21 +3359,21 @@ function wfDrawArrows(){
           const aPos = wfGetPortCoords(`wfNode-${i}-${key}-${k}`,'out') || wfPortPos(arr[k],'out');
           const bPos = wfGetPortCoords(`wfNode-${i}-${key}-${k+1}`,'in') || wfPortPos(arr[k+1],'in');
           const ekeyCh = wfEdgeKey('e', arr[k].id||(`${nid}-${key}-${k}`), 'out', arr[k+1].id||(`${nid}-${key}-${k+1}`));
-          paths += `<path class="wf-arrow-path" d="M ${aPos.x} ${aPos.y} C ${aPos.x+50} ${aPos.y}, ${bPos.x-50} ${bPos.y}, ${bPos.x} ${bPos.y}" stroke="#334155" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"${wfEdgeClick(ekeyCh)}/>` + wfEdgeLabelSvg(ekeyCh, aPos.x, aPos.y, bPos.x, bPos.y);
+          arrow(aPos.x, aPos.y, bPos.x, bPos.y, {color:'#334155', half:50, key:ekeyCh, labelKey:ekeyCh});
         }
       });
       if(next){
         const lastYes = yesNodes[yesNodes.length-1], lastNo=noNodes[noNodes.length-1];
         const nPos = wfGetPortCoords(`wfNode-${i+1}`,'in') || wfPortPos(next,'in');
-        if(lastYes){ const aPos=wfGetPortCoords(`wfNode-${i}-yes-${yesNodes.length-1}`,'out') || wfPortPos(lastYes,'out'); const ekeyMgY=wfEdgeKey('e', lastYes.id||(`${nid}-yes-${yesNodes.length-1}`), 'out', next.id||(`wfNode-${i+1}`)); paths += `<path class="wf-arrow-path" d="M ${aPos.x} ${aPos.y} C ${aPos.x+60} ${aPos.y}, ${nPos.x-60} ${nPos.y}, ${nPos.x} ${nPos.y}" stroke="#334155" stroke-width="2.4" fill="none" stroke-dasharray="7 5" opacity="0.95" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"${wfEdgeClick(ekeyMgY)}/>` + wfEdgeLabelSvg(ekeyMgY, aPos.x, aPos.y, nPos.x, nPos.y); }
-        if(lastNo){ const aPos2=wfGetPortCoords(`wfNode-${i}-no-${noNodes.length-1}`,'out') || wfPortPos(lastNo,'out'); const ekeyMgN=wfEdgeKey('e', lastNo.id||(`${nid}-no-${noNodes.length-1}`), 'out', next.id||(`wfNode-${i+1}`)); paths += `<path class="wf-arrow-path" d="M ${aPos2.x} ${aPos2.y} C ${aPos2.x+60} ${aPos2.y}, ${nPos.x-60} ${nPos.y}, ${nPos.x} ${nPos.y}" stroke="#334155" stroke-width="2.4" fill="none" stroke-dasharray="7 5" opacity="0.95" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"${wfEdgeClick(ekeyMgN)}/>` + wfEdgeLabelSvg(ekeyMgN, aPos2.x, aPos2.y, nPos.x, nPos.y); }
+        if(lastYes){ const aPos=wfGetPortCoords(`wfNode-${i}-yes-${yesNodes.length-1}`,'out') || wfPortPos(lastYes,'out'); const ekeyMgY=wfEdgeKey('e', lastYes.id||(`${nid}-yes-${yesNodes.length-1}`), 'out', next.id||(`wfNode-${i+1}`)); arrow(aPos.x, aPos.y, nPos.x, nPos.y, {color:'#334155', half:60, dashed:'7 5', opacity:'0.95', key:ekeyMgY, labelKey:ekeyMgY}); }
+        if(lastNo){ const aPos2=wfGetPortCoords(`wfNode-${i}-no-${noNodes.length-1}`,'out') || wfPortPos(lastNo,'out'); const ekeyMgN=wfEdgeKey('e', lastNo.id||(`${nid}-no-${noNodes.length-1}`), 'out', next.id||(`wfNode-${i+1}`)); arrow(aPos2.x, aPos2.y, nPos.x, nPos.y, {color:'#334155', half:60, dashed:'7 5', opacity:'0.95', key:ekeyMgN, labelKey:ekeyMgN}); }
       }
     } else {
       if(next){
         const sPos=wfGetPortCoords(nid,'out') || wfPortPos(n,'out');
         const tPos=wfGetPortCoords(`wfNode-${i+1}`,'in') || wfPortPos(next,'in');
         const ekeyLn=wfEdgeKey('e', n.id||nid, 'out', next.id||(`wfNode-${i+1}`));
-        paths += `<path class="wf-arrow-path" d="M ${sPos.x} ${sPos.y} C ${sPos.x+70} ${sPos.y}, ${tPos.x-70} ${tPos.y}, ${tPos.x} ${tPos.y}" stroke="#0F172A" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"${wfEdgeClick(ekeyLn)}/>` + wfEdgeLabelSvg(ekeyLn, sPos.x, sPos.y, tPos.x, tPos.y);
+        arrow(sPos.x, sPos.y, tPos.x, tPos.y, {color:'#0F172A', half:70, key:ekeyLn, labelKey:ekeyLn});
       }
     }
   });
@@ -3326,9 +3384,8 @@ function wfDrawArrows(){
     const sPos = wfPortPos(s.node, L.from.port||'out'), tPos = wfPortPos(t.node, 'in');
     const col = (L.from.port==='yes') ? '#1D9E75' : (L.from.port==='no' ? '#791F1F' : '#0F172A');
     const ekeyCu = wfEdgeKey('c', L.from.id, L.from.port||'out', L.to.id);
-    paths += `<path class="wf-arrow-path" d="M ${sPos.x} ${sPos.y} C ${sPos.x+60} ${sPos.y}, ${tPos.x-60} ${tPos.y}, ${tPos.x} ${tPos.y}" stroke="${col}" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"${wfEdgeClick(ekeyCu)}/>` + wfEdgeLabelSvg(ekeyCu, sPos.x, sPos.y, tPos.x, tPos.y);
+    arrow(sPos.x, sPos.y, tPos.x, tPos.y, {color:col, half:60, key:ekeyCu, labelKey:ekeyCu});
   });
-  svg.innerHTML = paths;
 }
 /* ===== Workflow canvas engine: nodes array is source of truth, SVG links layer, pan/zoom ===== */
 let wfView = {x:0, y:0, zoom:1};
