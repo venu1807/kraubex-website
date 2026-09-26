@@ -3759,7 +3759,7 @@ function openWfEdgeCard(e, key){
   document.getElementById('wfEdgeLabel').value = nt.label||'';
   document.getElementById('wfEdgeCond').value = nt.cond||'';
   document.getElementById('wfEdgeDeleteBtn').style.display = (kind==='c') ? '' : 'none';
-  window.wfEdgeKey = key;
+  window.wfActiveEdgeKey = key;
   const pop = document.getElementById('wfEdgePop');
   pop.classList.add('show');
   const wrap = document.querySelector('.wf-modal-body');
@@ -3771,9 +3771,9 @@ function openWfEdgeCard(e, key){
     pop.style.left = '16px'; pop.style.top = '16px';
   }
 }
-function closeWfEdgeCard(){ const p=document.getElementById('wfEdgePop'); if(p) p.classList.remove('show'); window.wfEdgeKey = null; }
+function closeWfEdgeCard(){ const p=document.getElementById('wfEdgePop'); if(p) p.classList.remove('show'); window.wfActiveEdgeKey = null; }
 function applyWfEdgeCard(){
-  const key = window.wfEdgeKey;
+  const key = window.wfActiveEdgeKey;
   if(!key) return;
   if(!window.wfEdgeNotes) window.wfEdgeNotes = {};
   const label = document.getElementById('wfEdgeLabel').value.trim();
@@ -3784,7 +3784,7 @@ function applyWfEdgeCard(){
   wfDrawArrows();
 }
 function deleteWfEdgeCard(){
-  const key = window.wfEdgeKey;
+  const key = window.wfActiveEdgeKey;
   if(!key) return;
   const parts = String(key).split('|');
   if(parts[0]==='c'){
