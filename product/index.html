@@ -3183,6 +3183,8 @@ function renderWfModalHead(){
     <button class="btn btn-ghost" style="color:#791F1F; border-color:#F7C1C1;" onclick="deleteWorkflow(editingWfName); closeWorkflowTemplate();">Delete</button>
   `;
   document.getElementById('wfPaletteWrap').style.display = editingWfMode ? 'block' : 'none';
+  const wfHintEl2 = document.getElementById('wfHint');
+  if(wfHintEl2) wfHintEl2.textContent = editingWfMode ? 'Click a block to select · drag selected block to move · drag between dots to connect · click an arrow to annotate · scroll to zoom' : 'Click a block to inspect · click an arrow to annotate · scroll to zoom · switch to Edit to move or rewire';
   if(editingWfMode) renderWfPalette();
 }
 let wfDragState = null;
@@ -3319,7 +3321,7 @@ function wfDrawArrows(){
     p.setAttribute('marker-end', 'url(#wfArrowHead)');
     p.setAttribute('filter', 'url(#wfShadow)');
     if(o.key){
-      p.style.cursor = 'pointer';
+      p.setAttribute('style', 'cursor:pointer;');
       p.addEventListener('click', (ev)=>{ ev.stopPropagation(); openWfEdgeCard(ev, o.key); });
     }
     svg.appendChild(p);
@@ -3586,6 +3588,7 @@ function wfDragEnd(){
 
 window.wfPortDrag = null;
 function wfPortDragStart(e,i,branchKey,branchIdx,port){
+  if(!editingWfMode) return;
   if(port==='in') return;
   const isBranch = branchKey && branchKey.length>0;
   const node = isBranch ? (editingNodes[i] && editingNodes[i].branches && editingNodes[i].branches[branchKey] && editingNodes[i].branches[branchKey][branchIdx]) : editingNodes[i];
