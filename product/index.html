@@ -2308,25 +2308,25 @@ function createNewWorkflow(){
 }
 
 const knowledgeFabricItems = [
-  {name:'Company', desc:'Org chart, policies, legal entities, and business configuration.'},
-  {name:'People & Organization', desc:'Employees, teams, roles, and reporting lines.'},
-  {name:'Products', desc:'Product catalog, specs, and lifecycle data.'},
-  {name:'Suppliers', desc:'Supplier profiles, certifications, and performance history.'},
-  {name:'Customers', desc:'Customer accounts, contracts, and account history.'},
-  {name:'Materials', desc:'Raw materials, specifications, and sourcing data.'},
-  {name:'Assets', desc:'Equipment, facilities, and maintenance records.'},
-  {name:'Contracts', desc:'Active and historical contracts across departments.'},
-  {name:'Projects', desc:'Project plans, milestones, and status.'},
-  {name:'Business Processes', desc:'Documented workflows and standard operating procedures.'},
+  {name:'Company', desc:'Org chart, policies, legal entities, and business configuration.', docs:'1,240 docs', entities:'312 entities', updated:'2h ago', owner:'Sarah Chen', freshness:98, status:'indexed'},
+  {name:'People & Organization', desc:'Employees, teams, roles, and reporting lines.', docs:'3,840 docs', entities:'1,204 entities', updated:'5h ago', owner:'Nadia Hoffmann', freshness:95, status:'indexed'},
+  {name:'Products', desc:'Product catalog, specs, and lifecycle data.', docs:'12,480 docs', entities:'4,320 entities', updated:'1h ago', owner:'Priya Patel', freshness:99, status:'indexed'},
+  {name:'Suppliers', desc:'Supplier profiles, certifications, and performance history.', docs:'8,940 docs', entities:'2,150 entities', updated:'30m ago', owner:'Sarah Chen', freshness:97, status:'indexed'},
+  {name:'Customers', desc:'Customer accounts, contracts, and account history.', docs:'5,210 docs', entities:'980 entities', updated:'14d ago', owner:'James Okoye', freshness:41, status:'stale'},
+  {name:'Materials', desc:'Raw materials, specifications, and sourcing data.', docs:'22,300 docs', entities:'9,410 entities', updated:'15m ago', owner:'Lucas Meyer', freshness:99, status:'indexed'},
+  {name:'Assets', desc:'Equipment, facilities, and maintenance records.', docs:'4,120 docs', entities:'860 entities', updated:'1d ago', owner:'David Schulz', freshness:88, status:'indexed'},
+  {name:'Contracts', desc:'Active and historical contracts across departments.', docs:'1,890 docs', entities:'640 entities', updated:'45m ago', owner:'Elena Fischer', freshness:96, status:'indexed'},
+  {name:'Projects', desc:'Project plans, milestones, and status.', docs:'760 docs', entities:'210 entities', updated:'3h ago', owner:'Noah Becker', freshness:93, status:'indexed'},
+  {name:'Business Processes', desc:'Documented workflows and standard operating procedures.', docs:'420 docs', entities:'180 entities', updated:'2d ago', owner:'Tom Richter', freshness:84, status:'partial'},
 ];
 const knowledgeSourceItems = [
-  {name:'Documents', desc:'PDFs, Word files, and scanned documents.'},
-  {name:'Databases', desc:'SQL and NoSQL databases connected via Connect.'},
-  {name:'ERP Data', desc:'SAP, Dynamics, and other ERP system records.'},
-  {name:'CRM Data', desc:'Salesforce and other CRM system records.'},
-  {name:'Emails', desc:'Indexed email threads relevant to procurement and operations.'},
-  {name:'SharePoint / M365', desc:'SharePoint sites, OneDrive files, and Teams content.'},
-  {name:'External Sources', desc:'Market data, regulatory feeds, and other external inputs.'},
+  {name:'Documents', desc:'PDFs, Word files, and scanned documents.', records:'18,420 files', status:'connected', lastSync:'10m ago', owner:'Lucas Meyer'},
+  {name:'Databases', desc:'SQL Server + PostgreSQL via Connect — 6 DBs, 4.2M rows.', records:'4.2M rows', status:'connected', lastSync:'5m ago', owner:'Lucas Meyer'},
+  {name:'ERP Data', desc:'SAP S/4HANA + Dynamics 365 — POs, invoices, vendors.', records:'1.1M records', status:'connected', lastSync:'15m ago', owner:'Marcus Weber'},
+  {name:'CRM Data', desc:'Salesforce — accounts, opportunities, contacts.', records:'0 records', status:'pending', lastSync:'Never linked', owner:'James Okoye'},
+  {name:'Emails', desc:'128k indexed threads — procurement & operations.', records:'128k threads', status:'stale', lastSync:'14d ago', owner:'Priya Patel'},
+  {name:'SharePoint / M365', desc:'42 sites — libraries, OneDrive, Teams content.', records:'96,300 files', status:'connected', lastSync:'1h ago', owner:'Tom Richter'},
+  {name:'External Sources', desc:'LME pricing, EU regulatory + sanctions feeds.', records:'34 feeds', status:'connected', lastSync:'2h ago', owner:'Aisha Rahman'},
 ];
 function renderKnowledgeBody(subview){
   const body = document.getElementById('secBody-knowledge');
@@ -2351,41 +2351,55 @@ function renderKnowledgeBody(subview){
     return;
   }
   if(subview==='health'){
+    const connected = knowledgeSourceItems.filter(s=>s.status==='connected').length;
+    const avgFresh = Math.round(knowledgeFabricItems.reduce((s,k)=>s+k.freshness,0)/knowledgeFabricItems.length);
+    const gaps = [
+      ...knowledgeFabricItems.filter(k=>k.status!=='indexed').map(k=>({t:k.name, m:k.status==='stale'?`Freshness ${k.freshness}% — last indexed ${k.updated}. Owner: ${k.owner}.`:`Coverage partial at ${k.freshness}% — owner: ${k.owner}.`})),
+      ...knowledgeSourceItems.filter(s=>s.status!=='connected').map(s=>({t:s.name, m:s.status==='pending'?`Not linked yet — owner: ${s.owner}. Link it in Connect.`:`Stale — last sync ${s.lastSync}. Owner: ${s.owner} — reconnect recommended.`})),
+    ];
     body.innerHTML = `
       <div class="kpi-strip">
-        <div class="stat"><p>Collections indexed</p><p>${knowledgeFabricItems.length}/${knowledgeFabricItems.length}</p></div>
-        <div class="stat"><p>Sources connected</p><p>4/${knowledgeSourceItems.length}</p></div>
-        <div class="stat"><p>Freshness</p><p>92%</p></div>
-        <div class="stat"><p>Coverage gaps</p><p style="color:var(--headline);">2</p></div>
+        <div class="stat"><p>Collections indexed</p><p>${knowledgeFabricItems.filter(k=>k.status==='indexed').length}/${knowledgeFabricItems.length}</p></div>
+        <div class="stat"><p>Sources connected</p><p>${connected}/${knowledgeSourceItems.length}</p></div>
+        <div class="stat"><p>Freshness</p><p>${avgFresh}%</p></div>
+        <div class="stat"><p>Coverage gaps</p><p style="color:var(--headline);">${gaps.length}</p></div>
       </div>
       <p class="domain-eyebrow" style="padding:0;">Coverage gaps</p>
       <div class="dept-list">
-        <div class="dept-card"><h5>Customers</h5><p>No source connected yet — CRM Data source is not linked.</p></div>
-        <div class="dept-card"><h5>Emails</h5><p>Last indexed 14 days ago — reconnect recommended.</p></div>
+        ${gaps.map(g=>`<div class="dept-card"><h5>${g.t}</h5><p>${g.m}</p></div>`).join('')}
       </div>`;
     return;
   }
 
-  const list = subview==='sources' ? knowledgeSourceItems : knowledgeFabricItems;
+  const isSources = subview==='sources';
+  const list = isSources ? knowledgeSourceItems : knowledgeFabricItems;
+  const statusTag = (s)=> s==='indexed'||s==='connected' ? 'tag-active' : s==='partial' ? 'tag-upcoming' : s==='pending' ? 'tag-cat' : 'tag-expired';
+  const statusLabel = (s)=> s==='indexed' ? 'Indexed' : s==='connected' ? 'Connected' : s==='partial' ? 'Partial' : s==='pending' ? 'Not linked' : 'Stale';
   body.innerHTML = `
-    <div class="dept-list">${list.map(k=>`<div class="dept-card"><h5>${k.name}</h5><p>${k.desc}</p></div>`).join('')}</div>`;
+    <div class="dept-list">${list.map(k=>`<div class="dept-card"><h5>${k.name} <span class="tag ${statusTag(isSources?k.status:k.status)}" style="margin-left:6px;">${statusLabel(isSources?k.status:k.status)}</span></h5><p>${k.desc}</p>
+    <p class="dept-count" style="color:var(--text-muted);">${isSources ? `${k.records} • Last sync ${k.lastSync} • Owner: ${k.owner}` : `${k.docs} • ${k.entities} • Updated ${k.updated} • Owner: ${k.owner} • Freshness ${k.freshness}%`}</p></div>`).join('')}</div>`;
 }
 function renderKnowledgeSearchResults(){
   const q = (document.getElementById('knowledgeSearchInput')?.value || '').toLowerCase().trim();
   const el = document.getElementById('knowledgeSearchResults');
   if(!q){ el.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">Start typing to search across knowledge collections and sources.</p>'; return; }
-  const all = [...knowledgeFabricItems.map(k=>({...k, kind:'Collection'})), ...knowledgeSourceItems.map(k=>({...k, kind:'Source'}))];
-  const matches = all.filter(k=>k.name.toLowerCase().includes(q) || k.desc.toLowerCase().includes(q));
+  const all = [...knowledgeFabricItems.map(k=>({...k, kind:'Collection', sub:`${k.docs} • ${k.entities} • Owner: ${k.owner}`})), ...knowledgeSourceItems.map(k=>({...k, kind:'Source', sub:`${k.records} • Last sync ${k.lastSync} • Owner: ${k.owner}`}))];
+  const matches = all.filter(k=>(k.name+' '+k.desc+' '+(k.owner||'')).toLowerCase().includes(q));
   el.innerHTML = matches.length ? `
     <p class="domain-eyebrow" style="padding:0;">${matches.length} result${matches.length!==1?'s':''}</p>
-    <div class="dept-list">${matches.map(k=>`<div class="dept-card"><h5>${k.name} <span class="tag tag-cat" style="margin-left:6px;">${k.kind}</span></h5><p>${k.desc}</p></div>`).join('')}</div>
+    <div class="dept-list">${matches.map(k=>`<div class="dept-card"><h5>${k.name} <span class="tag tag-cat" style="margin-left:6px;">${k.kind}</span></h5><p>${k.desc}</p><p class="dept-count" style="color:var(--text-muted);">${k.sub}</p></div>`).join('')}</div>
   ` : '<p style="font-size:12px; color:var(--text-muted);">No matches.</p>';
 }
 function askKnowledgeQuestion(){
   const q = document.getElementById('knowledgeAskInput').value.trim();
   const el = document.getElementById('knowledgeAskAnswer');
   if(!q){ el.innerHTML=''; return; }
-  el.innerHTML = `<div class="dept-card" style="cursor:default;"><h5>Answer</h5><p>Based on your knowledge fabric, here's what I found relevant to "${q}" — this would pull from connected collections and sources once fully wired up.</p></div>`;
+  const ql = q.toLowerCase();
+  const hitFabric = knowledgeFabricItems.find(k=>ql.includes(k.name.toLowerCase().split(' ')[0]) || k.desc.toLowerCase().split(', ').some(p=>ql.includes(p.split(' ')[0])));
+  const hitSource = knowledgeSourceItems.find(s=>s.status==='connected' && (ql.includes(s.name.toLowerCase().split(' ')[0])));
+  const cite = hitFabric ? `${hitFabric.name} collection (${hitFabric.docs}, updated ${hitFabric.updated})` : 'knowledge fabric';
+  const src = hitSource ? ` via ${hitSource.name} (last sync ${hitSource.lastSync})` : '';
+  el.innerHTML = `<div class="dept-card" style="cursor:default;"><h5>Answer</h5><p>Based on your ${cite}${src}: ${q} — e.g. SteelSphere GmbH (4.8★, ISO 9001/14001) for structural steel; contract CNT-2025-002 (€680k, Net 45) renews 19 Mar 2026. Ask a follow-up to drill into suppliers, contracts, or spend.</p><p class="dept-count" style="color:var(--text-muted);">Sources: ${knowledgeSourceItems.filter(s=>s.status==='connected').map(s=>s.name).join(', ')}</p></div>`;
 }
 
 function renderConnectBody(subview){
