@@ -1316,6 +1316,26 @@
   </div>
 </div>
 
+<div class="assign-overlay" id="publishOverlay" onclick="if(event.target===this) closePublishModal()">
+  <div class="assign-modal">
+    <h3>Publish agent</h3>
+    <p class="assign-sub" id="publishAgentName"></p>
+    <div class="assign-field">
+      <label>Channel</label>
+      <select id="publishChannelSelect" style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px;"></select>
+    </div>
+    <div class="assign-field">
+      <label>Target team / channel / number</label>
+      <input id="publishTargetInput" placeholder="e.g. Procurement team, #sourcing, +49 170 000000" style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px;">
+    </div>
+    <p class="assign-note" id="publishHint" style="margin-top:6px;"></p>
+    <div class="assign-actions">
+      <button class="btn btn-ghost" onclick="closePublishModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmPublish()">Publish</button>
+    </div>
+  </div>
+</div>
+
 <div class="assign-overlay" id="assignOverlay" onclick="if(event.target===this) closeAssignModal()">
   <div class="assign-modal">
     <h3 id="assignTitle">Assign task to agent</h3>
@@ -1801,6 +1821,8 @@ function domainAgentCardHTML(dept, domainAgent){
           ${domainAgent.rating}
         </span>
       </div>
+      <button class="btn btn-ghost" style="width:100%; margin-top:8px; padding:5px 8px; font-size:11px;" onclick="event.stopPropagation(); openPublishModal('${domainAgent.name.replace(/'/g,"\\'")}')">📣 Publish to channel</button>
+      ${agentPublishChips(domainAgent.name)}
       ${modelPickerHtml(domainAgent.name)}
     </div>`;
 }
@@ -1829,6 +1851,8 @@ function agentCardHTML(a, i){
           ${a.rating}
         </span>
       </div>
+      <button class="btn btn-ghost" style="width:100%; margin-top:8px; padding:5px 8px; font-size:11px;" onclick="event.stopPropagation(); openPublishModal('${a.name.replace(/'/g,"\\'")}')">📣 Publish to channel</button>
+      ${agentPublishChips(a.name)}
       ${modelPickerHtml(a.name)}
     </div>`;
 }
@@ -2069,6 +2093,8 @@ function deptAgentCardHTML(a, slug, i){
           ${a.rating}
         </span>
       </div>
+      <button class="btn btn-ghost" style="width:100%; margin-top:8px; padding:5px 8px; font-size:11px;" onclick="event.stopPropagation(); openPublishModal('${a.name.replace(/'/g,"\\'")}')">📣 Publish to channel</button>
+      ${agentPublishChips(a.name)}
       ${modelPickerHtml(a.name)}
     </div>`;
 }
@@ -2114,6 +2140,7 @@ function filterDeptCards(q){
   });
 }
 function renderAIWorkforceBody(subview){
+  window.lastWorkforceSubview = subview || 'overview';
   const body = document.getElementById('secBody-ai-workforce');
   if(subview==='overview' || !subview){
     body.innerHTML = `
@@ -2619,6 +2646,11 @@ function askKnowledgeQuestion(){
   el.innerHTML = `<div class="dept-card" style="cursor:default;"><h5>Answer</h5><p>Based on your ${cite}${src}: ${q} — e.g. SteelSphere GmbH (4.8★, ISO 9001/14001) for structural steel; contract CNT-2025-002 (€680k, Net 45) renews 19 Mar 2026. Ask a follow-up to drill into suppliers, contracts, or spend.</p><p class="dept-count" style="color:var(--text-muted);">Sources: ${knowledgeSourceItems.filter(s=>s.status==='connected').map(s=>s.name).join(', ')}</p></div>`;
 }
 
+const channelConnectors = [
+  {n:'Microsoft Teams',c:false,d:'Team chats & channels — bot + Adaptive Cards',cat:'Channels',meta:'Not configured'},
+  {n:'Slack',c:false,d:'Workspace channels & DMs — bot + Block Kit',cat:'Channels',meta:'Not configured'},
+  {n:'WhatsApp',c:false,d:'Business Cloud API — notifications & Q&A',cat:'Channels',meta:'Not configured'},
+];
 function renderConnectBody(subview){
   const body = document.getElementById('secBody-connect');
   const groups = {
@@ -2651,6 +2683,7 @@ function renderConnectBody(subview){
       {n:'CRM MCP',c:false,d:'Agent — Customer 360',cat:'MCP',meta:'Idle'},
       {n:'Custom MCP',c:false,d:'Agent — Your Custom MCP',cat:'MCP',meta:'Not configured'}
     ],
+    channels: channelConnectors,
   };
   const list = groups[subview] || groups.enterprise;
   const fenceOn = window.fenceEnabled !== false;
@@ -2702,6 +2735,8 @@ function findConnectorByName(name){
     ],
   };
   for(const k in allGroups){ const f = allGroups[k].find(x=>x.n===name); if(f) return f; }
+  const ch = channelConnectors.find(x=>x.n===name);
+  if(ch) return ch;
   return null;
 }
 function openConnectorDetail(name){
@@ -4215,6 +4250,7 @@ const sectionConfig = {
       {title:'MICROSOFT 365', items:[{id:'m365', label:'All M365'}]},
       {title:'DATABASES', items:[{id:'db', label:'All Databases'}]},
       {title:'APIS & AI', items:[{id:'mcp', label:'MCP Servers'}]},
+      {title:'CHANNELS', items:[{id:'channels', label:'Chat Channels'}]},
       {title:'CONNECTION MANAGEMENT', items:[{id:'active-conn',label:'Active Connections'},{id:'auth',label:'Authentication'},{id:'perms',label:'Permissions'},{id:'sync',label:'Sync Status'},{id:'logs',label:'Logs'}]},
     ],
     render: renderConnectBody,
@@ -4731,6 +4767,42 @@ function assignRowEntity(id){
   const inp = document.getElementById('assignEntityInput');
   if(inp) inp.value = found.id;
   renderAssignEntity();
+}
+if(!window.agentPublishes) window.agentPublishes = {};
+function openPublishModal(agentName){
+  if(!canUserConnect()){ alert('Access denied — only Admin can publish agents.\nRequired IAM: connector:write — contact your administrator.'); return; }
+  window.publishAgentName = agentName;
+  document.getElementById('publishAgentName').textContent = agentName;
+  const sel = document.getElementById('publishChannelSelect');
+  sel.innerHTML = channelConnectors.map(c=>`<option value="${c.n}" ${c.c?'':'disabled'}>${c.n}${c.c?' — '+c.meta:' — not connected'}</option>`).join('');
+  sel.selectedIndex = Math.max(0, channelConnectors.findIndex(c=>c.c));
+  document.getElementById('publishTargetInput').value = '';
+  document.getElementById('publishHint').textContent = 'Only connected channels can publish. Connect a channel first in Connect → Chat Channels.';
+  document.getElementById('publishOverlay').classList.add('show');
+}
+function closePublishModal(){ document.getElementById('publishOverlay').classList.remove('show'); window.publishAgentName = null; }
+function confirmPublish(){
+  const agentName = window.publishAgentName;
+  const channel = document.getElementById('publishChannelSelect').value;
+  const target = document.getElementById('publishTargetInput').value.trim();
+  if(!agentName || !channel) return;
+  if(!target){ alert('Enter the target team / channel / number.'); return; }
+  const ch = channelConnectors.find(c=>c.n===channel);
+  if(!ch || !ch.c){ alert(channel + ' is not connected. Connect it first in Connect → Chat Channels.'); return; }
+  if(!window.agentPublishes[agentName]) window.agentPublishes[agentName] = [];
+  if(!window.agentPublishes[agentName].some(p=>p.channel===channel && p.target===target))
+    window.agentPublishes[agentName].push({channel, target});
+  closePublishModal();
+  refreshWorkforceView();
+  alert(agentName + ' published to ' + channel + ' (' + target + '). Chat from there as well — messages route to this agent.');
+}
+function agentPublishChips(name){
+  const pubs = window.agentPublishes[name]||[];
+  if(!pubs.length) return '';
+  return `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">${pubs.map(p=>`<span class="tag tag-cat" title="Published channel">📣 ${p.channel} → ${p.target}</span>`).join('')}</div>`;
+}
+function refreshWorkforceView(){
+  renderAIWorkforceBody(window.lastWorkforceSubview || 'overview');
 }
 function openAssignModalObj(agentObj){
   pendingAgent = agentObj;
