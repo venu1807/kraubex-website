@@ -1305,6 +1305,17 @@
   </div>
 </div>
 
+<div class="assign-overlay" id="knowledgeDocOverlay" onclick="if(event.target===this) closeKnowledgeDocs()">
+  <div class="assign-modal">
+    <h3 id="knowledgeDocTitle">Collection</h3>
+    <p class="assign-sub" id="knowledgeDocSub"></p>
+    <div id="knowledgeDocBody"></div>
+    <div class="assign-actions">
+      <button class="btn btn-ghost" onclick="closeKnowledgeDocs()">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="assign-overlay" id="assignOverlay" onclick="if(event.target===this) closeAssignModal()">
   <div class="assign-modal">
     <h3 id="assignTitle">Assign task to agent</h3>
@@ -2482,6 +2493,45 @@ const knowledgeSourceItems = [
   {name:'SharePoint / M365', desc:'42 sites — libraries, OneDrive, Teams content.', records:'96,300 files', status:'connected', lastSync:'1h ago', owner:'Tom Richter'},
   {name:'External Sources', desc:'LME pricing, EU regulatory + sanctions feeds.', records:'34 feeds', status:'connected', lastSync:'2h ago', owner:'Aisha Rahman'},
 ];
+const knowledgeDocPools = {
+  'Company':[['Org chart 2026','PDF'],['Legal entities register','XLSX'],['Travel policy v4','PDF'],['Works council agreement','PDF'],['Brand guidelines','PDF']],
+  'People & Organization':[['Engineering ladder','PDF'],['Onboarding checklist','DOCX'],['Shift plan Q4','XLSX'],['Role matrix','XLSX'],['Training catalog','PDF']],
+  'Products':[['SKU master export','CSV'],['Spec sheet 412-A','PDF'],['Lifecycle status','XLSX'],['BOM snapshot','CSV'],['Pricing list Q3','XLSX']],
+  'Suppliers':[['SteelSphere profile','PDF'],['Supplier scorecard Q3','XLSX'],['ISO 9001 SteelSphere','PDF'],['Approved vendor list','CSV'],['Risk flags review','PDF']],
+  'Customers':[['Key account plan','PDF'],['Order history export','CSV'],['SLA overview','PDF'],['Credit limits','XLSX']],
+  'Materials':[['Steel grade specs','PDF'],['Copper LME mapping','CSV'],['RoHS declarations','PDF'],['Safety data sheets','PDF'],['Substitute materials','XLSX']],
+  'Assets':[['Press P-12 maintenance log','PDF'],['Facility floor plan','PDF'],['Calibration schedule','XLSX'],['Forklift inspection','PDF']],
+  'Contracts':[['CNT-2025-002 SteelSphere','PDF'],['CNT-2025-001 framework','PDF'],['Renewal pipeline','XLSX'],['Clause library','DOCX'],['Sign-off archive','ZIP']],
+  'Projects':[['Bielefeld rollout plan','MPP'],['Milestone tracker','XLSX'],['Steering deck Sep','PPTX'],['Risk log','XLSX']],
+  'Business Processes':[['P2P operating procedure','PDF'],['Approval matrix','XLSX'],['Escalation playbook','PDF'],['Segregation of duties','PDF']],
+  'Documents':[['Supplier onboarding pack','PDF'],['Q3 board deck','PPTX'],['NDA template','DOCX'],['Audit evidence bundle','ZIP'],['Meeting notes Sep','DOCX']],
+  'Databases':[['procurement.warehouse snapshot','DUMP'],['supplier_master view','SQL'],['po_lines extract','CSV'],['inventory_levels','CSV']],
+  'ERP Data':[['SAP vendors (KNA1)','TABLE'],['SAP POs (EKKO)','TABLE'],['Dynamics invoices','TABLE'],['GRN postings','TABLE']],
+  'CRM Data':[['Salesforce accounts export','CSV'],['Open opportunities','CSV'],['Contact roles','CSV']],
+  'Emails':[['Thread: SteelSphere renewal','EML'],['Thread: copper spot quote','EML'],['Thread: audit evidence request','EML'],['Thread: vendor onboarding','EML']],
+  'SharePoint / M365':[['Procurement intranet site','SITE'],['Teams: Sourcing channel','TEAMS'],['OneDrive: contracts folder','FOLDER'],['Policy library','LIB']],
+  'External Sources':[['LME copper daily feed','FEED'],['EU sanctions list delta','FEED'],['Steel price index','FEED'],['Regulatory digest Sep','PDF']],
+};
+function knowledgeDocsFor(name){
+  const pool = knowledgeDocPools[name] || [['Overview export','CSV'],['Readme','MD']];
+  return pool.map(d=>{
+    const h = hashStr(name+d[0]);
+    const sizes = ['84 KB','240 KB','1.2 MB','3.8 MB','512 KB','96 KB','2.1 MB'];
+    const days = ['26m ago','2h ago','5h ago','1d ago','3d ago','1w ago','2w ago'];
+    return {title:d[0], type:d[1], size:sizes[h%sizes.length], updated:days[(h>>3)%days.length]};
+  });
+}
+function openKnowledgeDocs(name, kind){
+  const docs = knowledgeDocsFor(name);
+  document.getElementById('knowledgeDocTitle').textContent = name;
+  document.getElementById('knowledgeDocSub').textContent = (kind||'Collection') + ' • ' + docs.length + ' items shown';
+  document.getElementById('knowledgeDocBody').innerHTML = docs.map(d=>`
+    <div class="doc-row"><span><b>${d.title}</b><br><span style="font-size:11px; color:var(--text-muted);">${d.type} • ${d.size} • Updated ${d.updated}</span></span>
+      <div class="doc-row-actions"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" onclick="alert('Viewing ${d.title}')" title="View"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></div>
+    </div>`).join('');
+  document.getElementById('knowledgeDocOverlay').classList.add('show');
+}
+function closeKnowledgeDocs(){ document.getElementById('knowledgeDocOverlay').classList.remove('show'); }
 function renderKnowledgeBody(subview){
   const body = document.getElementById('secBody-knowledge');
 
@@ -2530,7 +2580,7 @@ function renderKnowledgeBody(subview){
   const statusTag = (s)=> s==='indexed'||s==='connected' ? 'tag-active' : s==='partial' ? 'tag-upcoming' : s==='pending' ? 'tag-cat' : 'tag-expired';
   const statusLabel = (s)=> s==='indexed' ? 'Indexed' : s==='connected' ? 'Connected' : s==='partial' ? 'Partial' : s==='pending' ? 'Not linked' : 'Stale';
   body.innerHTML = `
-    <div class="dept-list">${list.map(k=>`<div class="dept-card"><h5>${k.name} <span class="tag ${statusTag(isSources?k.status:k.status)}" style="margin-left:6px;">${statusLabel(isSources?k.status:k.status)}</span></h5><p>${k.desc}</p>
+    <div class="dept-list">${list.map(k=>`<div class="dept-card" style="cursor:pointer;" onclick="openKnowledgeDocs('${k.name}', '${isSources?'Source':'Collection'}')"><h5>${k.name} <span class="tag ${statusTag(isSources?k.status:k.status)}" style="margin-left:6px;">${statusLabel(isSources?k.status:k.status)}</span></h5><p>${k.desc}</p>
     <p class="dept-count" style="color:var(--text-muted);">${isSources ? `${k.records} • Last sync ${k.lastSync} • Owner: ${k.owner}` : `${k.docs} • ${k.entities} • Updated ${k.updated} • Owner: ${k.owner} • Freshness ${k.freshness}%`}</p></div>`).join('')}</div>`;
 }
 function renderKnowledgeSearchResults(){
@@ -2541,7 +2591,7 @@ function renderKnowledgeSearchResults(){
   const matches = all.filter(k=>(k.name+' '+k.desc+' '+(k.owner||'')).toLowerCase().includes(q));
   el.innerHTML = matches.length ? `
     <p class="domain-eyebrow" style="padding:0;">${matches.length} result${matches.length!==1?'s':''}</p>
-    <div class="dept-list">${matches.map(k=>`<div class="dept-card"><h5>${k.name} <span class="tag tag-cat" style="margin-left:6px;">${k.kind}</span></h5><p>${k.desc}</p><p class="dept-count" style="color:var(--text-muted);">${k.sub}</p></div>`).join('')}</div>
+    <div class="dept-list">${matches.map(k=>`<div class="dept-card" style="cursor:pointer;" onclick="openKnowledgeDocs('${k.name}', '${k.kind}')"><h5>${k.name} <span class="tag tag-cat" style="margin-left:6px;">${k.kind}</span></h5><p>${k.desc}</p><p class="dept-count" style="color:var(--text-muted);">${k.sub}</p></div>`).join('')}</div>
   ` : '<p style="font-size:12px; color:var(--text-muted);">No matches.</p>';
 }
 function askKnowledgeQuestion(){
