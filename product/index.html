@@ -1582,18 +1582,49 @@ function iconFor(a){
   </div>`;
 }
 function domainIconFor(deptName, color){
-  const c = color || deptColors[hashStr(deptName) % deptColors.length];
+  const businessTeal = '#0F766E', riskRust = '#9C4221', techIndigo = '#4F46E5';
+  const businessDepts = ['Procurement','Finance','Product','Operations','Supply Chain','Sales','Marketing','Customer success','Customer Service','Human Resources','HR','Production','Manufacturing','Inventory','Logistics','Administration','Project','Project Management','Customer support','Revenue operations'];
+  const riskDepts = ['Compliance','Cybersecurity','Legal & Contracts','Legal & contract','Risk','ESG & Sustainability','Audit'];
+  const techDepts = ['IT','Software engineering','Engineering','QA & testing','QA & Testing','Quality'];
+  let c = color || deptColors[hashStr(deptName) % deptColors.length];
+  if(businessDepts.includes(deptName)) c = businessTeal;
+  else if(riskDepts.includes(deptName)) c = riskRust;
+  else if(techDepts.includes(deptName)) c = techIndigo;
   const icons = {
     'Procurement':'<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h2l2.4 12.2a2 2 0 002 1.8h8.6a2 2 0 002-1.6L21 7H6"/>',
     'Finance':'<text x="12" y="15" text-anchor="middle" dominant-baseline="central" font-family="Inter, Geist, sans-serif" font-size="16" font-weight="800" fill="currentColor" stroke="none">€</text>',
+    'Product':'<path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>',
+    'Operations':'<circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M18.36 18.36l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M18.36 5.64l2.12-2.12"/>',
+    'Supply Chain':'<path d="M14 18V6a2 2 0 00-2-2H5a2 2 0 00-2 2v11a1 1 0 001 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 001-1v-3.83a1 1 0 00-.37-.77L18 9V18"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
     'Sales':'<path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-9"/>',
     'Marketing':'<path d="M3 11l18-5v12L3 14v-3z"/><path d="M11 11v6a2 2 0 002 2h2"/>',
-    'Supply Chain':'<path d="M14 18V6a2 2 0 00-2-2H5a2 2 0 00-2 2v11a1 1 0 001 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 001-1v-3.83a1 1 0 00-.37-.77L18 9V18"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
-    'Operations':'<circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M18.36 18.36l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M18.36 5.64l2.12-2.12"/>',
+    'Customer success':'<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c1 1.2 2.2 1.8 3.5 1.8s2.5-.6 3.5-1.8"/><path d="M9 9.5h.01M15 9.5h.01"/>',
+    'Customer Service':'<path d="M4 15v-2a8 8 0 0116 0v2"/><rect x="2.5" y="14.5" width="4.5" height="6" rx="2"/><rect x="17" y="14.5" width="4.5" height="6" rx="2"/><path d="M20 20.5a4 4 0 01-4 3.5"/>',
+    'Customer support':'<path d="M4 15v-2a8 8 0 0116 0v2"/><rect x="2.5" y="14.5" width="4.5" height="6" rx="2"/><rect x="17" y="14.5" width="4.5" height="6" rx="2"/><path d="M20 20.5a4 4 0 01-4 3.5"/>',
+    'Human Resources':'<circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.4 2.9-5.8 6.5-5.8s6.5 2.4 6.5 5.8"/><circle cx="17" cy="9" r="2.4"/><path d="M16.5 14.4c2.6.5 4.5 2.5 4.5 5.1"/>',
+    'HR':'<circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.4 2.9-5.8 6.5-5.8s6.5 2.4 6.5 5.8"/><circle cx="17" cy="9" r="2.4"/><path d="M16.5 14.4c2.6.5 4.5 2.5 4.5 5.1"/>',
+    'Production':'<path d="M12 2l9 5-9 5-9-5 9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 17l9 5 9-5"/>',
     'Manufacturing':'<path d="M3 20h18"/><path d="M5 20V10a2 2 0 012-2h2a2 2 0 012 2v10"/><path d="M11 20V14a2 2 0 012-2h2a2 2 0 012 2v6"/><path d="M3 10l3-3 3 3 3-3 3 3 3-3 3 3"/>',
-    'Quality':'<path d="M12 2l7 4v6c0 5-3.5 9-7 10-3.5-1-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+    'Inventory':'<path d="M4 7.5l8-4 8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4"/><path d="M4 16.5l8 4 8-4"/>',
+    'Logistics':'<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 7.5l7.6 7.6"/><path d="M18 8.5h-5v-5"/><circle cx="18" cy="6" r="1"/>',
+    'Administration':'<path d="M2 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H4a2 2 0 01-2-2V7z"/><path d="M2 9.5h20"/>',
+    'Project':'<circle cx="6" cy="6" r="2.4"/><circle cx="6" cy="18" r="2.4"/><circle cx="18" cy="12" r="2.4"/><path d="M6 8.4v7.2"/><path d="M18 14.4c0 2.8-3.5 3-6.5 3"/>',
+    'Project Management':'<circle cx="6" cy="6" r="2.4"/><circle cx="6" cy="18" r="2.4"/><circle cx="18" cy="12" r="2.4"/><path d="M6 8.4v7.2"/><path d="M18 14.4c0 2.8-3.5 3-6.5 3"/>',
+    'Revenue operations':'<path d="M21.2 15.9A10 10 0 118 2.8"/><path d="M22 12A10 10 0 0012 2v10h10z"/>',
+    'Compliance':'<rect x="8" y="2.5" width="8" height="4" rx="1"/><path d="M16 4.5h2a2 2 0 012 2v13a2 2 0 01-2 2H6a2 2 0 01-2-2v-13a2 2 0 012-2h2"/><path d="M9 14l2 2 4-4.5"/>',
+    'Cybersecurity':'<path d="M12 2l7 4v6c0 5-3.5 9-7 10-3.5-1-7-5-7-10V6z"/><path d="M9.5 12l1.8 1.8L14.8 10"/>',
+    'Legal & Contracts':'<path d="M12 3v18"/><path d="M8 21h8"/><path d="M4.5 7h15"/><path d="M7 7L4.2 14a2.9 2.9 0 005.6 0L7 7z"/><path d="M17 7l-2.8 7a2.9 2.9 0 005.6 0L17 7z"/>',
+    'Legal & contract':'<path d="M12 3v18"/><path d="M8 21h8"/><path d="M4.5 7h15"/><path d="M7 7L4.2 14a2.9 2.9 0 005.6 0L7 7z"/><path d="M17 7l-2.8 7a2.9 2.9 0 005.6 0L17 7z"/>',
+    'Risk':'<path d="M12 3.5L22 20H2L12 3.5z"/><path d="M12 10v4.5"/><path d="M12 17.5h.01"/>',
+    'ESG & Sustainability':'<path d="M5 19C5 10 12.5 5.5 20 4.5c-.5 8-4.5 14.5-13.5 14.5"/><path d="M5 19c3-6 7-10 11.5-11.5"/>',
+    'Audit':'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
+    'IT':'<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/>',
+    'Software engineering':'<path d="M8 6L2.5 12 8 18"/><path d="M16 6l5.5 6L16 18"/><path d="M13.5 4l-3 16"/>',
+    'Engineering':'<path d="M8 6L2.5 12 8 18"/><path d="M16 6l5.5 6L16 18"/><path d="M13.5 4l-3 16"/>',
+    'QA & testing':'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/><path d="M9.5 12.5l1.8 1.8 3.2-3.6"/>',
+    'QA & Testing':'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/><path d="M9.5 12.5l1.8 1.8 3.2-3.6"/>',
+    'Quality':'<circle cx="12" cy="9" r="5.5"/><path d="M8.8 13.8L7.5 21l4.5-2.6L16.5 21l-1.3-7.2"/><path d="M10 9l1.5 1.5L14.5 7.5"/>',
     'Data & Analytics':'<path d="M3 3v18h18"/><path d="M7 16h3V9H7v7zM14 16h3V5h-3v11z"/>',
-    'ESG & Sustainability':'<path d="M11 20A7 7 0 0111 6a7 7 0 010 14z"/><path d="M11 6c-1 2-1 5 0 8"/><path d="M11 6c2 1 4 3 4 6s-2 5-4 6"/>',
     'R&D':'<path d="M9 3h6"/><path d="M10 3v6l-3 6a2 2 0 002 3h6a2 2 0 002-3l-3-6V3"/><path d="M12 12h.01"/>',
     'Strategy':'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="1"/>',
     'Knowledge':'<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v15H6.5A2.5 2.5 0 014 19.5z"/><path d="M8 7h8M8 11h8"/>',
