@@ -2338,6 +2338,33 @@ const workflows = [
       no: [{type:'action', label:'Update risk dashboard', sub:'Action', detail:'Updates dashboard with latest scores, no alert.', owner:'System', config:'Dashboard: Risk_Overview'}]
     }},
   ]},
+  {id:'WF-008', name:'Pharma batch quality release', dept:'Quality', status:'Active', lastRun:'1h ago', createdBy:'Krishna', nodes:[
+    {type:'trigger', label:'Batch ready for release', sub:'Trigger', detail:'Fires when MES posts finished batch B-2026-0841.', owner:'System', config:'Event MES.batch_ready • Plant = Bielefeld'},
+    {type:'agent', label:'QA Agent', sub:'Review CoA and records', detail:'Checks certificate of analysis and batch record completeness.', owner:'QA Agent', config:'Spec: PH-Q-011 • CoA required'},
+    {type:'condition', label:'CoA within spec?', sub:'Condition', detail:'Branches on certificate results vs registered spec.', config:'Rule: all params within spec', branches:{
+      yes: [{type:'action', label:'Release batch', sub:'Action', detail:'Posts batch release to SAP and notifies warehouse.', owner:'System', config:'ERP: Batch.release'}],
+      no: [{type:'human', label:'Krishna', sub:'Raise deviation', detail:'QA analyst raises deviation and holds the batch.', owner:'Krishna • Quality', config:'SLA: 4h • Hold batch'}]
+    }},
+    {type:'action', label:'Notify warehouse', sub:'Action', detail:'Sends release/hold outcome to the warehouse team.', owner:'System', config:'Channel: Email • Template: Batch_Outcome'},
+  ]},
+  {id:'WF-009', name:'Cold chain excursion review', dept:'Supply Chain', status:'Active', lastRun:'3h ago', createdBy:'Anish', nodes:[
+    {type:'trigger', label:'Logger excursion alert', sub:'Trigger', detail:'Fires when a shipment logger breaches the 2–8°C band.', owner:'System', config:'Source: Logger API • Band: 2-8C'},
+    {type:'agent', label:'Supply Chain Agent', sub:'Pull logger data', detail:'Downloads time-series logger data for shipment SH-2210.', owner:'Supply Chain Agent', config:'Window: shipment duration'},
+    {type:'condition', label:'Excursion > 30 min?', sub:'Condition', detail:'Branches on cumulative out-of-band duration.', config:'Threshold: 30 min', branches:{
+      yes: [{type:'human', label:'Anish', sub:'Assess product impact', detail:'Data engineer assesses stability impact together with QA.', owner:'Anish • Supply Chain', config:'SLA: 8h'}],
+      no: [{type:'action', label:'Auto-close excursion', sub:'Action', detail:'Logs the minor excursion and closes the alert.', owner:'System', config:'Register: Excursion_Log'}]
+    }},
+    {type:'action', label:'Notify QA', sub:'Action', detail:'Sends the excursion outcome to QA on-call.', owner:'System', config:'Channel: Teams • Template: Excursion_Outcome'},
+  ]},
+  {id:'WF-010', name:'Pharma artwork approval', dept:'Quality', status:'Active', lastRun:'5h ago', createdBy:'Aisha Rahman', nodes:[
+    {type:'trigger', label:'Artwork proof uploaded', sub:'Trigger', detail:'Fires when the agency uploads the SKU-412 artwork proof.', owner:'System', config:'Source: DAM • SKU-412'},
+    {type:'agent', label:'Compliance Agent', sub:'Check regulatory text', detail:'Validates SmPC text, fonts and warning symbols.', owner:'Compliance Agent', config:'Rules: EU-QRD v10'},
+    {type:'condition', label:'Proof compliant?', sub:'Condition', detail:'Branches on the automated compliance score.', config:'Threshold: score >= 95', branches:{
+      yes: [{type:'action', label:'Approve artwork', sub:'Action', detail:'Approves the proof and releases it to the print vendor.', owner:'System', config:'DAM: Artwork.approve'}],
+      no: [{type:'human', label:'Aisha Rahman', sub:'Review markup', detail:'Quality manager reviews and marks corrections.', owner:'Aisha Rahman • Quality', config:'SLA: 2d'}]
+    }},
+    {type:'action', label:'Notify regulatory', sub:'Action', detail:'Sends the approval pack to regulatory affairs.', owner:'System', config:'Channel: Email • Pack: Approval_Pack'},
+  ]},
 ];
 if(!window.wfFilters) window.wfFilters = {search:'', dept:'all', creator:'all'};
 if(!window.taskFilters) window.taskFilters = {search:'', type:'all', agent:'all', creator:'all', status:'all'};
@@ -2668,6 +2695,11 @@ const taskOutcomes = {
   'Approve AutoParts invoice batch':{progress:25},
   'Renew Deutsche Stahlbau contract':{failureReason:'Expired ISO 3834 certificate — renewal blocked by compliance'},
   'Monthly spend consolidation':{result:'August spend report shared with finance', completedAt:'21 Sep 2026'},
+  'Release batch B-2026-0841':{progress:60},
+  'Investigate cold-chain excursion SH-2210':{progress:35},
+  'Approve artwork proof SKU-412':{progress:15},
+  'Backfill batch genealogy L2':{result:'340 genealogy links backfilled for line L2', completedAt:'24 Sep 2026'},
+  'Calibrate stability chambers':{progress:5},
 };
 const workflowStats = {
   'PO auto-approval under €5K':{runs:148, successRate:96, avgTime:'4m 12s'},
@@ -2677,6 +2709,9 @@ const workflowStats = {
   'Candidate screening':{runs:8, successRate:75, avgTime:'3h 20m'},
   'Quarterly ESG report':{runs:4, successRate:100, avgTime:'55m'},
   'Vendor risk re-score':{runs:26, successRate:62, avgTime:'18m'},
+  'Pharma batch quality release':{runs:34, successRate:93, avgTime:'2h 10m'},
+  'Cold chain excursion review':{runs:58, successRate:89, avgTime:'5h 45m'},
+  'Pharma artwork approval':{runs:19, successRate:95, avgTime:'1d 6h'},
 };
 function nextWorkflowId(){
   const nums = workflows.map(w=>parseInt(String(w.id||'').slice(3),10)).filter(n=>!isNaN(n));
@@ -2714,6 +2749,11 @@ function renderTasksBody(subview){
     {id:'TSK-012', name:'Approve AutoParts invoice batch', agent:'Finance Domain Agent', status:'Waiting for data', type:'Approval', createdBy:'Marcus Weber', createdAt:'8h ago', date:'24 Sep 2026', priority:'High', desc:'92 invoices totalling €214,500 awaiting release.'},
     {id:'TSK-013', name:'Renew Deutsche Stahlbau contract', agent:'Contract Life Cycle Management Agent', status:'Failed', type:'Contract', createdBy:'Elena Fischer', createdAt:'2d ago', date:'23 Sep 2026', priority:'High', desc:'Renewal blocked — expired ISO 3834 certificate.'},
     {id:'TSK-014', name:'Monthly spend consolidation', agent:'Finance Domain Agent', status:'Completed', type:'Report', createdBy:'Priya Patel', createdAt:'4d ago', date:'21 Sep 2026', priority:'Low', desc:'August spend rolled up across 6 cost centers.'},
+    {id:'TSK-015', name:'Release batch B-2026-0841', agent:'Quality Domain Agent', status:'In progress', type:'Approval', createdBy:'Krishna', createdAt:'2h ago', date:'25 Sep 2026', priority:'High', desc:'Review CoA and release documents for batch B-2026-0841.'},
+    {id:'TSK-016', name:'Investigate cold-chain excursion SH-2210', agent:'Quality Domain Agent', status:'Running', type:'Incident', createdBy:'Anish', createdAt:'4h ago', date:'25 Sep 2026', priority:'Medium', desc:'Analyze logger data for the SH-2210 temperature excursion.'},
+    {id:'TSK-017', name:'Approve artwork proof SKU-412', agent:'Quality Domain Agent', status:'Waiting for data', type:'Approval', createdBy:'Aisha Rahman', createdAt:'6h ago', date:'25 Sep 2026', priority:'Medium', desc:'Check agency proof against the QRD template.'},
+    {id:'TSK-018', name:'Backfill batch genealogy L2', agent:'Quality Domain Agent', status:'Completed', type:'Data', createdBy:'Anish', createdAt:'1d ago', date:'24 Sep 2026', priority:'Low', desc:'Backfill genealogy links for production line L2.'},
+    {id:'TSK-019', name:'Calibrate stability chambers', agent:'Quality Domain Agent', status:'Waiting for data', type:'Maintenance', createdBy:'Krishna', createdAt:'2d ago', date:'23 Sep 2026', priority:'Medium', desc:'Annual calibration due for chambers SC-01 and SC-02.'},
   ];
   // preserve toolbar values
   const prevTSearch = document.getElementById('taskSearchInput')?.value;
