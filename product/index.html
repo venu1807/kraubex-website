@@ -665,6 +665,31 @@
   .wf-node-detail-row span:first-child{color:var(--text-muted);}
   .wf-node-detail-row span:last-child{color:var(--subhead); font-weight:600; text-align:right; max-width:62%;}
   .wf-node-detail-desc{font-size:13px; color:var(--subhead); line-height:1.5; margin:10px 0; background:var(--bg); padding:10px 12px; border-radius:8px;}
+  .wf-modal-body{position:relative;}
+  .wf-node{width:196px; min-width:0; max-width:none; padding:0;}
+  .wf-node-head{display:flex; align-items:center; gap:8px; padding:9px 10px; border-bottom:1px solid var(--border); border-radius:8px 8px 0 0;}
+  .wf-node-icon{margin:0;}
+  .wf-node-title{font-size:12.5px; font-weight:700; color:var(--subhead); line-height:1.2; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .wf-node-kind{font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; margin:0;}
+  .wf-node-body{padding:9px 10px 11px; font-size:11.5px; color:var(--text-muted); line-height:1.4; margin:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+  .wf-node-meta{display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-muted); padding:0 10px 10px; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .del-btn{position:absolute; top:-8px; right:-8px; width:18px; height:18px; border-radius:50%; background:var(--card); border:1px solid var(--border); color:var(--text-muted); font-size:11px; display:none; align-items:center; justify-content:center; cursor:pointer; line-height:1; z-index:5;}
+  .wf-node:hover .del-btn{display:flex;}
+  .del-btn:hover{color:#791F1F; border-color:#791F1F;}
+  .wf-zoomctl{position:absolute; bottom:18px; right:18px; background:var(--card); border:1px solid var(--border); border-radius:9px; display:flex; box-shadow:0 8px 24px rgba(0,0,0,.08); overflow:hidden; z-index:15;}
+  .wf-zoomctl button{border:none; background:none; width:34px; height:34px; font-size:16px; cursor:pointer; color:var(--subhead);}
+  .wf-zoomctl button:hover{background:var(--bg);}
+  .wf-zval{width:46px; display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--text-muted); border-left:1px solid var(--border); border-right:1px solid var(--border);}
+  .wf-hint{position:absolute; top:16px; left:50%; transform:translateX(-50%); background:var(--subhead); color:#fff; font-size:12px; padding:7px 14px; border-radius:20px; box-shadow:0 8px 24px rgba(0,0,0,.12); opacity:.92; pointer-events:none; z-index:15; white-space:nowrap;}
+  .wf-inspector{position:absolute; top:0; right:0; bottom:0; width:280px; background:var(--card); border-left:1px solid var(--border); box-shadow:-4px 0 16px rgba(0,0,0,.08); padding:16px; display:none; flex-direction:column; gap:6px; overflow-y:auto; z-index:20;}
+  .wf-inspector.open{display:flex;}
+  .wf-insp-head{display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:8px;}
+  .wf-insp-kind{font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted);}
+  .wf-insp-title{font-size:14px; font-weight:700; color:var(--subhead);}
+  .wf-inspector label{font-size:11px; color:var(--text-muted); margin-top:8px; font-weight:500;}
+  .wf-inspector input, .wf-inspector textarea{font-family:inherit; font-size:12px; border:1px solid var(--border); border-radius:7px; padding:7px 8px; background:#fff; color:var(--subhead); resize:vertical;}
+  .wf-inspector input:disabled{color:var(--text-muted); background:var(--bg);}
+  .wf-inspector input:focus, .wf-inspector textarea:focus{outline:none; border-color:var(--headline);}
   .oc-model-picker{position:relative; margin-top:10px; padding-top:8px; border-top:1px solid var(--border);}
   .oc-model-label{font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.04em; text-transform:uppercase; display:block; margin-bottom:4px;}
   .oc-model-btn{width:100%; display:flex; align-items:center; gap:7px; padding:6px 8px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--subhead); font-size:11px; cursor:pointer; transition:border-color .15s, box-shadow .15s; text-align:left;}
@@ -1144,6 +1169,7 @@
       <button class="wf-tool-btn" onclick="wfSaveJson()" title="Download workflow as JSON">Save JSON</button>
       <button class="wf-tool-btn" onclick="document.getElementById('wfLoadFile').click()" title="Load workflow from JSON">Load JSON</button>
       <input type="file" id="wfLoadFile" accept="application/json,.json" style="display:none" onchange="wfLoadJsonFile(this)">
+      <button class="wf-tool-btn" onclick="wfRunTest()" title="Pulse through blocks">▶ Run test</button>
       <span class="wf-toolbar-hint">Drag background to pan • scroll to zoom • drag a dot to connect</span>
     </div>
     <div class="wf-modal-body">
@@ -1152,6 +1178,32 @@
         <div class="wf-palette" id="wfPalette"></div>
       </aside>
       <div class="wf-canvas" id="wfCanvas"></div>
+      <div class="wf-hint" id="wfHint">Drag a block to move · drag between dots to connect · scroll to zoom</div>
+      <div class="wf-zoomctl">
+        <button onclick="wfZoomOut()" title="Zoom out">−</button>
+        <div class="wf-zval" id="wfZoomVal">100%</div>
+        <button onclick="wfZoomIn()" title="Zoom in">+</button>
+      </div>
+      <aside class="wf-inspector" id="wfInspector">
+        <div class="wf-insp-head">
+          <div>
+            <div class="wf-insp-kind" id="wfInspKind">agent</div>
+            <div class="wf-insp-title" id="wfInspTitle">Node</div>
+          </div>
+          <button class="wf-close" onclick="closeWfInspector()" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>
+        <label>Label</label>
+        <input id="wfInspLabel" type="text">
+        <label>Node ID</label>
+        <input id="wfInspId" type="text" disabled>
+        <label>Owner</label>
+        <input id="wfInspOwner" type="text">
+        <label>Detail</label>
+        <textarea id="wfInspDetail" rows="3"></textarea>
+        <label>Config</label>
+        <input id="wfInspConfig" type="text">
+        <button class="btn btn-primary" onclick="applyWfInspector()" style="width:100%; margin-top:10px;">Apply</button>
+      </aside>
     </div>
     <div class="wf-legend">
       <span><i style="background:#1D9E75;"></i>Trigger</span>
@@ -3087,6 +3139,8 @@ function openWorkflowTemplate(name, editMode){
   renderWfModalHead();
   renderWfCanvas();
   document.getElementById('wfOverlay').classList.add('show');
+  const wfHintEl = document.getElementById('wfHint');
+  if(wfHintEl) wfHintEl.style.display = 'block';
 }
 function renderWfModalHead(){
   document.getElementById('wfModalActions').innerHTML = editingWfMode ? `
@@ -3138,13 +3192,17 @@ function wfNodeHtml(n, i, isBranch, branchKey, branchIdx){
   const portsHtml = isCondition
     ? `<div class="wf-port in" data-port="in" onmousedown="wfPortDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1},'in'); event.stopPropagation();"></div><div class="wf-port yes" data-port="yes" onmousedown="wfPortDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1},'yes'); event.stopPropagation();" title="Yes branch"></div><div class="wf-port no" data-port="no" onmousedown="wfPortDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1},'no'); event.stopPropagation();" style="top:66%;" title="No branch"></div>`
     : `<div class="wf-port in" data-port="in" onmousedown="wfPortDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1},'in'); event.stopPropagation();"></div><div class="wf-port out" data-port="out" onmousedown="wfPortDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1},'out'); event.stopPropagation();"></div>`;
+  const typeColors = {trigger:'#1D9E75',condition:'#EF9F27',agent:'#B83E01',action:'#378ADD',human:'#D4537E'};
+  const tc = typeColors[n.type] || '#378ADD';
+  const bodyDefaults = {trigger:'Starts the workflow when this event fires.', agent:'Calls a Kraubex domain/skill agent.', condition:'Branches the flow — Yes / No.', action:'Performs an external side effect.', human:'Waits for a person to review and decide.'};
   return `<div class="wf-node ${n.type}" id="${nid}" style="left:${x}px; top:${y}px;" ${dragHandler} ${clickHandler}>
       ${portsHtml}
-      ${editingWfMode ? `<svg class="wf-node-remove" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ${removeHandler}><path d="M6 6l12 12M18 6L6 18"/></svg>` : ''}
-      <div class="wf-node-icon">${wfNodeIcon(n.type)}</div>
-      <p class="wf-node-type">${n.sub}</p>
-      <p class="wf-node-label">${n.label}</p>
-      ${n.detail ? `<p class="wf-node-desc">${n.detail}</p>` : ''}
+      ${editingWfMode ? `<div class="del-btn" title="Delete" ${removeHandler}>✕</div>` : ''}
+      <div class="wf-node-head" style="background:${tc}0D">
+        <div class="wf-node-icon">${wfNodeIcon(n.type)}</div>
+        <div style="min-width:0;"><p class="wf-node-title">${n.label}</p><p class="wf-node-kind">${n.type}</p></div>
+      </div>
+      <p class="wf-node-body">${n.detail || bodyDefaults[n.type] || ''}</p>
       ${n.owner ? `<p class="wf-node-meta"><span class="wf-meta-dot"></span>${n.owner}</p>` : ''}
     </div>`;
 }
@@ -3161,7 +3219,7 @@ function wfGetPortCoords(elId, port){
   return null;
 }
 function wfPortPos(node, port){
-  const W=200, H=110;
+  const W=196, H=110;
   if(port==='in') return {x:(node.x||0), y:(node.y||0)+H/2};
   if(port==='yes') return {x:(node.x||0)+W, y:(node.y||0)+H*0.34};
   if(port==='no') return {x:(node.x||0)+W, y:(node.y||0)+H*0.66};
@@ -3291,6 +3349,8 @@ function applyWfView(){
   if(w) w.style.transform = `translate(${wfView.x}px,${wfView.y}px) scale(${wfView.zoom})`;
   const lbl = document.getElementById('wfZoomLabel');
   if(lbl) lbl.textContent = Math.round(wfView.zoom*100)+'%';
+  const zval = document.getElementById('wfZoomVal');
+  if(zval) zval.textContent = Math.round(wfView.zoom*100)+'%';
 }
 function wfZoomIn(){ wfView.zoom = Math.min(1.6, +(wfView.zoom*1.15).toFixed(3)); applyWfView(); }
 function wfZoomOut(){ wfView.zoom = Math.max(0.5, +(wfView.zoom/1.15).toFixed(3)); applyWfView(); }
@@ -3401,6 +3461,7 @@ function wfDragStart(e,i,branchKey,branchIdx){
   const cx = touch? touch.clientX : e.clientX;
   const cy = touch? touch.clientY : e.clientY;
   wfDragState = {i, branchKey, branchIdx, isBranch, node, startX:cx, startY:cy, origX:node.x, origY:node.y};
+  wfHideHint();
   window.wfDragMoved=false;
   const el = document.getElementById(isBranch?`wfNode-${i}-${branchKey}-${branchIdx}`:`wfNode-${i}`);
   if(el) el.classList.add('dragging');
@@ -3460,6 +3521,7 @@ function wfPortDragStart(e,i,branchKey,branchIdx,port){
     else { sx=(node.x||0)+W; sy=(node.y||0)+H/2; }
   }
   window.wfPortDrag = {active:true, fromI:i, fromBranchKey:branchKey||'', fromBranchIdx: isBranch?branchIdx:-1, port, sx, sy, tx:sx, ty:sy};
+  wfHideHint();
   const portEl = e.currentTarget;
   if(portEl) portEl.classList.add('dragging');
   e.preventDefault(); e.stopPropagation();
@@ -3531,17 +3593,54 @@ function wfPortDragEnd(e){
 }
 
 function openWfNodeDetail(i){
-  const n = editingNodes[i];
-  if(!n) return;
-  showWfNodeDetail(n);
+  openWfInspector(i,'',-1);
 }
 function openWfBranchNodeDetail(parentIdx, branchKey, branchIdx){
-  const parent = editingNodes[parentIdx];
-  if(!parent || !parent.branches || !parent.branches[branchKey]) return;
-  const n = parent.branches[branchKey][branchIdx];
-  if(!n) return;
-  showWfNodeDetail(n);
+  openWfInspector(parentIdx,branchKey,branchIdx);
 }
+function wfInspectTarget(){
+  const s = window.wfInspecting;
+  if(!s) return null;
+  if(s.branchKey){
+    const p = editingNodes[s.i];
+    if(!p || !p.branches || !p.branches[s.branchKey]) return null;
+    return p.branches[s.branchKey][s.branchIdx] || null;
+  }
+  return editingNodes[s.i] || null;
+}
+function openWfInspector(i, branchKey, branchIdx){
+  window.wfInspecting = {i, branchKey:branchKey||'', branchIdx:(branchIdx===undefined?-1:branchIdx)};
+  const n = wfInspectTarget();
+  if(!n) return;
+  document.getElementById('wfInspKind').textContent = n.type || '';
+  document.getElementById('wfInspTitle').textContent = n.label || 'Node';
+  document.getElementById('wfInspId').value = n.id || '';
+  document.getElementById('wfInspLabel').value = n.label || '';
+  document.getElementById('wfInspOwner').value = n.owner || '';
+  document.getElementById('wfInspDetail').value = n.detail || '';
+  document.getElementById('wfInspConfig').value = n.config || '';
+  document.getElementById('wfInspector').classList.add('open');
+}
+function closeWfInspector(){
+  document.getElementById('wfInspector').classList.remove('open');
+  window.wfInspecting = null;
+}
+function applyWfInspector(){
+  const n = wfInspectTarget();
+  if(!n) return;
+  n.label = document.getElementById('wfInspLabel').value;
+  n.owner = document.getElementById('wfInspOwner').value;
+  n.detail = document.getElementById('wfInspDetail').value;
+  n.config = document.getElementById('wfInspConfig').value;
+  closeWfInspector();
+  renderWfCanvas();
+}
+function wfRunTest(){
+  document.querySelectorAll('#wfCanvas .wf-node-icon').forEach((el,idx)=>{
+    setTimeout(()=>{ el.style.boxShadow='0 0 0 3px rgba(184,62,1,.35)'; setTimeout(()=>{el.style.boxShadow='';},500); }, idx*220);
+  });
+}
+function wfHideHint(){ const h=document.getElementById('wfHint'); if(h) h.style.display='none'; }
 function showWfNodeDetail(n){
   const colorMap = {trigger:'#1D9E75',condition:'#EF9F27',agent:'var(--headline)',action:'#378ADD',human:'#D4537E'};
   document.getElementById('wfNodeDetailIcon').innerHTML = wfNodeIcon(n.type);
