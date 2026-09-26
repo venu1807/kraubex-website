@@ -604,6 +604,8 @@
   .wf-zoom-label{font-size:12px; font-weight:700; color:var(--text-muted); min-width:44px; text-align:center;}
   .wf-toolbar-sep{width:1px; height:20px; background:var(--border);}
   .wf-toolbar-hint{font-size:11px; color:var(--text-muted); margin-left:auto;}
+  .wf-conn-count{font-size:11px; font-weight:700; color:var(--subhead); white-space:nowrap;}
+  .wf-build-stamp{font-size:10px; color:var(--text-muted); border:1px solid var(--border); padding:2px 6px; border-radius:8px; white-space:nowrap;}
   .wf-palette-side{width:230px; flex-shrink:0; border-right:1px solid var(--border); background:var(--bg); overflow-y:auto; padding:14px 12px;}
   .wf-canvas.panning{cursor:grabbing;}
   .wf-canvas.panning .wf-node{cursor:grabbing;}
@@ -1183,6 +1185,8 @@
       <button class="wf-tool-btn" onclick="document.getElementById('wfLoadFile').click()" title="Load workflow from JSON">Load JSON</button>
       <input type="file" id="wfLoadFile" accept="application/json,.json" style="display:none" onchange="wfLoadJsonFile(this)">
       <button class="wf-tool-btn" onclick="wfRunTest()" title="Pulse through blocks">▶ Run test</button>
+      <span class="wf-conn-count" id="wfConnCount"></span>
+      <span class="wf-build-stamp" id="wfBuildStamp">arrows-DOM rev2</span>
       <span class="wf-toolbar-hint">Drag background to pan • scroll to zoom • drag a dot to connect</span>
     </div>
     <div class="wf-modal-body">
@@ -3388,6 +3392,12 @@ function wfDrawArrows(){
     const ekeyCu = wfEdgeKey('c', L.from.id, L.from.port||'out', L.to.id);
     arrow(sPos.x, sPos.y, tPos.x, tPos.y, {color:col, half:60, key:ekeyCu, labelKey:ekeyCu});
   });
+  try{
+    const drawnCount = svg.querySelectorAll('path').length;
+    const ccEl = document.getElementById('wfConnCount');
+    if(ccEl) ccEl.textContent = drawnCount + (drawnCount===1?' connection':' connections');
+    window.wfLastDrawn = drawnCount;
+  }catch(_){}
 }
 /* ===== Workflow canvas engine: nodes array is source of truth, SVG links layer, pan/zoom ===== */
 let wfView = {x:0, y:0, zoom:1};
