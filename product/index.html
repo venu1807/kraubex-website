@@ -2420,7 +2420,7 @@ function createNewWorkflow(){
   const name = prompt('Name your new workflow:');
   if(!name || !name.trim()) return;
   if(workflows.some(w=>w.name===name.trim())){ alert('A workflow with that name already exists.'); return; }
-  const newWf = {id:'WF-'+String(Date.now()).slice(-6), name:name.trim(), dept:'Custom', status:'Draft', lastRun:'—', createdBy:'You', nodes:[
+  const newWf = {id:nextWorkflowId(), name:name.trim(), dept:'Custom', status:'Draft', lastRun:'—', createdBy:'You', nodes:[
     {type:'trigger', label:'Set a trigger', sub:'Trigger'},
   ]};
   workflows.push(newWf);
@@ -2678,6 +2678,19 @@ const workflowStats = {
   'Quarterly ESG report':{runs:4, successRate:100, avgTime:'55m'},
   'Vendor risk re-score':{runs:26, successRate:62, avgTime:'18m'},
 };
+function nextWorkflowId(){
+  const nums = workflows.map(w=>parseInt(String(w.id||'').slice(3),10)).filter(n=>!isNaN(n));
+  const m = Math.max(0, ...nums, (window.wfIdSeq||0));
+  window.wfIdSeq = m + 1;
+  return 'WF-' + String(window.wfIdSeq).padStart(3,'0');
+}
+function nextTaskId(){
+  const list = window.tasksList || [];
+  const nums = list.map(t=>parseInt(String(t.id||'').slice(4),10)).filter(n=>!isNaN(n));
+  const m = Math.max(0, ...nums, (window.taskIdSeq||0));
+  window.taskIdSeq = m + 1;
+  return 'TSK-' + String(window.taskIdSeq).padStart(3,'0');
+}
 function wfSuccessCell(name){
   const s = workflowStats[name]||{runs:0, successRate:0};
   const c = s.successRate>=90 ? '#27500A' : s.successRate>=70 ? '#633806' : '#B3261E';
@@ -2729,6 +2742,7 @@ function renderTasksBody(subview){
   const allCreators = [...new Set(tasks.map(t=>t.createdBy))];
   body.innerHTML = `
     <div class="toolbar" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
+      <button class="btn btn-primary" onclick="createNewTask()" style="white-space:nowrap; padding:6px 12px; font-size:12px;">+ New task</button>
       <input class="search" id="taskSearchInput" placeholder="Search tasks, agent or creator..." value="${window.taskFilters.search||''}" oninput="window.taskFilters.search=this.value; renderTasksBody(window.lastTasksSubview)" style="flex:1; min-width:220px;">
       <select class="filter-select" id="taskTypeFilter" onchange="window.taskFilters.type=this.value; renderTasksBody(window.lastTasksSubview)" style="min-width:130px;">
         <option value="all" ${window.taskFilters.type==='all'?'selected':''}>All Types</option>
@@ -2817,6 +2831,15 @@ function closeTaskDetail(){ document.getElementById('taskDetailOverlay').classLi
 function viewTask(name){ openTaskDetail(name); }
 function editTask(name){ const n=prompt('Edit task name:', name); if(n && n.trim() && n.trim()!==name) alert('Task renamed to: '+n.trim()+' (demo)'); }
 function deleteTask(name){ if(confirm('Delete task "'+name+'"?')) alert('Task "'+name+'" deleted (demo).'); }
+function createNewTask(){
+  const name = prompt('Task name:');
+  if(!name || !name.trim()) return;
+  const list = window.tasksList || [];
+  if(list.some(t=>t.name===name.trim())){ alert('A task with that name already exists.'); return; }
+  list.unshift({id:nextTaskId(), name:name.trim(), agent:'Contract Life Cycle Management Agent', status:'In progress', type:'Action', createdBy:'You', createdAt:'just now', date:'25 Sep 2026', priority:'Medium', desc:''});
+  taskOutcomes[name.trim()] = {progress:0};
+  renderTasksBody(window.lastTasksSubview || 'all');
+}
 function shareTask(name){ if(navigator.share){ navigator.share({title:name, text:'Task: '+name}).catch(()=>{}); } else { prompt('Share link for "'+name+'":', location.href+'#task='+encodeURIComponent(name)); } }
 
 function renderApprovalsBody(subview){
