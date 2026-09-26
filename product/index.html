@@ -1293,6 +1293,18 @@
   </div>
 </div>
 
+<div class="assign-overlay" id="taskDetailOverlay" onclick="if(event.target===this) closeTaskDetail()">
+  <div class="assign-modal">
+    <h3 id="taskDetailTitle">Task</h3>
+    <p class="assign-sub" id="taskDetailSub"></p>
+    <div id="taskDetailBody"></div>
+    <div class="assign-actions">
+      <button class="btn btn-ghost" onclick="closeTaskDetail()">Close</button>
+      <button class="btn btn-primary" id="taskDetailEditBtn" onclick="editTask(document.getElementById('taskDetailTitle').textContent)">Edit</button>
+    </div>
+  </div>
+</div>
+
 <div class="assign-overlay" id="assignOverlay" onclick="if(event.target===this) closeAssignModal()">
   <div class="assign-modal">
     <h3 id="assignTitle">Assign task to agent</h3>
@@ -2642,14 +2654,21 @@ function handleConnectorAction(){
 function renderTasksBody(subview){
   window.lastTasksSubview = subview || 'all';
   const body = document.getElementById('secBody-tasks');
-  const tasks = [
-    {name:'Review SteelSphere contract renewal', agent:'Contract Life Cycle Management Agent', status:'In progress', type:'Decision', createdBy:'Sarah Chen', createdAt:'2h ago', date:'24 Sep 2026'},
-    {name:'Benchmark copper pricing', agent:'Price Optimizer Agent', status:'Waiting for data', type:'Research', createdBy:'Marcus Weber', createdAt:'5h ago', date:'24 Sep 2026'},
-    {name:'Screen 4 new candidates', agent:'Human Resources Domain Agent', status:'Running', type:'Analysis', createdBy:'Nadia Hoffmann', createdAt:'1d ago', date:'23 Sep 2026'},
-    {name:'Draft Q3 ESG report', agent:'ESG & Sustainability Domain Agent', status:'Completed', type:'Document', createdBy:'Fatima Al-Sayed', createdAt:'3d ago', date:'21 Sep 2026'},
-    {name:'Reconcile March invoices', agent:'Finance Domain Agent', status:'Failed', type:'Action', createdBy:'David Schulz', createdAt:'6h ago', date:'24 Sep 2026'},
-    {name:'Approve Q2 vendor payments', agent:'Finance Domain Agent', status:'In progress', type:'Approval', createdBy:'Elena Fischer', createdAt:'4h ago', date:'24 Sep 2026'},
-    {name:'Onboard new steel supplier', agent:'Contract Life Cycle Management Agent', status:'Waiting for data', type:'Onboarding', createdBy:'Priya Patel', createdAt:'1d ago', date:'23 Sep 2026'},
+  const tasks = window.tasksList = [
+    {name:'Review SteelSphere contract renewal', agent:'Contract Life Cycle Management Agent', status:'In progress', type:'Decision', createdBy:'Sarah Chen', createdAt:'2h ago', date:'24 Sep 2026', priority:'High', desc:'SteelSphere GmbH €680k contract expires 19 Mar 2026 — review renewal terms.'},
+    {name:'Benchmark copper pricing', agent:'Price Optimizer Agent', status:'Waiting for data', type:'Research', createdBy:'Marcus Weber', createdAt:'5h ago', date:'24 Sep 2026', priority:'Medium', desc:'Compare LME copper pricing across 4 suppliers.'},
+    {name:'Screen 4 new candidates', agent:'Human Resources Domain Agent', status:'Running', type:'Analysis', createdBy:'Nadia Hoffmann', createdAt:'1d ago', date:'23 Sep 2026', priority:'Medium', desc:'Shortlist 4 machinist candidates for the Bielefeld plant.'},
+    {name:'Draft Q3 ESG report', agent:'ESG & Sustainability Domain Agent', status:'Completed', type:'Document', createdBy:'Fatima Al-Sayed', createdAt:'3d ago', date:'21 Sep 2026', priority:'Medium', desc:'Compile Q3 emissions, waste and water metrics.'},
+    {name:'Reconcile March invoices', agent:'Finance Domain Agent', status:'Failed', type:'Action', createdBy:'David Schulz', createdAt:'6h ago', date:'24 Sep 2026', priority:'High', desc:'Match 214 March invoices to POs and receipts.'},
+    {name:'Approve Q2 vendor payments', agent:'Finance Domain Agent', status:'In progress', type:'Approval', createdBy:'Elena Fischer', createdAt:'4h ago', date:'24 Sep 2026', priority:'High', desc:'Release €42,900 payment run for 11 vendors.'},
+    {name:'Onboard new steel supplier', agent:'Contract Life Cycle Management Agent', status:'Waiting for data', type:'Onboarding', createdBy:'Priya Patel', createdAt:'1d ago', date:'23 Sep 2026', priority:'Medium', desc:'Complete qualification for 2 new steel vendors.'},
+    {name:'Negotiate SteelSphere volume discount', agent:'Contract Life Cycle Management Agent', status:'In progress', type:'Negotiation', createdBy:'Praveen Gitta', createdAt:'1h ago', date:'25 Sep 2026', priority:'High', desc:'Target 8% volume discount on the Q4 structural steel batch.'},
+    {name:'Verify copper supplier quotes', agent:'Price Optimizer Agent', status:'Running', type:'Research', createdBy:'Tousif', createdAt:'3h ago', date:'25 Sep 2026', priority:'Medium', desc:'Cross-check top 3 copper quotes against the LME index.'},
+    {name:'Prepare onboarding docs for new hires', agent:'Human Resources Domain Agent', status:'Waiting for data', type:'Document', createdBy:'Anish', createdAt:'7h ago', date:'24 Sep 2026', priority:'Low', desc:'Collect contracts, tax forms and equipment requests.'},
+    {name:'Track Q3 carbon offset purchases', agent:'ESG & Sustainability Domain Agent', status:'In progress', type:'Tracking', createdBy:'Krishna', createdAt:'2d ago', date:'23 Sep 2026', priority:'Medium', desc:'Reconcile offset certificates with the emissions ledger.'},
+    {name:'Approve AutoParts invoice batch', agent:'Finance Domain Agent', status:'Waiting for data', type:'Approval', createdBy:'Marcus Weber', createdAt:'8h ago', date:'24 Sep 2026', priority:'High', desc:'92 invoices totalling €214,500 awaiting release.'},
+    {name:'Renew Deutsche Stahlbau contract', agent:'Contract Life Cycle Management Agent', status:'Failed', type:'Contract', createdBy:'Elena Fischer', createdAt:'2d ago', date:'23 Sep 2026', priority:'High', desc:'Renewal blocked — expired ISO 3834 certificate.'},
+    {name:'Monthly spend consolidation', agent:'Finance Domain Agent', status:'Completed', type:'Report', createdBy:'Priya Patel', createdAt:'4d ago', date:'21 Sep 2026', priority:'Low', desc:'August spend rolled up across 6 cost centers.'},
   ];
   // preserve toolbar values
   const prevTSearch = document.getElementById('taskSearchInput')?.value;
@@ -2714,7 +2733,7 @@ function renderTasksBody(subview){
           </td></tr>
           ${list.map(t=>`
             <tr>
-              <td style="${tdTask} white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t.name}</td>
+              <td style="${tdTask} white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;" onclick="viewTask('${t.name.replace(/'/g,"\\'")}')">${t.name}</td>
               <td style="${tdCenter} color:var(--text-muted);">${t.type}</td>
               <td style="${tdCenter}"><span class="tag ${t.status==='Completed'?'tag-active':t.status==='Failed'?'tag-expired':'tag-upcoming'}">${t.status}</span></td>
               <td style="${tdLeft}"><span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:22px; height:22px; border-radius:50%; background:var(--bg); border:1px solid var(--border); display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:var(--subhead); flex-shrink:0;">${t.createdBy.split(' ').map(s=>s[0]).join('').slice(0,2)}</span><span style="white-space:nowrap;">${t.createdBy}</span></span></td>
@@ -2734,7 +2753,25 @@ function renderTasksBody(subview){
     </table>
     </div>`;
 }
-function viewTask(name){ alert('View task: ' + name); }
+function openTaskDetail(name){
+  const t = (window.tasksList||[]).find(x=>x.name===name);
+  if(!t) return;
+  document.getElementById('taskDetailTitle').textContent = t.name;
+  document.getElementById('taskDetailSub').textContent = t.agent + ' • ' + t.type;
+  const tagCls = t.status==='Completed'?'tag-active':t.status==='Failed'?'tag-expired':'tag-upcoming';
+  const priCls = t.priority==='High'?'tag-expired':t.priority==='Medium'?'tag-upcoming':'tag-active';
+  document.getElementById('taskDetailBody').innerHTML = `
+    <div class="connector-detail-row"><span>Status</span><span><span class="tag ${tagCls}">${t.status}</span></span></div>
+    <div class="connector-detail-row"><span>Priority</span><span><span class="tag ${priCls}">${t.priority||'Medium'}</span></span></div>
+    <div class="connector-detail-row"><span>Type</span><span>${t.type}</span></div>
+    <div class="connector-detail-row"><span>Agent</span><span>${t.agent}</span></div>
+    <div class="connector-detail-row"><span>Created by</span><span>${t.createdBy}</span></div>
+    <div class="connector-detail-row"><span>Date</span><span>${t.date} (${t.createdAt})</span></div>
+    <div class="connector-detail-row"><span>Description</span><span style="font-weight:400; text-align:right;">${t.desc||'—'}</span></div>`;
+  document.getElementById('taskDetailOverlay').classList.add('show');
+}
+function closeTaskDetail(){ document.getElementById('taskDetailOverlay').classList.remove('show'); }
+function viewTask(name){ openTaskDetail(name); }
 function editTask(name){ const n=prompt('Edit task name:', name); if(n && n.trim() && n.trim()!==name) alert('Task renamed to: '+n.trim()+' (demo)'); }
 function deleteTask(name){ if(confirm('Delete task "'+name+'"?')) alert('Task "'+name+'" deleted (demo).'); }
 function shareTask(name){ if(navigator.share){ navigator.share({title:name, text:'Task: '+name}).catch(()=>{}); } else { prompt('Share link for "'+name+'":', location.href+'#task='+encodeURIComponent(name)); } }
