@@ -608,10 +608,10 @@
   .wf-canvas.panning{cursor:grabbing;}
   .wf-canvas.panning .wf-node{cursor:grabbing;}
   .wf-node{background:var(--card); border:2px solid var(--border); border-radius:10px; padding:14px 14px 12px; min-width:190px; max-width:220px; box-shadow:0 2px 8px rgba(0,0,0,.07); position:absolute; z-index:2; user-select:none; touch-action:none;}
-  .wf-node{cursor:grab;}
+  .wf-node{cursor:pointer;}
   .wf-node:active{cursor:grabbing;}
   .wf-node.dragging{cursor:grabbing; opacity:.85; box-shadow:0 10px 28px rgba(0,0,0,.18); z-index:20;}
-  .wf-node.selected{box-shadow:0 0 0 3px rgba(55,138,221,.3);}
+  .wf-node.selected{box-shadow:0 0 0 3px rgba(55,138,221,.3); cursor:grab;}
   .wf-node-remove{position:absolute; top:6px; right:6px; color:var(--text-muted); cursor:pointer; background:var(--bg); border-radius:50%; padding:2px;}
   .wf-node-remove:hover{color:#791F1F;}
   .wf-node-add{display:none;}
@@ -1178,7 +1178,7 @@
         <div class="wf-palette" id="wfPalette"></div>
       </aside>
       <div class="wf-canvas" id="wfCanvas"></div>
-      <div class="wf-hint" id="wfHint">Drag a block to move · drag between dots to connect · scroll to zoom</div>
+      <div class="wf-hint" id="wfHint">Click a block to select · drag selected block to move · drag between dots to connect · scroll to zoom</div>
       <div class="wf-zoomctl">
         <button onclick="wfZoomOut()" title="Zoom out">−</button>
         <div class="wf-zval" id="wfZoomVal">100%</div>
@@ -3134,6 +3134,7 @@ function openWorkflowTemplate(name, editMode){
   editingNodes = wf.nodes.map(n=>({...n}));
   window.wfLinks = wf.edges ? JSON.parse(JSON.stringify(wf.edges)) : [];
   wfView = {x:0, y:0, zoom:1};
+  window.wfSelectedId = null;
   document.getElementById('wfModalTitle').textContent = wf.name;
   document.getElementById('wfModalDept').textContent = wf.dept + ' • ' + wf.status;
   renderWfModalHead();
@@ -3195,7 +3196,7 @@ function wfNodeHtml(n, i, isBranch, branchKey, branchIdx){
   const typeColors = {trigger:'#1D9E75',condition:'#EF9F27',agent:'#B83E01',action:'#378ADD',human:'#D4537E'};
   const tc = typeColors[n.type] || '#378ADD';
   const bodyDefaults = {trigger:'Starts the workflow when this event fires.', agent:'Calls a Kraubex domain/skill agent.', condition:'Branches the flow — Yes / No.', action:'Performs an external side effect.', human:'Waits for a person to review and decide.'};
-  return `<div class="wf-node ${n.type}" id="${nid}" style="left:${x}px; top:${y}px;" ${dragHandler} ${clickHandler}>
+  return `<div class="wf-node ${n.type}${(n.id && window.wfSelectedId===n.id)?' selected':''}" id="${nid}" style="left:${x}px; top:${y}px;" ${dragHandler} ${clickHandler}>
       ${portsHtml}
       ${editingWfMode ? `<div class="del-btn" title="Delete" ${removeHandler}>✕</div>` : ''}
       <div class="wf-node-head" style="background:${tc}0D">
@@ -3342,6 +3343,8 @@ function wfBindCanvasView(){
   canvas.addEventListener('mousedown', (e)=>{
     const t = e.target;
     if(t.closest && (t.closest('.wf-node') || t.closest('.wf-port') || t.closest('button') || t.closest('.wf-node-add') || t.closest('input') || t.closest('select'))) return;
+    window.wfSelectedId = null;
+    document.querySelectorAll('.wf-node.selected').forEach(el=>el.classList.remove('selected'));
     wfPanState = {startX:e.clientX, startY:e.clientY, origX:wfView.x, origY:wfView.y};
     canvas.classList.add('panning');
   });
@@ -3429,6 +3432,13 @@ function wfDragStart(e,i,branchKey,branchIdx){
   const isBranch = branchKey && branchKey.length>0;
   const node = isBranch ? (editingNodes[i] && editingNodes[i].branches && editingNodes[i].branches[branchKey] && editingNodes[i].branches[branchKey][branchIdx]) : editingNodes[i];
   if(!node) return;
+  if(!node.id || window.wfSelectedId!==node.id){
+    window.wfSelectedId = node.id || null;
+    document.querySelectorAll('.wf-node.selected').forEach(el=>el.classList.remove('selected'));
+    const selEl = document.getElementById(isBranch?`wfNode-${i}-${branchKey}-${branchIdx}`:`wfNode-${i}`);
+    if(selEl) selEl.classList.add('selected');
+    return;
+  }
   const touch = e.touches && e.touches[0];
   const cx = touch? touch.clientX : e.clientX;
   const cy = touch? touch.clientY : e.clientY;
