@@ -650,6 +650,16 @@
   .wf-port-tag{position:absolute; right:13px; transform:translateY(-50%); font-size:9px; font-weight:800; letter-spacing:.04em; z-index:4; pointer-events:none; background:var(--card); border:1px solid var(--border); padding:0 5px; border-radius:8px; line-height:1.7;}
   .wf-port-tag.yes-tag{top:34%; color:#1D9E75; border-color:#1D9E75;}
   .wf-port-tag.no-tag{top:66%; color:#791F1F; border-color:#791F1F;}
+  .wf-arrow-path{pointer-events:stroke; cursor:pointer;}
+  .wf-arrow-path:hover{stroke:#B83E01;}
+  .wf-edge-pop{position:absolute; width:264px; background:var(--card); border:1px solid var(--border); border-radius:10px; box-shadow:0 12px 32px rgba(0,0,0,.18); padding:14px; z-index:30; display:none;}
+  .wf-edge-pop.show{display:block;}
+  .wf-edge-pop-title{font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--text-muted);}
+  .wf-edge-route{font-size:13px; font-weight:700; color:var(--subhead); margin:2px 0 6px; line-height:1.35;}
+  .wf-edge-pop label{font-size:11px; color:var(--text-muted); font-weight:500; display:block; margin-top:8px;}
+  .wf-edge-pop input, .wf-edge-pop textarea{font-family:inherit; font-size:12px; border:1px solid var(--border); border-radius:7px; padding:7px 8px; background:#fff; color:var(--subhead); width:100%; resize:vertical; margin-top:3px;}
+  .wf-edge-pop input:focus, .wf-edge-pop textarea:focus{outline:none; border-color:var(--headline);}
+  .wf-edge-pop-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:12px;}
   .wf-port:hover{background:#334155; transform:translateY(-50%) scale(1.25);}
   .wf-port.yes:hover{background:#1D9E75;}
   .wf-port.no:hover{background:#791F1F;}
@@ -1181,7 +1191,20 @@
         <div class="wf-palette" id="wfPalette"></div>
       </aside>
       <div class="wf-canvas" id="wfCanvas"></div>
-      <div class="wf-hint" id="wfHint">Click a block to select · drag selected block to move · drag between dots to connect · scroll to zoom</div>
+      <div class="wf-hint" id="wfHint">Click a block to select · drag selected block to move · drag between dots to connect · click an arrow to annotate · scroll to zoom</div>
+      <div class="wf-edge-pop" id="wfEdgePop">
+        <div class="wf-edge-pop-title">Connection</div>
+        <div class="wf-edge-route" id="wfEdgeRoute"></div>
+        <label>Label</label>
+        <input id="wfEdgeLabel" type="text" placeholder="e.g. amount > €5000">
+        <label>Trigger / condition</label>
+        <textarea id="wfEdgeCond" rows="2" placeholder="e.g. PO.amount >= 5000, escalate to finance"></textarea>
+        <div class="wf-edge-pop-actions">
+          <button class="btn btn-ghost" onclick="closeWfEdgeCard()">Close</button>
+          <button class="btn btn-ghost" id="wfEdgeDeleteBtn" onclick="deleteWfEdgeCard()" style="color:#791F1F; border-color:#F7C1C1;">Delete</button>
+          <button class="btn btn-primary" onclick="applyWfEdgeCard()">Save</button>
+        </div>
+      </div>
       <div class="wf-zoomctl">
         <button onclick="wfZoomOut()" title="Zoom out">−</button>
         <div class="wf-zval" id="wfZoomVal">100%</div>
@@ -3145,6 +3168,8 @@ function openWorkflowTemplate(name, editMode){
   document.getElementById('wfOverlay').classList.add('show');
   const wfHintEl = document.getElementById('wfHint');
   if(wfHintEl) wfHintEl.style.display = 'block';
+  window.wfEdgeNotes = (wf.edgeNotes && typeof wf.edgeNotes==='object') ? JSON.parse(JSON.stringify(wf.edgeNotes)) : {};
+  closeWfEdgeCard();
 }
 function renderWfModalHead(){
   document.getElementById('wfModalActions').innerHTML = editingWfMode ? `
@@ -3229,6 +3254,15 @@ function wfPortPos(node, port){
   if(port==='no') return {x:(node.x||0)+W, y:(node.y||0)+H*0.66};
   return {x:(node.x||0)+W, y:(node.y||0)+H/2};
 }
+function wfEdgeKey(kind, fromId, port, toId){ return kind+'|'+fromId+'|'+port+'|'+toId; }
+function wfEdgeClick(key){ return ` style="cursor:pointer;" onclick="event.stopPropagation(); openWfEdgeCard(event,'${key}')"`; }
+function wfEdgeLabelSvg(key, x1, y1, x2, y2, dy){
+  const nt = (window.wfEdgeNotes||{})[key];
+  if(!nt || !nt.label) return '';
+  const mx = ((x1+x2)/2).toFixed(1), my = ((y1+y2)/2 + (dy===undefined?-12:dy)).toFixed(1);
+  const esc = String(nt.label).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return `<text x="${mx}" y="${my}" font-size="10.5" font-weight="800" fill="#B83E01" text-anchor="middle" style="paint-order:stroke; stroke:#F3F0E6; stroke-width:3px;">${esc}</text>`;
+}
 function wfDrawArrows(){
   const svg = document.getElementById('wfArrows');
   if(!svg) return;
@@ -3253,31 +3287,35 @@ function wfDrawArrows(){
       const sYes = wfGetPortCoords(nid,'yes') || wfPortPos(n,'yes'), sNo = wfGetPortCoords(nid,'no') || wfPortPos(n,'no');
       if(yesNodes.length){
         const t = wfGetPortCoords(`wfNode-${i}-yes-0`,'in') || wfPortPos(yesNodes[0],'in');
-        paths += `<path class="wf-arrow-path" d="M ${sYes.x} ${sYes.y} C ${sYes.x+50} ${sYes.y}, ${t.x-50} ${t.y}, ${t.x} ${t.y}" stroke="#1D9E75" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/><text x="${(sYes.x+t.x)/2}" y="${(sYes.y+t.y)/2-10}" font-size="10.5" font-weight="800" fill="#1D9E75" text-anchor="middle" style="paint-order:stroke; stroke:#F3F0E6; stroke-width:3px;">Yes</text>`;
+        const ekeyYes = wfEdgeKey('e', n.id||nid, 'yes', yesNodes[0].id||(nid+'-yes-0'));
+        paths += `<path class="wf-arrow-path" d="M ${sYes.x} ${sYes.y} C ${sYes.x+50} ${sYes.y}, ${t.x-50} ${t.y}, ${t.x} ${t.y}" stroke="#1D9E75" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"${wfEdgeClick(ekeyYes)}/><text x="${(sYes.x+t.x)/2}" y="${(sYes.y+t.y)/2-10}" font-size="10.5" font-weight="800" fill="#1D9E75" text-anchor="middle" style="paint-order:stroke; stroke:#F3F0E6; stroke-width:3px;">Yes</text>` + wfEdgeLabelSvg(ekeyYes, sYes.x, sYes.y, t.x, t.y, 16);
       }
       if(noNodes.length){
         const t2 = wfGetPortCoords(`wfNode-${i}-no-0`,'in') || wfPortPos(noNodes[0],'in');
-        paths += `<path class="wf-arrow-path" d="M ${sNo.x} ${sNo.y} C ${sNo.x+50} ${sNo.y}, ${t2.x-50} ${t2.y}, ${t2.x} ${t2.y}" stroke="#791F1F" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/><text x="${(sNo.x+t2.x)/2}" y="${(sNo.y+t2.y)/2-10}" font-size="10.5" font-weight="800" fill="#791F1F" text-anchor="middle" style="paint-order:stroke; stroke:#F3F0E6; stroke-width:3px;">No</text>`;
+        const ekeyNo = wfEdgeKey('e', n.id||nid, 'no', noNodes[0].id||(nid+'-no-0'));
+        paths += `<path class="wf-arrow-path" d="M ${sNo.x} ${sNo.y} C ${sNo.x+50} ${sNo.y}, ${t2.x-50} ${t2.y}, ${t2.x} ${t2.y}" stroke="#791F1F" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"${wfEdgeClick(ekeyNo)}/><text x="${(sNo.x+t2.x)/2}" y="${(sNo.y+t2.y)/2-10}" font-size="10.5" font-weight="800" fill="#791F1F" text-anchor="middle" style="paint-order:stroke; stroke:#F3F0E6; stroke-width:3px;">No</text>` + wfEdgeLabelSvg(ekeyNo, sNo.x, sNo.y, t2.x, t2.y, 16);
       }
       ;[yesNodes,noNodes].forEach(arr=>{
         const key = arr===yesNodes?'yes':'no';
         for(let k=0;k<arr.length-1;k++){
           const aPos = wfGetPortCoords(`wfNode-${i}-${key}-${k}`,'out') || wfPortPos(arr[k],'out');
           const bPos = wfGetPortCoords(`wfNode-${i}-${key}-${k+1}`,'in') || wfPortPos(arr[k+1],'in');
-          paths += `<path class="wf-arrow-path" d="M ${aPos.x} ${aPos.y} C ${aPos.x+50} ${aPos.y}, ${bPos.x-50} ${bPos.y}, ${bPos.x} ${bPos.y}" stroke="#334155" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`;
+          const ekeyCh = wfEdgeKey('e', arr[k].id||(`${nid}-${key}-${k}`), 'out', arr[k+1].id||(`${nid}-${key}-${k+1}`));
+          paths += `<path class="wf-arrow-path" d="M ${aPos.x} ${aPos.y} C ${aPos.x+50} ${aPos.y}, ${bPos.x-50} ${bPos.y}, ${bPos.x} ${bPos.y}" stroke="#334155" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"${wfEdgeClick(ekeyCh)}/>` + wfEdgeLabelSvg(ekeyCh, aPos.x, aPos.y, bPos.x, bPos.y);
         }
       });
       if(next){
         const lastYes = yesNodes[yesNodes.length-1], lastNo=noNodes[noNodes.length-1];
         const nPos = wfGetPortCoords(`wfNode-${i+1}`,'in') || wfPortPos(next,'in');
-        if(lastYes){ const aPos=wfGetPortCoords(`wfNode-${i}-yes-${yesNodes.length-1}`,'out') || wfPortPos(lastYes,'out'); paths += `<path class="wf-arrow-path" d="M ${aPos.x} ${aPos.y} C ${aPos.x+60} ${aPos.y}, ${nPos.x-60} ${nPos.y}, ${nPos.x} ${nPos.y}" stroke="#334155" stroke-width="2.4" fill="none" stroke-dasharray="7 5" opacity="0.95" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`; }
-        if(lastNo){ const aPos2=wfGetPortCoords(`wfNode-${i}-no-${noNodes.length-1}`,'out') || wfPortPos(lastNo,'out'); paths += `<path class="wf-arrow-path" d="M ${aPos2.x} ${aPos2.y} C ${aPos2.x+60} ${aPos2.y}, ${nPos.x-60} ${nPos.y}, ${nPos.x} ${nPos.y}" stroke="#334155" stroke-width="2.4" fill="none" stroke-dasharray="7 5" opacity="0.95" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`; }
+        if(lastYes){ const aPos=wfGetPortCoords(`wfNode-${i}-yes-${yesNodes.length-1}`,'out') || wfPortPos(lastYes,'out'); const ekeyMgY=wfEdgeKey('e', lastYes.id||(`${nid}-yes-${yesNodes.length-1}`), 'out', next.id||(`wfNode-${i+1}`)); paths += `<path class="wf-arrow-path" d="M ${aPos.x} ${aPos.y} C ${aPos.x+60} ${aPos.y}, ${nPos.x-60} ${nPos.y}, ${nPos.x} ${nPos.y}" stroke="#334155" stroke-width="2.4" fill="none" stroke-dasharray="7 5" opacity="0.95" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"${wfEdgeClick(ekeyMgY)}/>` + wfEdgeLabelSvg(ekeyMgY, aPos.x, aPos.y, nPos.x, nPos.y); }
+        if(lastNo){ const aPos2=wfGetPortCoords(`wfNode-${i}-no-${noNodes.length-1}`,'out') || wfPortPos(lastNo,'out'); const ekeyMgN=wfEdgeKey('e', lastNo.id||(`${nid}-no-${noNodes.length-1}`), 'out', next.id||(`wfNode-${i+1}`)); paths += `<path class="wf-arrow-path" d="M ${aPos2.x} ${aPos2.y} C ${aPos2.x+60} ${aPos2.y}, ${nPos.x-60} ${nPos.y}, ${nPos.x} ${nPos.y}" stroke="#334155" stroke-width="2.4" fill="none" stroke-dasharray="7 5" opacity="0.95" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"${wfEdgeClick(ekeyMgN)}/>` + wfEdgeLabelSvg(ekeyMgN, aPos2.x, aPos2.y, nPos.x, nPos.y); }
       }
     } else {
       if(next){
         const sPos=wfGetPortCoords(nid,'out') || wfPortPos(n,'out');
         const tPos=wfGetPortCoords(`wfNode-${i+1}`,'in') || wfPortPos(next,'in');
-        paths += `<path class="wf-arrow-path" d="M ${sPos.x} ${sPos.y} C ${sPos.x+70} ${sPos.y}, ${tPos.x-70} ${tPos.y}, ${tPos.x} ${tPos.y}" stroke="#0F172A" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`;
+        const ekeyLn=wfEdgeKey('e', n.id||nid, 'out', next.id||(`wfNode-${i+1}`));
+        paths += `<path class="wf-arrow-path" d="M ${sPos.x} ${sPos.y} C ${sPos.x+70} ${sPos.y}, ${tPos.x-70} ${tPos.y}, ${tPos.x} ${tPos.y}" stroke="#0F172A" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"${wfEdgeClick(ekeyLn)}/>` + wfEdgeLabelSvg(ekeyLn, sPos.x, sPos.y, tPos.x, tPos.y);
       }
     }
   });
@@ -3287,7 +3325,8 @@ function wfDrawArrows(){
     if(!s || !t) return;
     const sPos = wfPortPos(s.node, L.from.port||'out'), tPos = wfPortPos(t.node, 'in');
     const col = (L.from.port==='yes') ? '#1D9E75' : (L.from.port==='no' ? '#791F1F' : '#0F172A');
-    paths += `<path class="wf-arrow-path" d="M ${sPos.x} ${sPos.y} C ${sPos.x+60} ${sPos.y}, ${tPos.x-60} ${tPos.y}, ${tPos.x} ${tPos.y}" stroke="${col}" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"/>`;
+    const ekeyCu = wfEdgeKey('c', L.from.id, L.from.port||'out', L.to.id);
+    paths += `<path class="wf-arrow-path" d="M ${sPos.x} ${sPos.y} C ${sPos.x+60} ${sPos.y}, ${tPos.x-60} ${tPos.y}, ${tPos.x} ${tPos.y}" stroke="${col}" stroke-width="2.4" fill="none" marker-end="url(#wfArrowHead)" filter="url(#wfShadow)"${wfEdgeClick(ekeyCu)}/>` + wfEdgeLabelSvg(ekeyCu, sPos.x, sPos.y, tPos.x, tPos.y);
   });
   svg.innerHTML = paths;
 }
@@ -3385,7 +3424,7 @@ function wfBindCanvasView(){
   }, {passive:false});
 }
 function wfSaveJson(){
-  const data = {name: editingWfName, nodes: editingNodes, edges: window.wfLinks||[]};
+  const data = {name: editingWfName, nodes: editingNodes, edges: window.wfLinks||[], edgeNotes: window.wfEdgeNotes||{}};
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -3403,6 +3442,7 @@ function wfLoadJsonFile(input){
       if(!data.nodes || !Array.isArray(data.nodes)) throw new Error('bad file');
       editingNodes = data.nodes;
       window.wfLinks = Array.isArray(data.edges) ? data.edges : [];
+      window.wfEdgeNotes = (data.edgeNotes && typeof data.edgeNotes==='object') ? data.edgeNotes : {};
       if(data.name){ editingWfName = data.name; document.getElementById('wfModalTitle').textContent = data.name; }
       wfView = {x:0, y:0, zoom:1};
       renderWfCanvas();
@@ -3626,6 +3666,55 @@ function wfRunTest(){
   });
 }
 function wfHideHint(){ const h=document.getElementById('wfHint'); if(h) h.style.display='none'; }
+function wfEdgeName(id){
+  const f = (typeof wfFindNodeById==='function') ? wfFindNodeById(id) : null;
+  return (f && f.node && f.node.label) ? f.node.label : id;
+}
+function openWfEdgeCard(e, key){
+  const parts = String(key).split('|');
+  const kind = parts[0], fromId = parts[1], port = parts[2], toId = parts.slice(3).join('|');
+  const nt = (window.wfEdgeNotes||{})[key] || {};
+  document.getElementById('wfEdgeRoute').textContent = wfEdgeName(fromId) + (port && port!=='out' ? ' ('+port+')' : '') + ' → ' + wfEdgeName(toId);
+  document.getElementById('wfEdgeLabel').value = nt.label||'';
+  document.getElementById('wfEdgeCond').value = nt.cond||'';
+  document.getElementById('wfEdgeDeleteBtn').style.display = (kind==='c') ? '' : 'none';
+  window.wfEdgeKey = key;
+  const pop = document.getElementById('wfEdgePop');
+  pop.classList.add('show');
+  const wrap = document.querySelector('.wf-modal-body');
+  if(wrap){
+    const r = wrap.getBoundingClientRect();
+    pop.style.left = Math.max(8, Math.min(e.clientX - r.left - 20, r.width - 280)) + 'px';
+    pop.style.top = Math.max(8, Math.min(e.clientY - r.top - 10, r.height - 320)) + 'px';
+  } else {
+    pop.style.left = '16px'; pop.style.top = '16px';
+  }
+}
+function closeWfEdgeCard(){ const p=document.getElementById('wfEdgePop'); if(p) p.classList.remove('show'); window.wfEdgeKey = null; }
+function applyWfEdgeCard(){
+  const key = window.wfEdgeKey;
+  if(!key) return;
+  if(!window.wfEdgeNotes) window.wfEdgeNotes = {};
+  const label = document.getElementById('wfEdgeLabel').value.trim();
+  const cond = document.getElementById('wfEdgeCond').value.trim();
+  if(!label && !cond) delete window.wfEdgeNotes[key];
+  else window.wfEdgeNotes[key] = {label, cond};
+  closeWfEdgeCard();
+  wfDrawArrows();
+}
+function deleteWfEdgeCard(){
+  const key = window.wfEdgeKey;
+  if(!key) return;
+  const parts = String(key).split('|');
+  if(parts[0]==='c'){
+    const fromId=parts[1], port=parts[2], toId=parts.slice(3).join('|');
+    const idx = (window.wfLinks||[]).findIndex(L=>L.from.id===fromId && (L.from.port||'out')===port && L.to.id===toId);
+    if(idx>-1) window.wfLinks.splice(idx,1);
+    if(window.wfEdgeNotes) delete window.wfEdgeNotes[key];
+  }
+  closeWfEdgeCard();
+  wfDrawArrows();
+}
 function showWfNodeDetail(n){
   const colorMap = {trigger:'#1D9E75',condition:'#EF9F27',agent:'var(--headline)',action:'#378ADD',human:'#D4537E'};
   document.getElementById('wfNodeDetailIcon').innerHTML = wfNodeIcon(n.type);
@@ -3732,7 +3821,7 @@ function removeWfNode(i){
 }
 function saveWfEdit(){
   const wf = workflows.find(w=>w.name===editingWfName);
-  if(wf){ wf.nodes = editingNodes.map(n=>({...n})); wf.edges = JSON.parse(JSON.stringify(window.wfLinks||[])); }
+  if(wf){ wf.nodes = editingNodes.map(n=>({...n})); wf.edges = JSON.parse(JSON.stringify(window.wfLinks||[])); wf.edgeNotes = JSON.parse(JSON.stringify(window.wfEdgeNotes||{})); }
   editingWfMode = false;
   renderWfModalHead();
   renderWfCanvas();
@@ -3742,6 +3831,7 @@ function cancelWfEdit(){
   const wf = workflows.find(w=>w.name===editingWfName);
   editingNodes = wf ? wf.nodes.map(n=>({...n})) : [];
   window.wfLinks = (wf && wf.edges) ? JSON.parse(JSON.stringify(wf.edges)) : [];
+  window.wfEdgeNotes = (wf && wf.edgeNotes) ? JSON.parse(JSON.stringify(wf.edgeNotes)) : {};
   editingWfMode = false;
   renderWfModalHead();
   renderWfCanvas();
