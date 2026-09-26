@@ -3552,6 +3552,7 @@ function wfDragStart(e,i,branchKey,branchIdx){
   const isBranch = branchKey && branchKey.length>0;
   const node = isBranch ? (editingNodes[i] && editingNodes[i].branches && editingNodes[i].branches[branchKey] && editingNodes[i].branches[branchKey][branchIdx]) : editingNodes[i];
   if(!node) return;
+  if(e.button!==undefined && e.button!==0) return;
   if(!node.id || window.wfSelectedId!==node.id){
     window.wfSelectedId = node.id || null;
     document.querySelectorAll('.wf-node.selected').forEach(el=>el.classList.remove('selected'));
@@ -3578,9 +3579,10 @@ function wfDragMove(e){
   const touch = e.touches && e.touches[0];
   const cx = touch? touch.clientX : e.clientX;
   const cy = touch? touch.clientY : e.clientY;
-  const dx = (cx - wfDragState.startX)/wfView.zoom;
-  const dy = (cy - wfDragState.startY)/wfView.zoom;
-  if(Math.abs(cx - wfDragState.startX)>4 || Math.abs(cy - wfDragState.startY)>4) window.wfDragMoved=true;
+  const rawDx = cx - wfDragState.startX, rawDy = cy - wfDragState.startY;
+  if(Math.abs(rawDx)>4 || Math.abs(rawDy)>4) window.wfDragMoved=true;
+  if(!window.wfDragMoved) return;
+  const dx = rawDx/wfView.zoom, dy = rawDy/wfView.zoom;
   const node = wfDragState.node;
   node.x = wfDragState.origX + dx;
   node.y = wfDragState.origY + dy;
