@@ -2084,89 +2084,8 @@ function deptDomainAgent(dept){
     rating: (4.4 + (hashStr(dept.name) % 6) / 10).toFixed(1)
   };
 }
-if(!window.agentFilters) window.agentFilters = {search:'', status:'all', dept:'all'};
-function allWorkforceAgents(){
-  const list = [];
-  agents.forEach((a,i)=>list.push({a, dept:'Procurement', open:`openAssignModal(${i})`, isDomain:a.group==='domain'}));
-  departments.forEach(d=>{
-    if(d.builtin) return;
-    const da = deptDomainAgent(d);
-    list.push({a:da, dept:d.name, open:`openDeptDomainAgent('${deptSlug(d.name)}')`, isDomain:true});
-    buildDeptSkillAgents(d).forEach((sa,si)=>list.push({a:sa, dept:d.name, open:`openDeptAgent('${deptSlug(d.name)}', ${si})`, isDomain:false}));
-  });
-  return list;
-}
-function openDeptDomainAgent(slug){
-  const dept = departments.find(d=>deptSlug(d.name)===slug);
-  if(!dept) return;
-  const da = deptDomainAgent(dept);
-  openAssignModalObj({name:da.name, desc:da.desc, tag:da.tag, color:da.color});
-}
-function agentFilterCardHtml(x){
-  const a = x.a;
-  return `
-    <div class="agent-card" style="cursor:pointer;" onclick="${x.open}">
-      <div class="agent-card-top">
-        ${iconFor(a)}
-        <div class="agent-name-row">
-          <div><p>${a.name}</p></div>
-          <span class="agent-badge ${a.status}">${a.status}</span>
-        </div>
-      </div>
-      <p class="agent-desc">${a.desc}</p>
-      <p class="agent-tag">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
-        ${a.tag} • ${x.dept}${x.isDomain ? ' • Domain' : ''}
-      </p>
-      <div class="agent-foot">
-        <span>${a.tasks} tasks</span>
-        <span class="agent-rating">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 16.9 5.8 20.3l1.6-6.8L2.2 8.9l6.9-.6z"/></svg>
-          ${a.rating}
-        </span>
-      </div>
-      ${modelPickerHtml(a.name)}
-    </div>`;
-}
-function agentFilterGridHtml(list){
-  if(!list.length) return '<p style="font-size:13px; color:var(--text-muted); padding:16px;">No agents match these filters.</p>';
-  return `<div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">${list.map(x=>agentFilterCardHtml(x)).join('')}</div>`;
-}
-function filteredWorkforceAgents(){
-  const f = window.agentFilters;
-  let list = allWorkforceAgents();
-  const s = (f.search||'').toLowerCase().trim();
-  if(s) list = list.filter(x=>(x.a.name+' '+x.a.desc+' '+x.a.tag).toLowerCase().includes(s));
-  if(f.status!=='all') list = list.filter(x=>x.a.status===f.status);
-  if(f.dept!=='all') list = list.filter(x=>x.dept===f.dept);
-  return list;
-}
-function renderAgentFilterGrid(){
-  const f = window.agentFilters;
-  const depts = [...new Set(allWorkforceAgents().map(x=>x.dept))];
-  return `
-    <div class="toolbar" style="display:flex; gap:8px; flex-wrap:wrap; margin:18px 0 12px; align-items:center;">
-      <input class="search" id="agentSearchInput" placeholder="Search agents by name, skill or tag..." value="${f.search||''}" oninput="window.agentFilters.search=this.value; refreshAgentFilterGrid()" style="flex:1; min-width:220px;">
-      <select class="filter-select" id="agentStatusFilter" onchange="window.agentFilters.status=this.value; refreshAgentFilterGrid()" style="min-width:130px;">
-        <option value="all" ${f.status==='all'?'selected':''}>All statuses</option>
-        <option value="active" ${f.status==='active'?'selected':''}>Active</option>
-        <option value="idle" ${f.status==='idle'?'selected':''}>Idle</option>
-      </select>
-      <select class="filter-select" id="agentDeptFilter" onchange="window.agentFilters.dept=this.value; refreshAgentFilterGrid()" style="min-width:150px;">
-        <option value="all" ${f.dept==='all'?'selected':''}>All departments</option>
-        ${depts.map(d=>`<option value="${d}" ${f.dept===d?'selected':''}>${d}</option>`).join('')}
-      </select>
-      ${(f.search||f.status!=='all'||f.dept!=='all') ? `<button class="btn btn-ghost" style="padding:6px 10px; font-size:12px;" onclick="window.agentFilters={search:'',status:'all',dept:'all'}; renderAIWorkforceBody('overview')">Clear</button>` : ''}
-    </div>
-    <div id="agentFilterGrid">
-      ${agentFilterGridHtml(filteredWorkforceAgents())}
-    </div>`;
-}
-function refreshAgentFilterGrid(){
-  const grid = document.getElementById('agentFilterGrid');
-  if(!grid) return;
-  grid.innerHTML = agentFilterGridHtml(filteredWorkforceAgents());
-}
+
+
 function genericDeptHTML(dept){
   const skillAgents = buildDeptSkillAgents(dept);
   const domainAgent = deptDomainAgent(dept);
@@ -2188,6 +2107,12 @@ function genericDeptHTML(dept){
     </div>`;
 }
 
+function filterDeptCards(q){
+  q = (q||'').toLowerCase().trim();
+  document.querySelectorAll('#deptList .dept-card').forEach(card=>{
+    card.style.display = (!q || card.textContent.toLowerCase().includes(q)) ? '' : 'none';
+  });
+}
 function renderAIWorkforceBody(subview){
   const body = document.getElementById('secBody-ai-workforce');
   if(subview==='overview' || !subview){
@@ -2199,16 +2124,17 @@ function renderAIWorkforceBody(subview){
         <div class="stat"><p>Needs attention</p><p>2</p></div>
       </div>
       <p class="domain-eyebrow" style="padding:0;">Departments</p>
-      <div class="dept-list">
+      <div class="toolbar" style="display:flex; gap:8px; margin-bottom:12px; align-items:center;">
+        <input class="search" id="deptSearchInput" placeholder="Filter departments..." oninput="filterDeptCards(this.value)" style="flex:1; min-width:220px;">
+      </div>
+      <div class="dept-list" id="deptList">
         ${departments.map(d=>`
           <div class="dept-card" onclick="selectSubviewAndSidebar('ai-workforce','dept-${deptSlug(d.name)}')">
             <h5>${d.name}</h5>
             <p>${d.desc}</p>
             <p class="dept-count">${d.builtin ? '1 domain agent + 14 skill agents' : '1 domain agent + ' + d.skills.length + ' skill agents'}</p>
           </div>`).join('')}
-      </div>
-      <p class="domain-eyebrow" style="padding:0; margin-top:18px;">All agents</p>
-      ${renderAgentFilterGrid()}`;
+      </div>`;
     return;
   }
   if(['active','running','attention','completed'].includes(subview)){
