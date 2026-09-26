@@ -645,8 +645,11 @@
   .wf-port{width:14px; height:14px; border-radius:50%; background:#fff; border:2.5px solid #334155; position:absolute; top:50%; transform:translateY(-50%); z-index:4; cursor:crosshair; box-shadow:0 1px 4px rgba(0,0,0,.18); transition:transform .12s, background .12s;}
   .wf-port.in{left:-7px;}
   .wf-port.out{right:-7px;}
-  .wf-port.yes{border-color:#1D9E75; right:-7px;}
-  .wf-port.no{border-color:#791F1F; right:-7px;}
+  .wf-port.yes{border-color:#1D9E75; right:-7px; top:34%;}
+  .wf-port.no{border-color:#791F1F; right:-7px; top:66%;}
+  .wf-port-tag{position:absolute; right:13px; transform:translateY(-50%); font-size:9px; font-weight:800; letter-spacing:.04em; z-index:4; pointer-events:none; background:var(--card); border:1px solid var(--border); padding:0 5px; border-radius:8px; line-height:1.7;}
+  .wf-port-tag.yes-tag{top:34%; color:#1D9E75; border-color:#1D9E75;}
+  .wf-port-tag.no-tag{top:66%; color:#791F1F; border-color:#791F1F;}
   .wf-port:hover{background:#334155; transform:translateY(-50%) scale(1.25);}
   .wf-port.yes:hover{background:#1D9E75;}
   .wf-port.no:hover{background:#791F1F;}
@@ -3191,7 +3194,7 @@ function wfNodeHtml(n, i, isBranch, branchKey, branchIdx){
   const y = n.y!==undefined ? n.y : 0;
   const isCondition = n.type==='condition' && n.branches;
   const portsHtml = isCondition
-    ? `<div class="wf-port in" data-port="in" onmousedown="wfPortDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1},'in'); event.stopPropagation();"></div><div class="wf-port yes" data-port="yes" onmousedown="wfPortDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1},'yes'); event.stopPropagation();" title="Yes branch"></div><div class="wf-port no" data-port="no" onmousedown="wfPortDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1},'no'); event.stopPropagation();" style="top:66%;" title="No branch"></div>`
+    ? `<div class="wf-port in" data-port="in" onmousedown="wfPortDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1},'in'); event.stopPropagation();"></div><span class="wf-port-tag yes-tag">Yes</span><div class="wf-port yes" data-port="yes" onmousedown="wfPortDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1},'yes'); event.stopPropagation();" title="Yes branch"></div><span class="wf-port-tag no-tag">No</span><div class="wf-port no" data-port="no" onmousedown="wfPortDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1},'no'); event.stopPropagation();" title="No branch"></div>`
     : `<div class="wf-port in" data-port="in" onmousedown="wfPortDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1},'in'); event.stopPropagation();"></div><div class="wf-port out" data-port="out" onmousedown="wfPortDragStart(event,${i},'${isBranch?branchKey:''}',${isBranch?branchIdx:-1},'out'); event.stopPropagation();"></div>`;
   const typeColors = {trigger:'#1D9E75',condition:'#EF9F27',agent:'#B83E01',action:'#378ADD',human:'#D4537E'};
   const tc = typeColors[n.type] || '#378ADD';
