@@ -3536,9 +3536,12 @@ function renderWfCanvas(){
   });
   html += '</div></div>';
   canvas.innerHTML = html;
-  applyWfView();
-  wfBindCanvasView();
-  requestAnimationFrame(()=>wfDrawArrows());
+  try{
+    applyWfView();
+    wfBindCanvasView();
+    const rafFn = window.requestAnimationFrame || function(fn){ return setTimeout(fn, 16); };
+    rafFn(()=>{ try{ wfDrawArrows(); }catch(err){ wfReportDrawError(err); } });
+  }catch(err){ wfReportDrawError(err); }
 }
 function wfDragStart(e,i,branchKey,branchIdx){
   const isBranch = branchKey && branchKey.length>0;
@@ -3736,6 +3739,14 @@ function wfRunTest(){
   });
 }
 function wfHideHint(){ const h=document.getElementById('wfHint'); if(h) h.style.display='none'; }
+function wfReportDrawError(err){
+  try{
+    const msg = 'draw error: ' + ((err && err.message) ? err.message : String(err));
+    const ccEl = document.getElementById('wfConnCount');
+    if(ccEl){ ccEl.textContent = msg; ccEl.style.color = '#B3261E'; }
+    if(window.console && window.console.error) window.console.error('[wf]', err);
+  }catch(_){}
+}
 function wfEdgeName(id){
   const f = (typeof wfFindNodeById==='function') ? wfFindNodeById(id) : null;
   return (f && f.node && f.node.label) ? f.node.label : id;
