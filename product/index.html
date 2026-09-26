@@ -1492,24 +1492,33 @@ const agents = [
 ];
 
 const kraubexModels = [
-  {id:'gpt-4o', name:'GPT-4o', provider:'OpenAI', desc:'Flagship multimodal'},
-  {id:'gpt-4o-mini', name:'GPT-4o mini', provider:'OpenAI', desc:'Cost-efficient'},
-  {id:'claude-3.5-sonnet', name:'Claude 3.5 Sonnet', provider:'Anthropic', desc:'Reasoning & coding'},
-  {id:'claude-3-haiku', name:'Claude 3 Haiku', provider:'Anthropic', desc:'Fast lightweight'},
-  {id:'gemini-1.5-pro', name:'Gemini 1.5 Pro', provider:'Google', desc:'2M context'},
-  {id:'gemini-1.5-flash', name:'Gemini 1.5 Flash', provider:'Google', desc:'Speed-optimized'},
-  {id:'llama-3.1-405b', name:'Llama 3.1 405B', provider:'Meta', desc:'Open 405B'},
-  {id:'mistral-large-2', name:'Mistral Large 2', provider:'Mistral', desc:'Multilingual'},
+  {id:'gpt-6-astra', name:'GPT-6 Astra', provider:'OpenAI', desc:'Frontier flagship • 1.05M ctx'},
+  {id:'gpt-6-sol', name:'GPT-6 Sol', provider:'OpenAI', desc:'Balanced frontier'},
+  {id:'gpt-6-luna', name:'GPT-6 Luna', provider:'OpenAI', desc:'Efficient frontier'},
+  {id:'gpt-live-1', name:'GPT-Live-1', provider:'OpenAI', desc:'Realtime voice'},
+  {id:'claude-opus-5-5', name:'Claude Opus 5.5', provider:'Anthropic', desc:'Latest flagship • 1M ctx'},
+  {id:'claude-fable-5-1', name:'Claude Fable 5.1', provider:'Anthropic', desc:'Coding flagship'},
+  {id:'claude-mythos-5-1', name:'Claude Mythos 5.1', provider:'Anthropic', desc:'Frontier twin'},
+  {id:'claude-sonnet-5', name:'Claude Sonnet 5', provider:'Anthropic', desc:'Balanced'},
+  {id:'gemini-3-8-flash', name:'Gemini 3.8 Flash', provider:'Google', desc:'Workhorse • 1M ctx'},
+  {id:'gemini-3-pro', name:'Gemini 3 Pro', provider:'Google', desc:'Deep Think • 2M ctx'},
+  {id:'gemini-3-8-live', name:'Gemini 3.8 Live', provider:'Google', desc:'Live dialogue • 97 langs'},
+  {id:'muse-spark-1-3', name:'Muse Spark 1.3', provider:'Meta', desc:'Agentic flagship'},
+  {id:'llama-4-400b', name:'Llama 4 400B', provider:'Meta', desc:'Open weights'},
+  {id:'mistral-large-3', name:'Mistral Large 3', provider:'Mistral', desc:'Flagship • 128K ctx'},
+  {id:'mistral-medium-3-5', name:'Mistral Medium 3.5', provider:'Mistral', desc:'Cost-efficient'},
+  {id:'deepseek-v4-1-flash', name:'DeepSeek V4.1 Flash', provider:'DeepSeek', desc:'Efficiency king'},
   {id:'command-r-plus', name:'Command R+', provider:'Cohere', desc:'RAG-optimized'},
+  {id:'qwen3-8-max', name:'Qwen3.8 Max', provider:'Alibaba', desc:'Coding snapshot'},
   {id:'kraubex-ft', name:'Kraubex FT', provider:'Kraubex AI', desc:'Procurement fine-tune'},
 ];
 const agentModels = {};
-function getAgentModel(name){ return agentModels[name] || 'gpt-4o'; }
+function getAgentModel(name){ return agentModels[name] || 'gpt-6-astra'; }
 function setAgentModel(name, modelId){ agentModels[name]=modelId; }
 function modelOptionsHtml(selectedId){
   return kraubexModels.map(m=>`<option value="${m.id}" ${m.id===selectedId?'selected':''}>${m.name} — ${m.provider}</option>`).join('');
 }
-const providerColors = {OpenAI:'#10A37F', Anthropic:'#C97A2E', Google:'#4285F4', Meta:'#0668E1', Mistral:'#FF7000', Cohere:'#39594E', 'Kraubex AI':'#B83E01'};
+const providerColors = {OpenAI:'#10A37F', Anthropic:'#C97A2E', Google:'#4285F4', Meta:'#0668E1', Mistral:'#FF7000', Cohere:'#39594E', DeepSeek:'#4D6BFE', Alibaba:'#FF6A00', 'Kraubex AI':'#B83E01'};
 function providerColor(p){ return providerColors[p] || '#6B7280'; }
 function slugForModelPicker(name){ return name.replace(/[^a-z0-9]/gi,'-').toLowerCase(); }
 function modelPickerHtml(agentName){
