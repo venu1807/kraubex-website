@@ -2293,16 +2293,15 @@ function updateAgentLimit(agentName, value){
 
 function getAgentHealthData(a){
   const h = hashStr(a.name);
-  const successRate = 90 + (h % 95) / 10;
+  const successRate = 97 + (h % 30) / 10;
   const avgLatency = 350 + (h % 1800);
   const p95Latency = Math.round(avgLatency * (1.5 + (h % 5)/10));
-  const errors24h = h % 7;
+  const errors24h = h % 2;
   const retries24h = h % 5;
   const lastActiveMins = 1 + (h % 180);
   const lastActive = lastActiveMins < 60 ? `${lastActiveMins}m ago` : `${Math.round(lastActiveMins/60)}h ago`;
   let status = 'healthy';
-  if(successRate < 93 || errors24h >= 5) status = 'down';
-  else if(successRate < 97 || errors24h >= 2) status = 'degraded';
+  if(a.name==='RFQ/RFP Agent') status = 'degraded';
   const trend = Array.from({length:7}, (_,i)=> 20 + ((h*(i+3)) % 80));
   return {successRate, avgLatency, p95Latency, errors24h, retries24h, lastActive, status, trend};
 }
