@@ -1311,6 +1311,12 @@
     <p class="assign-sub">This agent will pick up the selected contract(s) and report back with results.</p>
     <div class="agent-instr" id="agentInstructions"></div>
     <div class="assign-field">
+      <label>Reference number (RFQ / PO / Contract / Task / Workflow)</label>
+      <input id="assignEntityInput" list="assignEntityList" placeholder="e.g. RFQ-2026-014, PO-2026-1042, CNT-2025-002, TSK-001" oninput="renderAssignEntity()" style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px;">
+      <datalist id="assignEntityList"></datalist>
+    </div>
+    <p class="assign-note" id="assignEntityDetail" style="margin-top:6px;"></p>
+    <div class="assign-field">
       <label>Task type</label>
       <textarea id="assignTaskInput" rows="4"></textarea>
     </div>
@@ -2830,6 +2836,7 @@ function renderTasksBody(subview){
               <td style="${tdCenter}"><span class="tag" style="${t.status==='Completed'?'background:#EAF3DE; color:#27500A;':t.status==='Failed'?'background:#F7C1C1; color:#791F1F;':'background:var(--bg); color:var(--subhead);'}">${t.status==='Completed'?'✓ Success':t.status==='Failed'?'✗ Failed':'◷ '+(taskOutcomes[t.name]?.progress||0)+'%'}</span></td>
               <td style="${tdCenter}">
                 <span style="display:inline-flex; gap:6px; justify-content:center; align-items:center;">
+                  <button class="icon-btn" title="Assign to agent" onclick="assignRowEntity('${t.id||t.name}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>
                   <button class="icon-btn" title="View" onclick="viewTask('${t.name.replace(/'/g,"\\'")}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
                   <button class="icon-btn" title="Edit" onclick="editTask('${t.name.replace(/'/g,"\\'")}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
                   <button class="icon-btn" title="Delete" onclick="deleteTask('${t.name.replace(/'/g,"\\'")}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>
@@ -4624,6 +4631,44 @@ function generateAgentInstructions(agent){
   const example = `You are the ${agent.name}. ${agent.desc} Stay within ${agent.tag.toLowerCase()} scope, keep responses concise and actionable, and escalate to a human reviewer whenever a task needs approval beyond your authority or the information provided is incomplete.`;
   return {describe, example};
 }
+let pendingEntityRef = null;
+function allAssignEntities(){
+  const list = [];
+  rfqs.forEach(r=>list.push({kind:'RFQ', id:r.id, title:r.title, sub:(r.suppliers||[]).join(', ')+' • '+r.status}));
+  purchaseOrders.forEach(p=>list.push({kind:'PO', id:p.id, title:p.supplier, sub:p.value+' • '+p.status}));
+  contracts.forEach(c=>list.push({kind:'Contract', id:c.id, title:c.supplier, sub:c.value+' • '+c.status}));
+  (window.tasksList||[]).forEach(t=>list.push({kind:'Task', id:t.id||t.name, title:t.name, sub:t.agent+' • '+t.status}));
+  workflows.forEach(w=>list.push({kind:'Workflow', id:w.id||w.name, title:w.name, sub:w.dept+' • '+w.status}));
+  return list;
+}
+function resolveEntityRef(q){
+  q = (q||'').trim().toUpperCase();
+  if(!q) return null;
+  return allAssignEntities().find(e=>e.id.toUpperCase()===q) || null;
+}
+function buildAssignEntityList(){
+  const dl = document.getElementById('assignEntityList');
+  if(!dl) return;
+  dl.innerHTML = allAssignEntities().map(e=>`<option value="${e.id}">${e.kind} — ${e.title}</option>`).join('');
+}
+function renderAssignEntity(){
+  const inp = document.getElementById('assignEntityInput');
+  const detail = document.getElementById('assignEntityDetail');
+  if(!inp || !detail) return;
+  const found = resolveEntityRef(inp.value);
+  pendingEntityRef = found;
+  detail.textContent = found ? `${found.kind} ${found.id} — ${found.title} (${found.sub})` : (inp.value.trim() ? 'No match for "'+inp.value.trim()+'".' : '');
+}
+function assignRowEntity(id){
+  const found = resolveEntityRef(id);
+  if(!found){ alert('Reference not found: '+id); return; }
+  pendingEntityRef = found;
+  const def = (agents||[]).find(a=>a.group==='skill') || agents[0];
+  openAssignModalObj(def);
+  const inp = document.getElementById('assignEntityInput');
+  if(inp) inp.value = found.id;
+  renderAssignEntity();
+}
 function openAssignModalObj(agentObj){
   pendingAgent = agentObj;
   document.getElementById('assignTitle').textContent = `Assign task to ${pendingAgent.name}`;
@@ -4639,6 +4684,10 @@ function openAssignModalObj(agentObj){
     <ul>${instr.describe.map(d=>`<li>${d}</li>`).join('')}</ul>
     <p class="instr-label">Example</p>
     <div class="instr-example">${instr.example}</div>`;
+  buildAssignEntityList();
+  const einp = document.getElementById('assignEntityInput');
+  if(einp && !pendingEntityRef) einp.value = '';
+  renderAssignEntity();
   document.getElementById('assignOverlay').classList.add('show');
 }
 function openAssignModal(i){
@@ -4647,12 +4696,13 @@ function openAssignModal(i){
 function closeAssignModal(){
   document.getElementById('assignOverlay').classList.remove('show');
   pendingAgent = null;
+  pendingEntityRef = null;
 }
 function confirmAssignTask(){
   const task = document.getElementById('assignTaskInput').value.trim();
   if(!task){ alert('Enter a task type first.'); return; }
   const idx = selectedIndexes();
-  alert(`${pendingAgent.name} assigned: "${task}"` + (idx.length ? `\nContracts: ${idx.map(n=>contracts[n].id).join(', ')}` : ''));
+  alert(`${pendingAgent.name} assigned: "${task}"` + (pendingEntityRef ? `\nRef: ${pendingEntityRef.kind} ${pendingEntityRef.id} — ${pendingEntityRef.title}` : '') + (idx.length ? `\nContracts: ${idx.map(n=>contracts[n].id).join(', ')}` : ''));
   closeAssignModal();
 }
 
@@ -4734,6 +4784,7 @@ function renderTable(){
       <td>${statusTag(c.renewal)}</td>
       <td style="color:var(--text-muted);">${c.end}</td>
       <td class="actions">
+        <button class="icon-btn" title="Assign to agent" onclick="assignRowEntity(contracts[${i}].id)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>
         <button class="icon-btn" title="View" onclick="viewContract(${i})"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
         <button class="icon-btn" title="Edit" onclick="editContract(${i})"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
         <button class="icon-btn" title="Share" onclick="shareContract(${i})"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.5 10.7l7-4M8.5 13.3l7 4"/></svg></button>
@@ -5035,6 +5086,7 @@ function renderRfqTable(tab){
       <td>${rfqStatusTag(r.status)}</td>
       <td style="color:var(--text-muted);">${r.due}</td>
       <td class="actions" style="justify-content:center;">
+        <button class="icon-btn" title="Assign to agent" onclick="assignRowEntity('${r.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>
         <button class="icon-btn" title="View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
         <button class="icon-btn" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
         <button class="icon-btn danger" title="Delete" onclick="deleteRfq('${r.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/></svg></button>
@@ -5104,6 +5156,7 @@ function renderPoTable(tab){
       <td>${poStatusTag(p.status)}</td>
       <td style="color:var(--text-muted);">${p.orderDate}</td>
       <td class="actions" style="justify-content:center;">
+        <button class="icon-btn" title="Assign to agent" onclick="assignRowEntity('${p.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>
         <button class="icon-btn" title="View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
         <button class="icon-btn" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
         <button class="icon-btn danger" title="Delete" onclick="deletePo('${p.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/></svg></button>
