@@ -1375,7 +1375,10 @@
 
 <div class="assign-overlay" id="assignPickerOverlay" onclick="if(event.target===this) closeAssignPicker()">
   <div class="assign-modal">
-    <h3>Assign to agent</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="margin:0;">Assign to agent</h3>
+      <button class="wf-close" onclick="closeAssignPicker()" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
     <p class="assign-sub" id="assignPickerContext"></p>
     <div class="assign-field">
       <label>Skill agent</label>
@@ -1389,13 +1392,19 @@
 
 <div class="assign-overlay" id="assignOverlay" onclick="if(event.target===this) closeAssignModal()">
   <div class="assign-modal">
-    <h3 id="assignTitle">Assign task to agent</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="assignTitle" style="margin:0;">Assign task to agent</h3>
+      <button class="wf-close" onclick="closeAssignModal()" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
     <p class="assign-sub">This agent will pick up the selected contract(s) and report back with results.</p>
     <div class="agent-instr" id="agentInstructions"></div>
+    <div class="assign-field">
+      <label>Prompt — what should the agent do</label>
+      <textarea id="assignTaskInput" rows="4" placeholder="e.g. Review the attached contracts and flag renewal risks"></textarea>
+    </div>
 
     <p class="assign-note" id="assignContext"></p>
     <div class="assign-actions">
-      <button class="btn btn-ghost" onclick="backToAssignPicker()">← Back</button>
       <button class="btn btn-ghost" onclick="closeAssignModal()">Cancel</button>
       <button class="btn btn-primary" onclick="confirmAssignTask()">Assign task</button>
     </div>
@@ -1847,7 +1856,7 @@ function domainIconFor(deptName, color){
 function domainAgentCardHTML(dept, domainAgent){
   const sel = getAgentModel(domainAgent.name);
   return `
-    <div class="agent-card domain-agent-card" style="border:2px solid var(--headline); background:linear-gradient(135deg, var(--card) 0%, var(--bg) 100%);">
+    <div class="agent-card domain-agent-card" style="cursor:pointer; border:2px solid var(--headline); background:linear-gradient(135deg, var(--card) 0%, var(--bg) 100%);" onclick="openAssignModalObj({name:'${domainAgent.name.replace(/'/g,"\\'")}', desc:'${domainAgent.desc.replace(/'/g,"\\'")}', tag:'${domainAgent.tag}', color:'${domainAgent.color}'})">
       <div class="agent-card-top">
         ${domainIconFor(dept.name, domainAgent.color)}
         <div class="agent-name-row">
@@ -1878,7 +1887,7 @@ function domainAgentCardHTML(dept, domainAgent){
 
 function agentCardHTML(a, i){
   return `
-    <div class="agent-card">
+    <div class="agent-card" style="cursor:pointer;" onclick="openAssignModal(${i})">
       <div class="agent-card-top">
         ${iconFor(a)}
         <div class="agent-name-row">
@@ -2124,7 +2133,7 @@ function openDeptAgent(slug, idx){
 
 function deptAgentCardHTML(a, slug, i){
   return `
-    <div class="agent-card">
+    <div class="agent-card" style="cursor:pointer;" onclick="openDeptAgent('${slug}', ${i})">
       <div class="agent-card-top">
         ${iconFor(a)}
         <div class="agent-name-row">
@@ -5053,14 +5062,11 @@ function openAssignPicker(contextText){
 function closeAssignPicker(){
   document.getElementById('assignPickerOverlay').classList.remove('show');
 }
-function backToAssignPicker(){
-  document.getElementById('assignOverlay').classList.remove('show');
-  pendingAgent = null;
-  document.getElementById('assignPickerOverlay').classList.add('show');
-}
+
 function openAssignModalObj(agentObj){
   pendingAgent = agentObj;
   document.getElementById('assignTitle').textContent = `Assign task to ${agentObj.name}`;
+  document.getElementById('assignTaskInput').value = agentObj.task || '';
   const idx = selectedIndexes();
   const extra = idx.length ? `${idx.length} contract(s) selected: ${idx.map(n=>contracts[n].id).join(', ')}` : '';
   document.getElementById('assignContext').textContent = [window.assignContextText, extra].filter(Boolean).join(' • ') || `${agentObj.name} will pick up the task and report back with results.`;
@@ -5076,8 +5082,10 @@ function closeAssignModal(){
 }
 function confirmAssignTask(){
   if(!pendingAgent){ alert('Select an agent first.'); return; }
+  const task = document.getElementById('assignTaskInput').value.trim();
+  if(!task){ alert('Write a prompt for the agent first.'); return; }
   const idx = selectedIndexes();
-  alert(`${pendingAgent.name} assigned` + (window.assignContextText ? `\n${window.assignContextText}` : '') + (idx.length ? `\nContracts: ${idx.map(n=>contracts[n].id).join(', ')}` : ''));
+  alert(`${pendingAgent.name} assigned: "${task}"` + (window.assignContextText ? `\n${window.assignContextText}` : '') + (idx.length ? `\nContracts: ${idx.map(n=>contracts[n].id).join(', ')}` : ''));
   closeAssignModal();
 }
 
