@@ -717,6 +717,13 @@
   .oc-model-name{font-size:11px; font-weight:600; color:var(--subhead); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .oc-model-chevron{color:var(--text-muted); flex-shrink:0; transition:transform .15s;}
   .oc-model-picker.open .oc-model-chevron{transform:rotate(180deg);}
+  .agent-actions-row{display:flex; gap:6px; margin-top:8px; align-items:stretch;}
+  .mini-btn{flex:1; display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:5px 6px; font-size:10.5px; font-weight:600; border:1px solid var(--border); border-radius:7px; background:var(--card); color:var(--subhead); cursor:pointer; white-space:nowrap; min-width:0;}
+  .mini-btn:hover{border-color:var(--headline); color:var(--headline);}
+  .oc-model-picker.compact{margin-top:0; padding-top:0; border-top:none; flex:1.2; min-width:0;}
+  .oc-model-picker.compact .oc-model-label{display:none;}
+  .oc-model-picker.compact .oc-model-btn{padding:5px 6px; font-size:10.5px;}
+  .oc-model-picker.compact .oc-model-provider{display:none;}
   .oc-model-dropdown{position:absolute; left:0; right:0; bottom:calc(100% + 6px); background:var(--card); border:1px solid var(--border); border-radius:10px; box-shadow:0 12px 28px rgba(0,0,0,.14); max-height:240px; overflow-y:auto; display:none; z-index:12; padding:6px;}
   .oc-model-dropdown.show{display:block;}
   .oc-model-group{font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.04em; text-transform:uppercase; padding:6px 8px 2px;}
@@ -1689,13 +1696,17 @@ function modelOptionsHtml(selectedId){
 const providerColors = {OpenAI:'#10A37F', Anthropic:'#C97A2E', Google:'#4285F4', Meta:'#0668E1', Mistral:'#FF7000', Cohere:'#39594E', DeepSeek:'#4D6BFE', Alibaba:'#FF6A00', 'Kraubex AI':'#B83E01'};
 function providerColor(p){ return providerColors[p] || '#6B7280'; }
 function slugForModelPicker(name){ return name.replace(/[^a-z0-9]/gi,'-').toLowerCase(); }
-function modelPickerHtml(agentName){
+function publishMiniBtnHtml(agentName){
+  const safe = agentName.replace(/'/g,"\\'");
+  return `<button class="mini-btn" onclick="event.stopPropagation(); openPublishModal('${safe}')" title="Publish to channel">📣 Publish</button>`;
+}
+function modelPickerHtml(agentName, compact){
   const sel = getAgentModel(agentName);
   const cur = kraubexModels.find(m=>m.id===sel) || kraubexModels[0];
   const grouped = {};
   kraubexModels.forEach(m=>{ if(!grouped[m.provider]) grouped[m.provider]=[]; grouped[m.provider].push(m); });
   const slug = slugForModelPicker(agentName);
-  return `<div class="oc-model-picker" id="picker-${slug}" onclick="event.stopPropagation()">
+  return `<div class="oc-model-picker${compact?' compact':''}" id="picker-${slug}" onclick="event.stopPropagation()">
     <label class="oc-model-label">Model</label>
     <button class="oc-model-btn" onclick="toggleModelPicker('${agentName.replace(/'/g,"\\'")}')">
       <span class="oc-model-dot" style="background:${providerColor(cur.provider)}"></span>
@@ -1833,9 +1844,11 @@ function domainAgentCardHTML(dept, domainAgent){
           ${domainAgent.rating}
         </span>
       </div>
-      <button class="btn btn-ghost" style="width:100%; margin-top:8px; padding:5px 8px; font-size:11px;" onclick="event.stopPropagation(); openPublishModal('${domainAgent.name.replace(/'/g,"\\'")}')">📣 Publish to channel</button>
+      <div class="agent-actions-row">
+        ${publishMiniBtnHtml(domainAgent.name)}
+        ${modelPickerHtml(domainAgent.name, true)}
+      </div>
       ${agentPublishChips(domainAgent.name)}
-      ${modelPickerHtml(domainAgent.name)}
     </div>`;
 }
 
@@ -1863,9 +1876,11 @@ function agentCardHTML(a, i){
           ${a.rating}
         </span>
       </div>
-      <button class="btn btn-ghost" style="width:100%; margin-top:8px; padding:5px 8px; font-size:11px;" onclick="event.stopPropagation(); openPublishModal('${a.name.replace(/'/g,"\\'")}')">📣 Publish to channel</button>
+      <div class="agent-actions-row">
+        ${publishMiniBtnHtml(a.name)}
+        ${modelPickerHtml(a.name, true)}
+      </div>
       ${agentPublishChips(a.name)}
-      ${modelPickerHtml(a.name)}
     </div>`;
 }
 
@@ -2105,9 +2120,11 @@ function deptAgentCardHTML(a, slug, i){
           ${a.rating}
         </span>
       </div>
-      <button class="btn btn-ghost" style="width:100%; margin-top:8px; padding:5px 8px; font-size:11px;" onclick="event.stopPropagation(); openPublishModal('${a.name.replace(/'/g,"\\'")}')">📣 Publish to channel</button>
+      <div class="agent-actions-row">
+        ${publishMiniBtnHtml(a.name)}
+        ${modelPickerHtml(a.name, true)}
+      </div>
       ${agentPublishChips(a.name)}
-      ${modelPickerHtml(a.name)}
     </div>`;
 }
 function deptDomainAgent(dept){
