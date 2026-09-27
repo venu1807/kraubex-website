@@ -1368,6 +1368,10 @@
     </div>
     <p class="assign-note" id="assignEntityDetail" style="margin-top:6px;"></p>
     <div class="assign-field">
+      <label>Agent</label>
+      <select id="assignAgentSelect" onchange="onAssignAgentChange()" style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px;"></select>
+    </div>
+    <div class="assign-field">
       <label>Task type</label>
       <textarea id="assignTaskInput" rows="4"></textarea>
     </div>
@@ -5006,6 +5010,40 @@ function agentPublishChips(name){
 function refreshWorkforceView(){
   renderAIWorkforceBody(window.lastWorkforceSubview || 'overview');
 }
+let assignAgentChoices = [];
+function buildAssignAgentChoices(){
+  const list = [];
+  (agents||[]).forEach(a=>list.push(a));
+  (departments||[]).forEach(d=>{
+    if(d.builtin) return;
+    try{ buildDeptSkillAgents(d).forEach(a=>list.push(a)); }catch(_){}
+  });
+  return list;
+}
+function populateAssignAgents(){
+  const sel = document.getElementById('assignAgentSelect');
+  if(!sel) return;
+  assignAgentChoices = buildAssignAgentChoices();
+  const cur = (window.pendingAgent && window.pendingAgent.name) || '';
+  sel.innerHTML = assignAgentChoices.map((a,i)=>`<option value="${i}" ${a.name===cur?'selected':''}>${a.name} — ${a.tag||''}</option>`).join('');
+}
+function renderAssignInstructions(a){
+  const instr = generateAgentInstructions(a);
+  document.getElementById('agentInstructions').innerHTML = `
+    <h4>Instructions</h4>
+    <p class="instr-label">Describe</p>
+    <ul>${instr.describe.map(d=>`<li>${d}</li>`).join('')}</ul>
+    <p class="instr-label">Example</p>
+    <div class="instr-example">${instr.example}</div>`;
+}
+function onAssignAgentChange(){
+  const sel = document.getElementById('assignAgentSelect');
+  const a = assignAgentChoices[parseInt(sel.value,10)];
+  if(!a) return;
+  pendingAgent = a;
+  document.getElementById('assignTitle').textContent = `Assign task to ${a.name}`;
+  renderAssignInstructions(a);
+}
 function openAssignModalObj(agentObj){
   pendingAgent = agentObj;
   document.getElementById('assignTitle').textContent = `Assign task to ${pendingAgent.name}`;
@@ -5014,17 +5052,12 @@ function openAssignModalObj(agentObj){
   document.getElementById('assignContext').textContent = idx.length
     ? `${idx.length} contract(s) selected: ${idx.map(n=>contracts[n].id).join(', ')}`
     : 'No contracts selected — the agent will run on the full supplier set.';
-  const instr = generateAgentInstructions(pendingAgent);
-  document.getElementById('agentInstructions').innerHTML = `
-    <h4>Instructions</h4>
-    <p class="instr-label">Describe</p>
-    <ul>${instr.describe.map(d=>`<li>${d}</li>`).join('')}</ul>
-    <p class="instr-label">Example</p>
-    <div class="instr-example">${instr.example}</div>`;
+  renderAssignInstructions(pendingAgent);
   buildAssignEntityList();
   const einp = document.getElementById('assignEntityInput');
   if(einp && !pendingEntityRef) einp.value = '';
   renderAssignEntity();
+  populateAssignAgents();
   document.getElementById('assignOverlay').classList.add('show');
 }
 function openAssignModal(i){
@@ -5354,8 +5387,10 @@ function downloadSelected(){
 function assignAgent(){
   const idx = selectedIndexes();
   if(!idx.length) return;
-  switchMainSection('ai-workforce', document.getElementById('navAIWorkforce'));
-  selectSubview('ai-workforce', 'dept-procurement');
+  const def = (agents||[]).find(a=>a.group==='skill') || agents[0];
+  openAssignModalObj(def);
+  const inp = document.getElementById('assignTaskInput');
+  if(inp) inp.value = `Review contracts: ${idx.map(n=>contracts[n].id).join(', ')}`;
 }
 function analyzeSelected(){
   const idx = selectedIndexes();
