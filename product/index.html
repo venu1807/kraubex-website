@@ -718,13 +718,13 @@
   .oc-model-name{font-size:11px; font-weight:600; color:var(--subhead); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .oc-model-chevron{color:var(--text-muted); flex-shrink:0; transition:transform .15s;}
   .oc-model-picker.open .oc-model-chevron{transform:rotate(180deg);}
-  .agent-actions-row{display:flex; gap:6px; margin-top:8px; align-items:stretch;}
-  .mini-btn{flex:1; display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:5px 6px; font-size:10.5px; font-weight:600; border:1px solid var(--border); border-radius:7px; background:var(--card); color:var(--subhead); cursor:pointer; white-space:nowrap; min-width:0;}
-  .mini-btn:hover{border-color:var(--headline); color:var(--headline);}
-  .oc-model-picker.compact{margin-top:0; padding-top:0; border-top:none; flex:1.2; min-width:0;}
-  .oc-model-picker.compact .oc-model-label{display:none;}
-  .oc-model-picker.compact .oc-model-btn{padding:5px 6px; font-size:10.5px;}
-  .oc-model-picker.compact .oc-model-provider{display:none;}
+  .tmpl-row{display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:var(--card); cursor:pointer;}
+  .tmpl-row:hover{border-color:var(--headline);}
+  .tmpl-icon{width:34px; height:34px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center;}
+  .tmpl-name{font-size:13px; font-weight:700; color:var(--subhead); margin:0;}
+  .tmpl-desc{font-size:11.5px; color:var(--text-muted); margin:2px 0 0;}
+  .tmpl-go{color:var(--text-muted); font-size:15px; flex-shrink:0;}
+  .tmpl-row:hover .tmpl-go{color:var(--headline);}
   .oc-model-dropdown{position:absolute; left:0; right:0; bottom:calc(100% + 6px); background:var(--card); border:1px solid var(--border); border-radius:10px; box-shadow:0 12px 28px rgba(0,0,0,.14); max-height:240px; overflow-y:auto; display:none; z-index:12; padding:6px;}
   .oc-model-dropdown.show{display:block;}
   .oc-model-group{font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.04em; text-transform:uppercase; padding:6px 8px 2px;}
@@ -1380,6 +1380,17 @@
   </div>
 </div>
 
+<div class="assign-overlay" id="templatePickerOverlay" onclick="if(event.target===this) closeTemplatePicker()">
+  <div class="assign-modal" style="width:560px;">
+    <h3 id="templatePickerTitle">Choose a template</h3>
+    <p class="assign-sub">Pick a card to prefill the new record — or start blank.</p>
+    <div id="templatePickerGrid" style="display:flex; flex-direction:column; gap:8px;"></div>
+    <div class="assign-actions">
+      <button class="btn btn-ghost" onclick="closeTemplatePicker()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div class="assign-overlay" id="assignPickerOverlay" onclick="if(event.target===this) closeAssignPicker()">
   <div class="assign-modal">
     <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -1736,17 +1747,13 @@ function modelOptionsHtml(selectedId){
 const providerColors = {OpenAI:'#10A37F', Anthropic:'#C97A2E', Google:'#4285F4', Meta:'#0668E1', Mistral:'#FF7000', Cohere:'#39594E', DeepSeek:'#4D6BFE', Alibaba:'#FF6A00', 'Kraubex AI':'#B83E01'};
 function providerColor(p){ return providerColors[p] || '#6B7280'; }
 function slugForModelPicker(name){ return name.replace(/[^a-z0-9]/gi,'-').toLowerCase(); }
-function publishMiniBtnHtml(agentName){
-  const safe = agentName.replace(/'/g,"\\'");
-  return `<button class="mini-btn" onclick="event.stopPropagation(); openPublishModal('${safe}')" title="Publish to channel">📣 Publish</button>`;
-}
-function modelPickerHtml(agentName, compact){
+function modelPickerHtml(agentName){
   const sel = getAgentModel(agentName);
   const cur = kraubexModels.find(m=>m.id===sel) || kraubexModels[0];
   const grouped = {};
   kraubexModels.forEach(m=>{ if(!grouped[m.provider]) grouped[m.provider]=[]; grouped[m.provider].push(m); });
   const slug = slugForModelPicker(agentName);
-  return `<div class="oc-model-picker${compact?' compact':''}" id="picker-${slug}" onclick="event.stopPropagation()">
+  return `<div class="oc-model-picker" id="picker-${slug}" onclick="event.stopPropagation()">
     <label class="oc-model-label">Model</label>
     <button class="oc-model-btn" onclick="toggleModelPicker('${agentName.replace(/'/g,"\\'")}')">
       <span class="oc-model-dot" style="background:${providerColor(cur.provider)}"></span>
@@ -1884,11 +1891,9 @@ function domainAgentCardHTML(dept, domainAgent){
           ${domainAgent.rating}
         </span>
       </div>
-      <div class="agent-actions-row">
-        ${publishMiniBtnHtml(domainAgent.name)}
-        ${modelPickerHtml(domainAgent.name, true)}
-      </div>
+      <button class="btn btn-ghost" style="width:100%; margin-top:8px; padding:5px 8px; font-size:11px;" onclick="event.stopPropagation(); openPublishModal('${domainAgent.name.replace(/'/g,"\\'")}')">📣 Publish to channel</button>
       ${agentPublishChips(domainAgent.name)}
+      ${modelPickerHtml(domainAgent.name)}
     </div>`;
 }
 
@@ -1916,11 +1921,9 @@ function agentCardHTML(a, i){
           ${a.rating}
         </span>
       </div>
-      <div class="agent-actions-row">
-        ${publishMiniBtnHtml(a.name)}
-        ${modelPickerHtml(a.name, true)}
-      </div>
+      <button class="btn btn-ghost" style="width:100%; margin-top:8px; padding:5px 8px; font-size:11px;" onclick="event.stopPropagation(); openPublishModal('${a.name.replace(/'/g,"\\'")}')">📣 Publish to channel</button>
       ${agentPublishChips(a.name)}
+      ${modelPickerHtml(a.name)}
     </div>`;
 }
 
@@ -2160,11 +2163,9 @@ function deptAgentCardHTML(a, slug, i){
           ${a.rating}
         </span>
       </div>
-      <div class="agent-actions-row">
-        ${publishMiniBtnHtml(a.name)}
-        ${modelPickerHtml(a.name, true)}
-      </div>
+      <button class="btn btn-ghost" style="width:100%; margin-top:8px; padding:5px 8px; font-size:11px;" onclick="event.stopPropagation(); openPublishModal('${a.name.replace(/'/g,"\\'")}')">📣 Publish to channel</button>
       ${agentPublishChips(a.name)}
+      ${modelPickerHtml(a.name)}
     </div>`;
 }
 function deptDomainAgent(dept){
@@ -5731,25 +5732,63 @@ const poTemplates = [
   {name:'Raw materials PO', category:'Raw materials', value:'€0'},
   {name:'Services PO', category:'Services', value:'€0'},
 ];
-function pickTemplate(kind){
+function templateIcon(kind){
+  const paths = {
+    contract:'<path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5"/><path d="M9 13h6M9 17h4"/>',
+    rfq:'<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><path d="M9 14l2 2 4-4"/>',
+    po:'<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h2l2.4 12.2a2 2 0 002 1.8h8.6a2 2 0 002-1.6L21 7H6"/>',
+  };
+  return paths[kind] || paths.contract;
+}
+function templateDesc(kind, t){
+  if(kind==='contract') return `${t.cat||'General'} • ${t.sub||''} • ${t.value||''}`;
+  if(kind==='rfq') return (t.type ? t.type + ' preset' : 'Start from scratch');
+  if(kind==='po') return `${t.category||'General'} • ${t.value||''}`;
+  return '';
+}
+let templatePickerCb = null;
+let templatePickerList = [];
+function openTemplatePicker(kind, cb){
+  templatePickerCb = cb;
   const map = {contract:contractTemplates, rfq:rfqTemplates, po:poTemplates};
-  const list = map[kind]||[];
-  const c = prompt(`Template (1-${list.length}, or ${list.length+1} for Blank):\n` + list.map((t,i)=>`${i+1}. ${t.name}`).join('\n') + `\n${list.length+1}. Blank`, '1');
-  if(c===null) return null;
-  const n = parseInt(c,10);
-  if(!isNaN(n) && n>=1 && n<=list.length) return list[n-1];
-  return {};
+  templatePickerList = map[kind]||[];
+  const titles = {contract:'New contract', rfq:'New RFQ/RFI', po:'New purchase order'};
+  const colors = {contract:'#378ADD', rfq:'#EF9F27', po:'#1D9E75'};
+  const c = colors[kind] || '#378ADD';
+  document.getElementById('templatePickerTitle').textContent = titles[kind] || 'Choose a template';
+  const grid = document.getElementById('templatePickerGrid');
+  grid.innerHTML = templatePickerList.map((t,i)=>`
+    <div class="tmpl-row" onclick="selectTemplateCard(${i})">
+      <div class="tmpl-icon" style="background:${c}14; color:${c};"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${templateIcon(kind)}</svg></div>
+      <div style="flex:1; min-width:0;"><p class="tmpl-name">${t.name}</p><p class="tmpl-desc">${templateDesc(kind, t)}</p></div>
+      <span class="tmpl-go">→</span>
+    </div>`).join('') + `
+    <div class="tmpl-row" onclick="selectTemplateCard(-1)">
+      <div class="tmpl-icon" style="background:var(--bg); color:var(--text-muted); border:2px dashed var(--border);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg></div>
+      <div style="flex:1; min-width:0;"><p class="tmpl-name">Blank</p><p class="tmpl-desc">Start from scratch</p></div>
+      <span class="tmpl-go">→</span>
+    </div>`;
+  document.getElementById('templatePickerOverlay').classList.add('show');
+}
+function selectTemplateCard(i){
+  document.getElementById('templatePickerOverlay').classList.remove('show');
+  const cb = templatePickerCb; templatePickerCb = null;
+  if(cb) cb(i<0 ? {} : templatePickerList[i]);
+}
+function closeTemplatePicker(){
+  document.getElementById('templatePickerOverlay').classList.remove('show');
+  templatePickerCb = null;
 }
 function createNewRfq(){
-  const t = pickTemplate('rfq');
-  if(!t) return;
-  const title = prompt('RFQ/RFI title:');
-  if(!title || !title.trim()) return;
-  const type = ((t.type)||(prompt('Type: RFQ or RFI', 'RFQ')||'RFQ')).toUpperCase();
-  const due = prompt('Due date:', '—') || '—';
-  const num = String(rfqs.length + 15).padStart(3,'0');
-  rfqs.unshift({id:`${type==='RFI'?'RFI':'RFQ'}-2026-${num}`, title:title.trim(), type: type==='RFI'?'RFI':'RFQ', suppliers:[], status:'Open', due:due});
-  renderRfqTable('all');
+  openTemplatePicker('rfq', (t)=>{
+    const title = prompt('RFQ/RFI title:');
+    if(!title || !title.trim()) return;
+    const type = ((t.type)||(prompt('Type: RFQ or RFI', 'RFQ')||'RFQ')).toUpperCase();
+    const due = prompt('Due date:', '—') || '—';
+    const num = String(rfqs.length + 15).padStart(3,'0');
+    rfqs.unshift({id:`${type==='RFI'?'RFI':'RFQ'}-2026-${num}`, title:title.trim(), type: type==='RFI'?'RFI':'RFQ', suppliers:[], status:'Open', due:due});
+    renderRfqTable('all');
+  });
 }
 function deleteRfq(id){
   const idx = rfqs.findIndex(r=>r.id===id);
@@ -5817,8 +5856,7 @@ function renderPoTable(tab){
     </tr>`).join('');
 }
 function createNewPo(){
-  const t = pickTemplate('po');
-  if(!t) return;
+  openTemplatePicker('po', (t)=>{
   const supplier = prompt('Supplier name:');
   if(!supplier || !supplier.trim()) return;
   const category = prompt('Category:', t.category||'General');
@@ -5826,6 +5864,7 @@ function createNewPo(){
   const num = 1062 + purchaseOrders.length;
   purchaseOrders.unshift({id:`PO-2026-${num}`, supplier:supplier.trim(), category: category||'General', value: value||'€0', status:'Open', orderDate:'Today'});
   renderPoTable('all');
+  });
 }
 function deletePo(id){
   const idx = purchaseOrders.findIndex(p=>p.id===id);
