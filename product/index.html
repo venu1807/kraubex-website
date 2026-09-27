@@ -856,7 +856,7 @@
       <p class="feature-desc">Track and manage purchase orders</p>
     </div>
     <div class="feature" onclick="switchFeature('directory', this)">
-      <div class="feature-top"><span class="feature-name">Supplier directory</span></div>
+      <div class="feature-top"><span class="feature-name">Approved Suppliers</span></div>
       <p class="feature-desc">Browse all suppliers by category</p>
     </div>
 
@@ -1089,8 +1089,8 @@
     <div class="page" id="page-directory">
       <div class="page-head">
         <div>
-          <h1>Supplier directory</h1>
-          <p>Browse all suppliers by category</p>
+          <h1>Approved Suppliers</h1>
+          <p>Browse approved suppliers by category</p>
         </div>
       </div>
       <div id="directoryBody"></div>
@@ -5428,21 +5428,18 @@ function renderSupplierDirectory(){
   const body = document.getElementById('directoryBody');
   body.innerHTML = Object.keys(byIndustry).sort().map(industry=>`
     <p class="domain-eyebrow" style="padding:0;">${industry}</p>
-    <div class="supplier-grid" style="margin-bottom:20px;">
-      ${byIndustry[industry].map(s=>`
-        <div class="supplier-card">
-          <h3>${s.name}</h3>
-          <p class="supplier-sub">${s.industry} • ${s.location}</p>
-          <div class="supplier-meta">
-            <span class="star"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 16.9 5.8 20.3l1.6-6.8L2.2 8.9l6.9-.6z"/></svg>${s.rating}</span>
-            <span>• ${s.size}</span>
-          </div>
-          <div class="supplier-certs">${s.certs.map(c=>`<span class="cert-tag">${c}</span>`).join('')}</div>
-          <p class="supplier-spec"><b>Specialties:</b> ${s.specialties}</p>
-          <div class="supplier-actions">
-            <button class="btn btn-primary" onclick="openCompanyModal('${s.name.replace(/'/g,"\\'")}')">View details</button>
-          </div>
-        </div>`).join('')}
+    <div class="table-wrap" style="margin-bottom:20px;">
+    <table><thead><tr><th style="text-align:left;">Supplier</th><th>Location</th><th>Size</th><th>Rating</th><th>Certifications</th><th style="text-align:left;">Specialties</th><th>Actions</th></tr></thead>
+    <tbody>${byIndustry[industry].map(s=>`
+      <tr>
+        <td style="text-align:left; font-weight:600;">${s.name}</td>
+        <td>${s.location}</td>
+        <td style="white-space:nowrap;">${s.size}</td>
+        <td><span class="star">★ ${s.rating}</span></td>
+        <td>${s.certs.map(c=>`<span class="cert-tag">${c}</span>`).join(' ')}</td>
+        <td style="text-align:left;">${s.specialties}</td>
+        <td><button class="btn btn-ghost" style="padding:5px 10px; font-size:12px; white-space:nowrap;" onclick="openCompanyModal('${s.name.replace(/'/g,"\\'")}')">View details</button></td>
+      </tr>`).join('')}</tbody></table>
     </div>`).join('');
 }
 
