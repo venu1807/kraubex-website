@@ -946,6 +946,7 @@
             <th>Status</th>
             <th>Renewal</th>
             <th>End date</th>
+            <th>Uploaded by</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -979,7 +980,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th class="checkcol"><input type="checkbox" id="rfqSelectAll" onchange="toggleRfqAll(this)"></th><th>ID</th><th>Title</th><th>Type</th><th>Suppliers invited</th><th>Status</th><th>Due date</th><th>Actions</th></tr></thead>
+          <thead><tr><th class="checkcol"><input type="checkbox" id="rfqSelectAll" onchange="toggleRfqAll(this)"></th><th>ID</th><th>Title</th><th>Type</th><th>Suppliers invited</th><th>Status</th><th>Due date</th><th>Uploaded by</th><th>Actions</th></tr></thead>
           <tbody id="rfqTableBody"></tbody>
         </table>
       </div>
@@ -1009,7 +1010,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th class="checkcol"><input type="checkbox" id="poSelectAll" onchange="togglePoAll(this)"></th><th>PO number</th><th>Supplier</th><th>Category</th><th>Value</th><th>Status</th><th>Order date</th><th>Actions</th></tr></thead>
+          <thead><tr><th class="checkcol"><input type="checkbox" id="poSelectAll" onchange="togglePoAll(this)"></th><th>PO number</th><th>Supplier</th><th>Category</th><th>Value</th><th>Status</th><th>Order date</th><th>Uploaded by</th><th>Actions</th></tr></thead>
           <tbody id="poTableBody"></tbody>
         </table>
       </div>
@@ -5076,6 +5077,41 @@ function confirmAssignTask(){
   closeAssignModal();
 }
 
+const uploadedBy = {
+  'RFQ-2026-014':'Sarah Chen','RFI-2026-009':'Tousif','RFQ-2026-013':'Priya Patel','RFQ-2026-012':'Marcus Weber','RFI-2026-008':'Anish','RFQ-2026-011':'Elena Fischer',
+  'PO-2026-1042':'Marcus Weber','PO-2026-1058':'Elena Fischer','PO-2026-1057':'David Schulz','PO-2026-1049':'Priya Patel','PO-2026-1033':'Praveen Gitta','PO-2026-1061':'Krishna',
+  'CNT-2025-001':'Sarah Chen','CNT-2025-002':'Marcus Weber','CNT-2025-003':'Elena Fischer','CNT-2025-004':'David Schulz','CNT-2025-005':'Priya Patel',
+};
+function uploaderCell(id){
+  const n = uploadedBy[id]||'—';
+  if(n==='—') return '<span style="color:var(--text-muted);">—</span>';
+  const initials = n.split(' ').map(s=>s[0]).join('').slice(0,2);
+  return `<span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:22px; height:22px; border-radius:50%; background:var(--bg); border:1px solid var(--border); display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:var(--subhead); flex-shrink:0;">${initials}</span><span style="white-space:nowrap;">${n}</span></span>`;
+}
+function shareRfq(id){
+  const r = rfqs.find(x=>x.id===id);
+  if(!r) return;
+  const url = location.href.split('#')[0] + '#rfq=' + encodeURIComponent(r.id);
+  if(navigator.share){ navigator.share({title:r.id, text:`${r.type}: ${r.title} (${r.status})`, url}).catch(()=>{}); }
+  else { prompt('Copy share link:', url); }
+}
+function downloadRfq(id){
+  const r = rfqs.find(x=>x.id===id);
+  if(!r) return;
+  download(`${r.id}.json`, JSON.stringify(r, null, 2));
+}
+function sharePo(id){
+  const p = purchaseOrders.find(x=>x.id===id);
+  if(!p) return;
+  const url = location.href.split('#')[0] + '#po=' + encodeURIComponent(p.id);
+  if(navigator.share){ navigator.share({title:p.id, text:`PO ${p.id} — ${p.supplier} (${p.status})`, url}).catch(()=>{}); }
+  else { prompt('Copy share link:', url); }
+}
+function downloadPo(id){
+  const p = purchaseOrders.find(x=>x.id===id);
+  if(!p) return;
+  download(`${p.id}.json`, JSON.stringify(p, null, 2));
+}
 const contracts = [
   {id:'CNT-2025-001', supplier:'SteelSphere GmbH', sub:'Net 30', cat:'Raw materials', value:'€450.000', status:'Active', renewal:'Upcoming', end:'31 Dec 2025'},
   {id:'CNT-2025-002', supplier:'MetalWorks Industries', sub:'Net 45', cat:'Fabrication', value:'€680.000', status:'Active', renewal:'Normal', end:'19 Mar 2026'},
@@ -5140,7 +5176,7 @@ function renderTable(){
     .filter(({c})=>filteredContracts().includes(c));
   const tbody = document.getElementById('tableBody');
   if(!rows.length){
-    tbody.innerHTML = `<tr><td colspan="9" style="padding:24px; text-align:center; color:var(--text-muted);">No contracts match this filter.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" style="padding:24px; text-align:center; color:var(--text-muted);">No contracts match this filter.</td></tr>`;
     return;
   }
   tbody.innerHTML = rows.map(({c,i})=>`
@@ -5153,6 +5189,7 @@ function renderTable(){
       <td>${statusTag(c.status)}</td>
       <td>${statusTag(c.renewal)}</td>
       <td style="color:var(--text-muted);">${c.end}</td>
+      <td>${uploaderCell(c.id)}</td>
       <td class="actions">
         <button class="icon-btn" title="View" onclick="viewContract(${i})"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
         <button class="icon-btn" title="Edit" onclick="editContract(${i})"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
@@ -5535,9 +5572,12 @@ function renderRfqTable(tab){
       <td>${r.suppliers.join(', ')}</td>
       <td>${rfqStatusTag(r.status)}</td>
       <td style="color:var(--text-muted);">${r.due}</td>
+      <td>${uploaderCell(r.id)}</td>
       <td class="actions" style="justify-content:center;">
         <button class="icon-btn" title="View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
         <button class="icon-btn" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
+        <button class="icon-btn" title="Share" onclick="shareRfq('${r.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.5 10.7l7-4M8.5 13.3l7 4"/></svg></button>
+        <button class="icon-btn" title="Download" onclick="downloadRfq('${r.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg></button>
         <button class="icon-btn danger" title="Delete" onclick="deleteRfq('${r.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/></svg></button>
       </td>
     </tr>`).join('');
@@ -5605,9 +5645,12 @@ function renderPoTable(tab){
       <td>${p.value}</td>
       <td>${poStatusTag(p.status)}</td>
       <td style="color:var(--text-muted);">${p.orderDate}</td>
+      <td>${uploaderCell(p.id)}</td>
       <td class="actions" style="justify-content:center;">
         <button class="icon-btn" title="View"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
         <button class="icon-btn" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
+        <button class="icon-btn" title="Share" onclick="sharePo('${p.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.5 10.7l7-4M8.5 13.3l7 4"/></svg></button>
+        <button class="icon-btn" title="Download" onclick="downloadPo('${p.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg></button>
         <button class="icon-btn danger" title="Delete" onclick="deletePo('${p.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/></svg></button>
       </td>
     </tr>`).join('');
