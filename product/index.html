@@ -5426,13 +5426,14 @@ function renderSupplierDirectory(){
     byIndustry[s.industry].push(s);
   });
   const body = document.getElementById('directoryBody');
-  body.innerHTML = Object.keys(byIndustry).sort().map(industry=>`
-    <p class="domain-eyebrow" style="padding:0;">${industry}</p>
-    <div class="table-wrap" style="margin-bottom:20px;">
-    <table><thead><tr><th style="text-align:left;">Supplier</th><th>Location</th><th>Size</th><th>Rating</th><th>Certifications</th><th style="text-align:left;">Specialties</th><th>Actions</th></tr></thead>
-    <tbody>${byIndustry[industry].map(s=>`
+  const sorted = Object.keys(byIndustry).sort().flatMap(industry=>byIndustry[industry].map(s=>({...s, _cat:industry})));
+  body.innerHTML = `
+    <div class="table-wrap">
+    <table><thead><tr><th style="text-align:left;">Supplier</th><th>Category</th><th>Location</th><th>Size</th><th>Rating</th><th>Certifications</th><th style="text-align:left;">Specialties</th><th>Actions</th></tr></thead>
+    <tbody>${sorted.map(s=>`
       <tr>
         <td style="text-align:left; font-weight:600;">${s.name}</td>
+        <td><span class="tag tag-cat">${s._cat}</span></td>
         <td>${s.location}</td>
         <td style="white-space:nowrap;">${s.size}</td>
         <td><span class="star">★ ${s.rating}</span></td>
@@ -5440,7 +5441,7 @@ function renderSupplierDirectory(){
         <td style="text-align:left;">${s.specialties}</td>
         <td><button class="btn btn-ghost" style="padding:5px 10px; font-size:12px; white-space:nowrap;" onclick="openCompanyModal('${s.name.replace(/'/g,"\\'")}')">View details</button></td>
       </tr>`).join('')}</tbody></table>
-    </div>`).join('');
+    </div>`;
 }
 
 function filteredSuppliers(){
