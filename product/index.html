@@ -662,6 +662,7 @@
   .wf-edge-pop input, .wf-edge-pop textarea{font-family:inherit; font-size:12px; border:1px solid var(--border); border-radius:7px; padding:7px 8px; background:#fff; color:var(--subhead); width:100%; resize:vertical; margin-top:3px;}
   .wf-edge-pop input:focus, .wf-edge-pop textarea:focus{outline:none; border-color:var(--headline);}
   .wf-edge-pop-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:12px;}
+  #kgSvg{background-color:#F3F0E6; background-image:radial-gradient(circle, rgba(0,0,0,.08) 1.5px, transparent 1.5px); background-size:22px 22px; border-radius:8px;}
   .wf-port:hover{background:#334155; transform:translateY(-50%) scale(1.25);}
   .wf-port.yes:hover{background:#1D9E75;}
   .wf-port.no:hover{background:#791F1F;}
@@ -2627,10 +2628,10 @@ function kgStatusColor(n){
 function buildKnowledgeGraph(){
   const nodes = [], links = [];
   knowledgeFabricItems.forEach((c,i)=>{
-    nodes.push({id:'c:'+c.name, label:c.name, kind:'collection', sub:c.docs+' • '+c.freshness+'% fresh', x:550, y:40+i*60, ref:c});
+    nodes.push({id:'c:'+c.name, label:c.name, kind:'collection', sub:c.docs+' • '+c.freshness+'% fresh', x:575, y:45+i*72, ref:c});
   });
   knowledgeSourceItems.forEach((s,i)=>{
-    nodes.push({id:'s:'+s.name, label:s.name, kind:'source', sub:s.records, x:140, y:60+i*83, ref:s});
+    nodes.push({id:'s:'+s.name, label:s.name, kind:'source', sub:s.records, x:150, y:70+i*105, ref:s});
   });
   const byId = {};
   nodes.forEach(n=>{byId[n.id]=n;});
@@ -2641,7 +2642,7 @@ function buildKnowledgeGraph(){
     const host = byId['c:'+target] || byId['s:'+target];
     if(!host) return;
     const id = 'e:'+en;
-    nodes.push({id, label:en, kind:'entity', sub:'Entity', x:960, y:80+i*130, ref:null});
+    nodes.push({id, label:en, kind:'entity', sub:'Entity', x:975, y:110+i*180, ref:null});
     byId[id] = nodes[nodes.length-1];
     links.push({from:host.id, to:id, label:'mentions'});
   });
@@ -2662,7 +2663,7 @@ function renderKnowledgeGraphBody(body){
     </div>
     <div style="display:flex; gap:12px; align-items:flex-start; margin-top:4px;">
       <div class="table-wrap" id="kgWrap" style="flex:1; overflow:auto; padding:8px;">
-        <svg id="kgSvg" width="1100" height="620" style="display:block; cursor:grab;"></svg>
+        <svg id="kgSvg" width="1150" height="760" style="display:block; cursor:grab;"></svg>
       </div>
       <div class="dept-card" id="kgPanel" style="cursor:default; width:250px; flex-shrink:0;"></div>
     </div>
@@ -2683,24 +2684,30 @@ function kgDraw(){
   const esc = (s)=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
   const byId = {};
   st.nodes.forEach(n=>{byId[n.id]=n;});
-  let h = `<g id="kgWorld" transform="scale(${st.scale||1})">`;
+  let h = `<defs><marker id="kgArrowHead" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="9" markerHeight="7" orient="auto"><polygon points="0 0, 9 3.5, 0 7" fill="#334155"/></marker><filter id="kgShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity="0.18"/></filter></defs><g id="kgWorld" transform="scale(${st.scale||1})">`;
   h += st.links.map(l=>{
     const a = byId[l.from], b = byId[l.to];
     if(!a || !b) return '';
-    return `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#CBD5E1" stroke-width="1.6"><title>${esc(a.label)} ${l.label} ${esc(b.label)}</title></line>`;
+    const sx = a.x+100, sy = a.y, tx = b.x-100, ty = b.y;
+    const col = l.label==='mentions' ? '#B83E01' : '#334155';
+    const dash = l.label==='mentions' ? ' stroke-dasharray="6 4"' : '';
+    return `<path d="M ${sx} ${sy} C ${sx+60} ${sy}, ${tx-60} ${ty}, ${tx} ${ty}" stroke="${col}" stroke-width="2" fill="none"${dash} marker-end="url(#kgArrowHead)" filter="url(#kgShadow)"><title>${esc(a.label)} ${l.label} ${esc(b.label)}</title></path><circle cx="${sx}" cy="${sy}" r="3" fill="${col}" stroke="#fff" stroke-width="1.2"/><circle cx="${tx}" cy="${ty}" r="3" fill="#fff" stroke="${col}" stroke-width="1.6"/>`;
   }).join('');
   h += st.nodes.map(n=>{
     const c = kgKindColors[n.kind] || '#6B7280';
     const dot = n.kind==='entity' ? '#B83E01' : kgStatusColor(n);
-    const label = esc(n.label.length>22 ? n.label.slice(0,21)+'…' : n.label);
-    const sub = esc((n.sub||'').length>26 ? n.sub.slice(0,25)+'…' : (n.sub||''));
+    const label = esc(n.label.length>24 ? n.label.slice(0,23)+'…' : n.label);
+    const sub = esc((n.sub||'').length>30 ? n.sub.slice(0,29)+'…' : (n.sub||''));
     const sel = st.sel===n.id;
-    const w = n.kind==='source' ? 170 : n.kind==='entity' ? 150 : 180;
+    const initials = esc(n.label.split(/[\s/]+/).map(w=>w[0]).join('').slice(0,2).toUpperCase());
     return `<g class="kg-node" transform="translate(${n.x},${n.y})" style="cursor:grab;" onmousedown="kgDragStart(event,'${n.id.replace(/'/g,"\\'")}')" onclick="kgClickNode(event,'${n.id.replace(/'/g,"\\'")}')">
-      <rect x="${-w/2}" y="-23" width="${w}" height="46" rx="8" fill="#fff" stroke="${sel?c:'#D8D3C7'}" stroke-width="${sel?2.5:1.5}"/>
-      <text y="-2" text-anchor="middle" font-size="11" font-weight="700" fill="#1F2937">${label}</text>
-      <text y="13" text-anchor="middle" font-size="9" fill="#6B7280">${sub}</text>
-      <circle cx="${w/2-10}" cy="-13" r="4" fill="${dot}"/>
+      <rect x="-100" y="-39" width="200" height="78" rx="10" fill="#fff" stroke="${sel?c:'#D8D3C7'}" stroke-width="${sel?2.5:1.5}" style="filter:drop-shadow(0 2px 6px rgba(0,0,0,.07));"/>
+      <rect x="-100" y="-39" width="6" height="78" rx="3" fill="${c}"/>
+      <circle cx="-80" cy="-18" r="11" fill="${c}"/>
+      <text x="-80" y="-14" text-anchor="middle" font-size="10" font-weight="800" fill="#fff">${initials}</text>
+      <text x="-62" y="-12" font-size="11.5" font-weight="700" fill="#1F2937">${label}</text>
+      <text x="-62" y="4" font-size="9.5" fill="#6B7280">${sub}</text>
+      <circle cx="88" cy="-29" r="4.5" fill="${dot}" stroke="#fff" stroke-width="1.5"/>
     </g>`;
   }).join('');
   h += '</g>';
@@ -2714,7 +2721,7 @@ function kgDragStart(e, id){
   const svg = document.getElementById('kgSvg');
   const wrap = document.getElementById('kgWrap');
   const rect = svg.getBoundingClientRect();
-  const sx = 1100/rect.width, sy = 620/rect.height, s = st.scale||1;
+  const sx = 1150/rect.width, sy = 760/rect.height, s = st.scale||1;
   const toWorld = (cx,cy)=>({x:((cx-rect.left+wrap.scrollLeft)*sx)/s, y:((cy-rect.top+wrap.scrollTop)*sy)/s});
   const p0 = toWorld(e.clientX, e.clientY);
   const ox = n.x, oy = n.y;
@@ -2725,8 +2732,8 @@ function kgDragStart(e, id){
     const p = toWorld(c.clientX, c.clientY);
     if(Math.abs(p.x-p0.x)>3 || Math.abs(p.y-p0.y)>3){ moved = true; window.kgDragMoved = true; }
     if(!moved) return;
-    n.x = Math.round(Math.max(90, Math.min(1010, ox + (p.x-p0.x))));
-    n.y = Math.round(Math.max(30, Math.min(590, oy + (p.y-p0.y))));
+    n.x = Math.round(Math.max(100, Math.min(1050, ox + (p.x-p0.x))));
+    n.y = Math.round(Math.max(45, Math.min(715, oy + (p.y-p0.y))));
     kgDraw();
   };
   const up = ()=>{ document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); };
