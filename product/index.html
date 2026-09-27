@@ -3173,12 +3173,15 @@ function renderTasksBody(subview){
   if(prevTAgent !== undefined) window.taskFilters.agent = prevTAgent;
   const prevTCreator = document.getElementById('taskCreatorFilter')?.value;
   if(prevTCreator !== undefined) window.taskFilters.creator = prevTCreator;
+  const prevTStatus = document.getElementById('taskStatusFilter')?.value;
+  if(prevTStatus !== undefined) window.taskFilters.status = prevTStatus;
   let filtered = !subview || subview==='all' ? tasks : tasks.filter(t=>t.status.toLowerCase().replace(/\s+/g,'-')===subview);
   const s = (window.taskFilters.search||'').toLowerCase().trim();
   if(s) filtered = filtered.filter(t=> t.name.toLowerCase().includes(s) || t.agent.toLowerCase().includes(s) || t.createdBy.toLowerCase().includes(s) || t.type.toLowerCase().includes(s));
   if(window.taskFilters.type && window.taskFilters.type!=='all') filtered = filtered.filter(t=>t.type===window.taskFilters.type);
   if(window.taskFilters.agent && window.taskFilters.agent!=='all') filtered = filtered.filter(t=>t.agent===window.taskFilters.agent);
   if(window.taskFilters.creator && window.taskFilters.creator!=='all') filtered = filtered.filter(t=>t.createdBy===window.taskFilters.creator);
+  if(window.taskFilters.status && window.taskFilters.status!=='all') filtered = filtered.filter(t=>t.status===window.taskFilters.status);
   const grouped = {};
   filtered.forEach(t=>{ if(!grouped[t.agent]) grouped[t.agent]=[]; grouped[t.agent].push(t); });
   if(filtered.length===0){ body.innerHTML='<p style="font-size:13px; color:var(--text-muted); padding:16px;">No tasks in this view.</p>'; return; }
@@ -3189,6 +3192,7 @@ function renderTasksBody(subview){
   const allTypes = [...new Set(tasks.map(t=>t.type))];
   const allAgents = [...new Set(tasks.map(t=>t.agent))];
   const allCreators = [...new Set(tasks.map(t=>t.createdBy))];
+  const allStatuses = [...new Set(tasks.map(t=>t.status))];
   body.innerHTML = `
     <div class="toolbar" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
       <button class="btn btn-primary" onclick="createNewTask()" style="white-space:nowrap; padding:6px 12px; font-size:12px;">+ New task</button>
@@ -3205,7 +3209,11 @@ function renderTasksBody(subview){
         <option value="all" ${window.taskFilters.creator==='all'?'selected':''}>All Creators</option>
         ${allCreators.map(c=>`<option value="${c}" ${window.taskFilters.creator===c?'selected':''}>${c}</option>`).join('')}
       </select>
-      ${(window.taskFilters.search||window.taskFilters.type!=='all'||window.taskFilters.agent!=='all'||window.taskFilters.creator!=='all') ? `<button class="btn btn-ghost" style="padding:6px 10px; font-size:12px;" onclick="window.taskFilters={search:'',type:'all',agent:'all',creator:'all',status:'all'}; renderTasksBody(window.lastTasksSubview)">Clear</button>` : ''}
+      <select class="filter-select" id="taskStatusFilter" onchange="window.taskFilters.status=this.value; renderTasksBody(window.lastTasksSubview)" style="min-width:130px;">
+        <option value="all" ${window.taskFilters.status==='all'?'selected':''}>All Statuses</option>
+        ${allStatuses.map(s=>`<option value="${s}" ${window.taskFilters.status===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+      ${(window.taskFilters.search||window.taskFilters.type!=='all'||window.taskFilters.agent!=='all'||window.taskFilters.creator!=='all'||window.taskFilters.status!=='all') ? `<button class="btn btn-ghost" style="padding:6px 10px; font-size:12px;" onclick="window.taskFilters={search:'',type:'all',agent:'all',creator:'all',status:'all'}; renderTasksBody(window.lastTasksSubview)">Clear</button>` : ''}
     </div>
     <div class="table-wrap">
     <table style="width:100%; table-layout:fixed; border-collapse:collapse;">
@@ -3242,7 +3250,7 @@ function renderTasksBody(subview){
                   <button class="icon-btn" title="Assign to agent" onclick="assignRowEntity('${t.id||t.name}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>
                   <button class="icon-btn" title="View" onclick="viewTask('${t.name.replace(/'/g,"\\'")}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
                   <button class="icon-btn" title="Edit" onclick="editTask('${t.name.replace(/'/g,"\\'")}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-                  ${t.status==='Failed' ? `<button class="icon-btn" title="Run" onclick="runTask('${t.name.replace(/'/g,"\\'")}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg></button>` : ''}
+                  <button class="icon-btn" title="Run" onclick="runTask('${t.name.replace(/'/g,"\\'")}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg></button>
                   <button class="icon-btn" title="Delete" onclick="deleteTask('${t.name.replace(/'/g,"\\'")}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>
                   <button class="icon-btn" title="Share" onclick="shareTask('${t.name.replace(/'/g,"\\'")}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
                 </span>
