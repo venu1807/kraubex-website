@@ -2601,6 +2601,166 @@ function openKnowledgeDocs(name, kind){
   document.getElementById('knowledgeDocOverlay').classList.add('show');
 }
 function closeKnowledgeDocs(){ document.getElementById('knowledgeDocOverlay').classList.remove('show'); }
+const kgLinkMap = [
+  ['Documents','Contracts'],['Documents','Business Processes'],['Documents','Company'],
+  ['Databases','Products'],['Databases','Materials'],['Databases','Suppliers'],
+  ['ERP Data','Suppliers'],['ERP Data','Contracts'],['ERP Data','Materials'],
+  ['CRM Data','Customers'],
+  ['Emails','Suppliers'],['Emails','Projects'],
+  ['SharePoint / M365','Company'],['SharePoint / M365','Projects'],['SharePoint / M365','People & Organization'],
+  ['External Sources','Materials'],['External Sources','Suppliers'],
+];
+const kgEntityLinks = [
+  ['SteelSphere GmbH','Suppliers'],
+  ['CNT-2025-002','Contracts'],
+  ['Copper (LME)','Materials'],
+  ['SAP S/4HANA','ERP Data'],
+];
+const kgKindColors = {collection:'#378ADD', source:'#1D9E75', entity:'#B83E01'};
+function kgStatusColor(n){
+  const s = n.ref ? n.ref.status : '';
+  if(s==='indexed'||s==='connected') return '#1D9E75';
+  if(s==='partial') return '#EF9F27';
+  if(s==='pending') return '#9CA3AF';
+  return '#B3261E';
+}
+function buildKnowledgeGraph(){
+  const nodes = [], links = [];
+  knowledgeFabricItems.forEach((c,i)=>{
+    nodes.push({id:'c:'+c.name, label:c.name, kind:'collection', sub:c.docs+' • '+c.freshness+'% fresh', x:550, y:40+i*60, ref:c});
+  });
+  knowledgeSourceItems.forEach((s,i)=>{
+    nodes.push({id:'s:'+s.name, label:s.name, kind:'source', sub:s.records, x:140, y:60+i*83, ref:s});
+  });
+  const byId = {};
+  nodes.forEach(n=>{byId[n.id]=n;});
+  kgLinkMap.forEach(([s,c])=>{
+    if(byId['s:'+s] && byId['c:'+c]) links.push({from:'s:'+s, to:'c:'+c, label:'feeds'});
+  });
+  kgEntityLinks.forEach(([en,target],i)=>{
+    const host = byId['c:'+target] || byId['s:'+target];
+    if(!host) return;
+    const id = 'e:'+en;
+    nodes.push({id, label:en, kind:'entity', sub:'Entity', x:960, y:80+i*130, ref:null});
+    byId[id] = nodes[nodes.length-1];
+    links.push({from:host.id, to:id, label:'mentions'});
+  });
+  return {nodes, links};
+}
+function renderKnowledgeGraphBody(body){
+  const g = buildKnowledgeGraph();
+  window.kgState = {nodes:g.nodes, links:g.links, scale:1, sel:null};
+  window.kgDragMoved = false;
+  const connected = knowledgeSourceItems.filter(s=>s.status==='connected').length;
+  const avgFresh = Math.round(knowledgeFabricItems.reduce((s,k)=>s+k.freshness,0)/knowledgeFabricItems.length);
+  body.innerHTML = `
+    <div class="kpi-strip">
+      <div class="stat"><p>Graph nodes</p><p>${g.nodes.length}</p></div>
+      <div class="stat"><p>Relationships</p><p>${g.links.length}</p></div>
+      <div class="stat"><p>Sources feeding</p><p>${connected}/${knowledgeSourceItems.length}</p></div>
+      <div class="stat"><p>Coverage</p><p>${avgFresh}%</p></div>
+    </div>
+    <div style="display:flex; gap:12px; align-items:flex-start; margin-top:4px;">
+      <div class="table-wrap" id="kgWrap" style="flex:1; overflow:auto; padding:8px;">
+        <svg id="kgSvg" width="1100" height="620" style="display:block; cursor:grab;"></svg>
+      </div>
+      <div class="dept-card" id="kgPanel" style="cursor:default; width:250px; flex-shrink:0;"></div>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:10px; align-items:center; flex-wrap:wrap;">
+      <button class="btn btn-ghost" style="padding:5px 10px; font-size:12px;" onclick="kgZoom(1.2)">Zoom +</button>
+      <button class="btn btn-ghost" style="padding:5px 10px; font-size:12px;" onclick="kgZoom(0.85)">Zoom −</button>
+      <button class="btn btn-ghost" style="padding:5px 10px; font-size:12px;" onclick="kgZoomReset()">Reset</button>
+      <span style="font-size:11px; color:var(--text-muted);">Drag nodes to rearrange • Click a node for details • Scroll sideways if needed</span>
+      <span style="font-size:11px; margin-left:auto;"><span style="color:#378ADD;">●</span> Collection <span style="color:#1D9E75;">●</span> Source <span style="color:#B83E01;">●</span> Entity</span>
+    </div>`;
+  kgDraw();
+  if(g.nodes.length) kgSelect(g.nodes[0].id);
+}
+function kgDraw(){
+  const st = window.kgState;
+  const svg = document.getElementById('kgSvg');
+  if(!svg || !st) return;
+  const esc = (s)=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const byId = {};
+  st.nodes.forEach(n=>{byId[n.id]=n;});
+  let h = `<g id="kgWorld" transform="scale(${st.scale||1})">`;
+  h += st.links.map(l=>{
+    const a = byId[l.from], b = byId[l.to];
+    if(!a || !b) return '';
+    return `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#CBD5E1" stroke-width="1.6"><title>${esc(a.label)} ${l.label} ${esc(b.label)}</title></line>`;
+  }).join('');
+  h += st.nodes.map(n=>{
+    const c = kgKindColors[n.kind] || '#6B7280';
+    const dot = n.kind==='entity' ? '#B83E01' : kgStatusColor(n);
+    const label = esc(n.label.length>22 ? n.label.slice(0,21)+'…' : n.label);
+    const sub = esc((n.sub||'').length>26 ? n.sub.slice(0,25)+'…' : (n.sub||''));
+    const sel = st.sel===n.id;
+    const w = n.kind==='source' ? 170 : n.kind==='entity' ? 150 : 180;
+    return `<g class="kg-node" transform="translate(${n.x},${n.y})" style="cursor:grab;" onmousedown="kgDragStart(event,'${n.id.replace(/'/g,"\\'")}')" onclick="kgClickNode(event,'${n.id.replace(/'/g,"\\'")}')">
+      <rect x="${-w/2}" y="-23" width="${w}" height="46" rx="8" fill="#fff" stroke="${sel?c:'#D8D3C7'}" stroke-width="${sel?2.5:1.5}"/>
+      <text y="-2" text-anchor="middle" font-size="11" font-weight="700" fill="#1F2937">${label}</text>
+      <text y="13" text-anchor="middle" font-size="9" fill="#6B7280">${sub}</text>
+      <circle cx="${w/2-10}" cy="-13" r="4" fill="${dot}"/>
+    </g>`;
+  }).join('');
+  h += '</g>';
+  svg.innerHTML = h;
+}
+function kgDragStart(e, id){
+  e.preventDefault(); e.stopPropagation();
+  const st = window.kgState;
+  const n = st.nodes.find(x=>x.id===id);
+  if(!n) return;
+  const svg = document.getElementById('kgSvg');
+  const wrap = document.getElementById('kgWrap');
+  const rect = svg.getBoundingClientRect();
+  const sx = 1100/rect.width, sy = 620/rect.height, s = st.scale||1;
+  const toWorld = (cx,cy)=>({x:((cx-rect.left+wrap.scrollLeft)*sx)/s, y:((cy-rect.top+wrap.scrollTop)*sy)/s});
+  const p0 = toWorld(e.clientX, e.clientY);
+  const ox = n.x, oy = n.y;
+  let moved = false;
+  window.kgDragMoved = false;
+  const mv = (ev)=>{
+    const c = ev.touches ? ev.touches[0] : ev;
+    const p = toWorld(c.clientX, c.clientY);
+    if(Math.abs(p.x-p0.x)>3 || Math.abs(p.y-p0.y)>3){ moved = true; window.kgDragMoved = true; }
+    if(!moved) return;
+    n.x = Math.round(Math.max(90, Math.min(1010, ox + (p.x-p0.x))));
+    n.y = Math.round(Math.max(30, Math.min(590, oy + (p.y-p0.y))));
+    kgDraw();
+  };
+  const up = ()=>{ document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); };
+  document.addEventListener('mousemove', mv);
+  document.addEventListener('mouseup', up);
+}
+function kgClickNode(e, id){
+  if(window.kgDragMoved){ window.kgDragMoved = false; return; }
+  kgSelect(id);
+}
+function kgSelect(id){
+  const st = window.kgState;
+  if(!st) return;
+  st.sel = id;
+  kgDraw();
+  const n = st.nodes.find(x=>x.id===id);
+  const panel = document.getElementById('kgPanel');
+  if(!panel) return;
+  if(!n){ panel.innerHTML = '<h5>Knowledge Graph</h5><p>Click any node to inspect it.</p>'; return; }
+  const kindLabel = n.kind==='collection' ? 'Collection' : n.kind==='source' ? 'Source' : 'Entity';
+  const neigh = st.links.filter(l=>l.from===id||l.to===id).map(l=>{
+    const oid = l.from===id ? l.to : l.from;
+    const on = st.nodes.find(x=>x.id===oid);
+    return on ? {id:oid, label:on.label, dir:l.from===id?'→':'←', rel:l.label} : null;
+  }).filter(Boolean);
+  let meta = '';
+  if(n.kind==='collection' && n.ref) meta = `<p>${n.ref.desc}</p><p class="dept-count" style="color:var(--text-muted);">${n.ref.docs} • ${n.ref.entities} • Updated ${n.ref.updated} • Owner: ${n.ref.owner}</p>`;
+  else if(n.kind==='source' && n.ref) meta = `<p>${n.ref.desc}</p><p class="dept-count" style="color:var(--text-muted);">${n.ref.records} • Last sync ${n.ref.lastSync} • Owner: ${n.ref.owner}</p>`;
+  else meta = `<p>Entity mentioned across the fabric — linked from live collections.</p>`;
+  panel.innerHTML = `<h5>${n.label}</h5><p><span class="tag tag-cat">${kindLabel}</span></p>${meta}<p class="dept-count" style="color:var(--text-muted);">${neigh.length} relationship${neigh.length!==1?'s':''}</p>` +
+    (neigh.length ? `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">${neigh.map(w=>`<button class="btn btn-ghost" style="padding:4px 8px; font-size:11px;" onclick="kgSelect('${w.id.replace(/'/g,"\\'")}')">${w.dir} ${w.label}</button>`).join('')}</div>` : '');
+}
+function kgZoom(f){ const st = window.kgState; if(!st) return; st.scale = Math.max(0.5, Math.min(1.8, (st.scale||1)*f)); kgDraw(); }
+function kgZoomReset(){ const st = window.kgState; if(!st) return; st.scale = 1; kgDraw(); }
 function renderKnowledgeBody(subview){
   const body = document.getElementById('secBody-knowledge');
 
@@ -2641,6 +2801,11 @@ function renderKnowledgeBody(subview){
       <div class="dept-list">
         ${gaps.map(g=>`<div class="dept-card"><h5>${g.t}</h5><p>${g.m}</p></div>`).join('')}
       </div>`;
+    return;
+  }
+
+  if(subview==='graph'){
+    renderKnowledgeGraphBody(body);
     return;
   }
 
@@ -4268,6 +4433,7 @@ const sectionConfig = {
       {title:'SOURCES', items:[{id:'sources', label:'All Sources'}]},
       {title:'KNOWLEDGE MANAGEMENT', items:[{id:'collections',label:'Knowledge Collections'},{id:'entities',label:'Entities'},{id:'relationships',label:'Relationships'},{id:'policies',label:'Policies & Rules'},{id:'memory',label:'Company Memory'},{id:'provenance',label:'Data Provenance'}]},
       {title:'SEARCH FABRIC', items:[{id:'search',label:'Search Knowledge'},{id:'ask',label:'Ask Knowledge'},{id:'health',label:'Knowledge Health'}]},
+      {title:'KNOWLEDGE GRAPH', items:[{id:'graph',label:'Enterprise Graph'}]},
     ],
     render: renderKnowledgeBody,
   },
