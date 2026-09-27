@@ -1373,27 +1373,29 @@
   </div>
 </div>
 
+<div class="assign-overlay" id="assignPickerOverlay" onclick="if(event.target===this) closeAssignPicker()">
+  <div class="assign-modal">
+    <h3>Assign to agent</h3>
+    <p class="assign-sub" id="assignPickerContext"></p>
+    <div class="assign-field">
+      <label>Skill agent</label>
+      <select id="assignPickerSelect" style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px;"></select>
+    </div>
+    <div class="assign-actions">
+      <button class="btn btn-ghost" onclick="closeAssignPicker()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div class="assign-overlay" id="assignOverlay" onclick="if(event.target===this) closeAssignModal()">
   <div class="assign-modal">
     <h3 id="assignTitle">Assign task to agent</h3>
     <p class="assign-sub">This agent will pick up the selected contract(s) and report back with results.</p>
     <div class="agent-instr" id="agentInstructions"></div>
-    <div class="assign-field">
-      <label>Reference number (RFQ / PO / Contract / Task / Workflow)</label>
-      <input id="assignEntityInput" list="assignEntityList" placeholder="e.g. RFQ-2026-014, PO-2026-1042, CNT-2025-002, TSK-001" oninput="renderAssignEntity()" style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px;">
-      <datalist id="assignEntityList"></datalist>
-    </div>
-    <p class="assign-note" id="assignEntityDetail" style="margin-top:6px;"></p>
-    <div class="assign-field">
-      <label>Agent</label>
-      <select id="assignAgentSelect" onchange="onAssignAgentChange()" style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px;"></select>
-    </div>
-    <div class="assign-field">
-      <label>Task type</label>
-      <textarea id="assignTaskInput" rows="4"></textarea>
-    </div>
+
     <p class="assign-note" id="assignContext"></p>
     <div class="assign-actions">
+      <button class="btn btn-ghost" onclick="backToAssignPicker()">← Back</button>
       <button class="btn btn-ghost" onclick="closeAssignModal()">Cancel</button>
       <button class="btn btn-primary" onclick="confirmAssignTask()">Assign task</button>
     </div>
@@ -4953,7 +4955,6 @@ function generateAgentInstructions(agent){
   const example = `You are the ${agent.name}. ${agent.desc} Stay within ${agent.tag.toLowerCase()} scope, keep responses concise and actionable, and escalate to a human reviewer whenever a task needs approval beyond your authority or the information provided is incomplete.`;
   return {describe, example};
 }
-let pendingEntityRef = null;
 function allAssignEntities(){
   const list = [];
   rfqs.forEach(r=>list.push({kind:'RFQ', id:r.id, title:r.title, sub:(r.suppliers||[]).join(', ')+' • '+r.status}));
@@ -4968,27 +4969,11 @@ function resolveEntityRef(q){
   if(!q) return null;
   return allAssignEntities().find(e=>e.id.toUpperCase()===q) || null;
 }
-function buildAssignEntityList(){
-  const dl = document.getElementById('assignEntityList');
-  if(!dl) return;
-  dl.innerHTML = allAssignEntities().map(e=>`<option value="${e.id}">${e.kind} — ${e.title}</option>`).join('');
-}
-function renderAssignEntity(){
-  const inp = document.getElementById('assignEntityInput');
-  const detail = document.getElementById('assignEntityDetail');
-  if(!inp || !detail) return;
-  const found = resolveEntityRef(inp.value);
-  pendingEntityRef = found;
-  detail.textContent = found ? `${found.kind} ${found.id} — ${found.title} (${found.sub})` : (inp.value.trim() ? 'No match for "'+inp.value.trim()+'".' : '');
-}
+/* reference-number field retired with the slim assign card — row labels now pass through openAssignPicker context */
 function assignRowEntity(id){
   const found = resolveEntityRef(id);
   if(!found){ alert('Reference not found: '+id); return; }
-  pendingEntityRef = found;
-  openAssignPicker();
-  const inp = document.getElementById('assignEntityInput');
-  if(inp) inp.value = found.id;
-  renderAssignEntity();
+  openAssignPicker(`${found.kind} ${found.id} — ${found.title}`);
 }
 if(!window.agentPublishes) window.agentPublishes = {};
 function openPublishModal(agentName){
@@ -5026,7 +5011,6 @@ function agentPublishChips(name){
 function refreshWorkforceView(){
   renderAIWorkforceBody(window.lastWorkforceSubview || 'overview');
 }
-let assignAgentChoices = [];
 function buildAssignAgentChoices(){
   const list = [];
   (agents||[]).forEach(a=>list.push(a));
@@ -5036,13 +5020,7 @@ function buildAssignAgentChoices(){
   });
   return list;
 }
-function populateAssignAgents(){
-  const sel = document.getElementById('assignAgentSelect');
-  if(!sel) return;
-  assignAgentChoices = buildAssignAgentChoices();
-  const cur = (window.pendingAgent && window.pendingAgent.name) || '';
-  sel.innerHTML = `<option value="">Select an agent…</option>` + assignAgentChoices.map((a,i)=>`<option value="${i}" ${a.name===cur?'selected':''}>${a.name} — ${a.tag||''}</option>`).join('');
-}
+/* old modal agent-dropdown retired with the slim assign card */
 function renderAssignInstructions(a){
   const instr = generateAgentInstructions(a);
   document.getElementById('agentInstructions').innerHTML = `
@@ -5052,42 +5030,41 @@ function renderAssignInstructions(a){
     <p class="instr-label">Example</p>
     <div class="instr-example">${instr.example}</div>`;
 }
-function onAssignAgentChange(){
-  const sel = document.getElementById('assignAgentSelect');
-  const a = assignAgentChoices[parseInt(sel.value,10)];
-  if(!a) return;
-  pendingAgent = a;
-  document.getElementById('assignTitle').textContent = `Assign task to ${a.name}`;
-  const taskInput = document.getElementById('assignTaskInput');
-  if(taskInput && !taskInput.value.trim()) taskInput.value = a.task || '';
-  renderAssignInstructions(a);
-}
-function openAssignPicker(){
+/* old modal agent-dropdown handler retired with the slim assign card */
+function openAssignPicker(contextText){
+  if(contextText !== undefined) window.assignContextText = contextText;
   pendingAgent = null;
-  document.getElementById('assignTitle').textContent = 'Assign to agent';
-  const idx = selectedIndexes();
-  document.getElementById('assignContext').textContent = idx.length
-    ? `${idx.length} contract(s) selected: ${idx.map(n=>contracts[n].id).join(', ')}`
-    : '';
-  document.getElementById('agentInstructions').innerHTML = '<p class="assign-sub">Choose a skill agent from the Agent dropdown above — the assign card will open for that agent.</p>';
-  buildAssignEntityList();
-  populateAssignAgents();
-  document.getElementById('assignOverlay').classList.add('show');
+  const sel = document.getElementById('assignPickerSelect');
+  if(sel){
+    const choices = buildAssignAgentChoices();
+    sel.innerHTML = `<option value="">Select a skill agent…</option>` + choices.map((a,i)=>`<option value="${i}">${a.name} — ${a.tag||''}</option>`).join('');
+    sel.selectedIndex = 0;
+    sel.onchange = ()=>{
+      if(sel.value==='') return;
+      const a = choices[parseInt(sel.value,10)];
+      if(!a) return;
+      closeAssignPicker();
+      openAssignModalObj(a);
+    };
+  }
+  document.getElementById('assignPickerContext').textContent = window.assignContextText || '';
+  document.getElementById('assignPickerOverlay').classList.add('show');
+}
+function closeAssignPicker(){
+  document.getElementById('assignPickerOverlay').classList.remove('show');
+}
+function backToAssignPicker(){
+  document.getElementById('assignOverlay').classList.remove('show');
+  pendingAgent = null;
+  document.getElementById('assignPickerOverlay').classList.add('show');
 }
 function openAssignModalObj(agentObj){
   pendingAgent = agentObj;
-  document.getElementById('assignTitle').textContent = `Assign task to ${pendingAgent.name}`;
-  document.getElementById('assignTaskInput').value = pendingAgent.task;
+  document.getElementById('assignTitle').textContent = `Assign task to ${agentObj.name}`;
   const idx = selectedIndexes();
-  document.getElementById('assignContext').textContent = idx.length
-    ? `${idx.length} contract(s) selected: ${idx.map(n=>contracts[n].id).join(', ')}`
-    : 'No contracts selected — the agent will run on the full supplier set.';
+  const extra = idx.length ? `${idx.length} contract(s) selected: ${idx.map(n=>contracts[n].id).join(', ')}` : '';
+  document.getElementById('assignContext').textContent = [window.assignContextText, extra].filter(Boolean).join(' • ') || `${agentObj.name} will pick up the task and report back with results.`;
   renderAssignInstructions(pendingAgent);
-  buildAssignEntityList();
-  const einp = document.getElementById('assignEntityInput');
-  if(einp && !pendingEntityRef) einp.value = '';
-  renderAssignEntity();
-  populateAssignAgents();
   document.getElementById('assignOverlay').classList.add('show');
 }
 function openAssignModal(i){
@@ -5096,13 +5073,11 @@ function openAssignModal(i){
 function closeAssignModal(){
   document.getElementById('assignOverlay').classList.remove('show');
   pendingAgent = null;
-  pendingEntityRef = null;
 }
 function confirmAssignTask(){
-  const task = document.getElementById('assignTaskInput').value.trim();
-  if(!task){ alert('Enter a task type first.'); return; }
+  if(!pendingAgent){ alert('Select an agent first.'); return; }
   const idx = selectedIndexes();
-  alert(`${pendingAgent.name} assigned: "${task}"` + (pendingEntityRef ? `\nRef: ${pendingEntityRef.kind} ${pendingEntityRef.id} — ${pendingEntityRef.title}` : '') + (idx.length ? `\nContracts: ${idx.map(n=>contracts[n].id).join(', ')}` : ''));
+  alert(`${pendingAgent.name} assigned` + (window.assignContextText ? `\n${window.assignContextText}` : '') + (idx.length ? `\nContracts: ${idx.map(n=>contracts[n].id).join(', ')}` : ''));
   closeAssignModal();
 }
 
@@ -5388,12 +5363,7 @@ function assignSelectedRfqs(){
   const ids = rfqSelectedIds();
   if(!ids.length){ alert('Select at least one RFQ first.'); return; }
   if(ids.length===1){ assignRowEntity(ids[0]); return; }
-  openAssignPicker();
-  const inp = document.getElementById('assignTaskInput');
-  if(inp) inp.value = `Review RFQs: ${ids.join(', ')}`;
-  const einp = document.getElementById('assignEntityInput');
-  if(einp) einp.value = ids[0];
-  renderAssignEntity();
+  openAssignPicker(`Review RFQs: ${ids.join(', ')}`);
 }
 function poSelectedIds(){ return Array.from(document.querySelectorAll('.po-check:checked')).map(cb=>cb.dataset.id); }
 function onPoCheck(cb){
@@ -5426,12 +5396,7 @@ function assignSelectedPos(){
   const ids = poSelectedIds();
   if(!ids.length){ alert('Select at least one purchase order first.'); return; }
   if(ids.length===1){ assignRowEntity(ids[0]); return; }
-  openAssignPicker();
-  const inp = document.getElementById('assignTaskInput');
-  if(inp) inp.value = `Review purchase orders: ${ids.join(', ')}`;
-  const einp = document.getElementById('assignEntityInput');
-  if(einp) einp.value = ids[0];
-  renderAssignEntity();
+  openAssignPicker(`Review purchase orders: ${ids.join(', ')}`);
 }
 
 const folderSyncState = {
@@ -5545,9 +5510,7 @@ function downloadSelected(){
 function assignAgent(){
   const idx = selectedIndexes();
   if(!idx.length) return;
-  openAssignPicker();
-  const inp = document.getElementById('assignTaskInput');
-  if(inp) inp.value = `Review contracts: ${idx.map(n=>contracts[n].id).join(', ')}`;
+  openAssignPicker(`Review contracts: ${idx.map(n=>contracts[n].id).join(', ')}`);
 }
 function analyzeSelected(){
   const idx = selectedIndexes();
