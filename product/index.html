@@ -2628,10 +2628,10 @@ function kgStatusColor(n){
 function buildKnowledgeGraph(){
   const nodes = [], links = [];
   knowledgeFabricItems.forEach((c,i)=>{
-    nodes.push({id:'c:'+c.name, label:c.name, kind:'collection', sub:c.docs+' • '+c.freshness+'% fresh', x:575, y:45+i*72, ref:c});
+    nodes.push({id:'c:'+c.name, label:c.name, kind:'collection', sub:c.docs+' • '+c.freshness+'% fresh', x:575, y:55+i*96, ref:c});
   });
   knowledgeSourceItems.forEach((s,i)=>{
-    nodes.push({id:'s:'+s.name, label:s.name, kind:'source', sub:s.records, x:150, y:70+i*105, ref:s});
+    nodes.push({id:'s:'+s.name, label:s.name, kind:'source', sub:s.records, x:150, y:90+i*120, ref:s});
   });
   const byId = {};
   nodes.forEach(n=>{byId[n.id]=n;});
@@ -2642,7 +2642,7 @@ function buildKnowledgeGraph(){
     const host = byId['c:'+target] || byId['s:'+target];
     if(!host) return;
     const id = 'e:'+en;
-    nodes.push({id, label:en, kind:'entity', sub:'Entity', x:975, y:110+i*180, ref:null});
+    nodes.push({id, label:en, kind:'entity', sub:'Entity', x:975, y:140+i*220, ref:null});
     byId[id] = nodes[nodes.length-1];
     links.push({from:host.id, to:id, label:'mentions'});
   });
@@ -2663,7 +2663,7 @@ function renderKnowledgeGraphBody(body){
     </div>
     <div style="display:flex; gap:12px; align-items:flex-start; margin-top:4px;">
       <div class="table-wrap" id="kgWrap" style="flex:1; overflow:auto; padding:8px;">
-        <svg id="kgSvg" width="1150" height="760" style="display:block; cursor:grab;"></svg>
+        <svg id="kgSvg" width="1150" height="1000" style="display:block; cursor:grab;"></svg>
       </div>
       <div class="dept-card" id="kgPanel" style="cursor:default; width:250px; flex-shrink:0;"></div>
     </div>
@@ -2721,7 +2721,7 @@ function kgDragStart(e, id){
   const svg = document.getElementById('kgSvg');
   const wrap = document.getElementById('kgWrap');
   const rect = svg.getBoundingClientRect();
-  const sx = 1150/rect.width, sy = 760/rect.height, s = st.scale||1;
+  const sx = 1150/rect.width, sy = 1000/rect.height, s = st.scale||1;
   const toWorld = (cx,cy)=>({x:((cx-rect.left+wrap.scrollLeft)*sx)/s, y:((cy-rect.top+wrap.scrollTop)*sy)/s});
   const p0 = toWorld(e.clientX, e.clientY);
   const ox = n.x, oy = n.y;
@@ -2733,7 +2733,7 @@ function kgDragStart(e, id){
     if(Math.abs(p.x-p0.x)>3 || Math.abs(p.y-p0.y)>3){ moved = true; window.kgDragMoved = true; }
     if(!moved) return;
     n.x = Math.round(Math.max(100, Math.min(1050, ox + (p.x-p0.x))));
-    n.y = Math.round(Math.max(45, Math.min(715, oy + (p.y-p0.y))));
+    n.y = Math.round(Math.max(50, Math.min(955, oy + (p.y-p0.y))));
     kgDraw();
   };
   const up = ()=>{ document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); };
