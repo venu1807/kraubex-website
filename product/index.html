@@ -920,6 +920,12 @@
       </select>
     </div>
 
+    <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px; flex-wrap:wrap;">
+      <button class="btn btn-ghost" onclick="openFolderSync('contracts')" style="padding:6px 12px; font-size:12px;">📁 Upload folder</button>
+      <span id="contractsSyncBar" style="font-size:12px; color:var(--text-muted);"></span>
+      <input type="file" id="contractsFolderInput" webkitdirectory directory multiple style="display:none" onchange="handleFolderSync('contracts', this)">
+    </div>
+
     <div class="selection-bar" id="selectionBar">
       <span class="count" id="selCount">0 selected</span>
       <button class="sel-btn agent" onclick="assignAgent()">
@@ -972,6 +978,11 @@
       <div class="toolbar">
         <input class="search" id="rfqSearchInput" placeholder="Search by title or supplier..." oninput="renderRfqTable(rfqActiveTab)">
       </div>
+      <div style="display:flex; gap:8px; align-items:center; margin:0 0 10px 0; flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="openFolderSync('rfq')" style="padding:6px 12px; font-size:12px;">📁 Upload folder</button>
+        <span id="rfqSyncBar" style="font-size:12px; color:var(--text-muted);"></span>
+        <input type="file" id="rfqFolderInput" webkitdirectory directory multiple style="display:none" onchange="handleFolderSync('rfq', this)">
+      </div>
       <div class="selection-bar" id="rfqSelectionBar">
         <span class="count" id="rfqSelCount">0 selected</span>
         <button class="sel-btn agent" onclick="assignSelectedRfqs()">Assign to agent</button>
@@ -1001,6 +1012,11 @@
       <div class="tabs" id="poTabs"></div>
       <div class="toolbar">
         <input class="search" id="poSearchInput" placeholder="Search by PO number or supplier..." oninput="renderPoTable(poActiveTab)">
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; margin:0 0 10px 0; flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="openFolderSync('po')" style="padding:6px 12px; font-size:12px;">📁 Upload folder</button>
+        <span id="poSyncBar" style="font-size:12px; color:var(--text-muted);"></span>
+        <input type="file" id="poFolderInput" webkitdirectory directory multiple style="display:none" onchange="handleFolderSync('po', this)">
       </div>
       <div class="selection-bar" id="poSelectionBar">
         <span class="count" id="poSelCount">0 selected</span>
@@ -5407,6 +5423,100 @@ function assignSelectedPos(){
   renderAssignEntity();
 }
 
+const folderSyncState = {
+  contracts:{folderName:'', files:{}, lastSync:''},
+  rfq:{folderName:'', files:{}, lastSync:''},
+  po:{folderName:'', files:{}, lastSync:''},
+};
+function openFolderSync(kind){
+  const map = {contracts:'contractsFolderInput', rfq:'rfqFolderInput', po:'poFolderInput'};
+  document.getElementById(map[kind]).click();
+}
+function parseEntityId(filename, kind){
+  const m = String(filename||'').toUpperCase().match(/((?:RFQ|RFI|PO|CNT)-\d+-\d+)/);
+  if(!m) return null;
+  const id = m[1];
+  if(kind==='rfq' && !/^(RFQ|RFI)-/.test(id)) return null;
+  if(kind==='po' && !/^PO-/.test(id)) return null;
+  if(kind==='contracts' && !/^CNT-/.test(id)) return null;
+  return id;
+}
+function prettyBase(filename){
+  const base = String(filename||'').split('/').pop().replace(/\.[^.]+$/,'');
+  return base.replace(/[_-]+/g,' ').trim() || 'Untitled document';
+}
+function nextContractNum(){
+  const nums = contracts.map(c=>parseInt(String(c.id).split('-')[2]||'0',10)).filter(n=>!isNaN(n));
+  return 'CNT-2025-' + String((nums.length?Math.max(...nums):0)+1).padStart(3,'0');
+}
+function syncFileToRow(kind, filename){
+  const id = parseEntityId(filename, kind);
+  if(kind==='rfq'){
+    if(id && rfqs.some(r=>r.id===id)) return 'matched';
+    const nid = id || ('RFQ-2026-' + String(rfqs.length+15).padStart(3,'0'));
+    if(rfqs.some(r=>r.id===nid)) return 'matched';
+    const t = prettyBase(filename);
+    rfqs.unshift({id:nid, title:t, type:/^RFI/i.test(t)?'RFI':'RFQ', suppliers:[], status:'Open', due:'—'});
+    uploadedBy[nid] = 'You';
+    return 'added';
+  }
+  if(kind==='po'){
+    if(id && purchaseOrders.some(p=>p.id===id)) return 'matched';
+    const nid = id || ('PO-2026-' + (1062+purchaseOrders.length));
+    if(purchaseOrders.some(p=>p.id===nid)) return 'matched';
+    purchaseOrders.unshift({id:nid, supplier:prettyBase(filename), category:'General', value:'€0', status:'Open', orderDate:'Today'});
+    uploadedBy[nid] = 'You';
+    return 'added';
+  }
+  if(id && contracts.some(c=>c.id===id)) return 'matched';
+  const nid = id || nextContractNum();
+  if(contracts.some(c=>c.id===nid)) return 'matched';
+  contracts.unshift({id:nid, supplier:prettyBase(filename), sub:'Net 30', cat:'General', value:'€0', status:'Active', renewal:'Normal', end:'—'});
+  uploadedBy[nid] = 'You';
+  return 'added';
+}
+function handleFolderSync(kind, input){
+  const files = Array.from(input.files||[]);
+  input.value = '';
+  if(!files.length) return;
+  const st = folderSyncState[kind];
+  const folderName = (files[0].webkitRelativePath||files[0].name).split('/')[0] || 'Selected folder';
+  let added=0, updated=0, matched=0;
+  const seen = new Set();
+  files.forEach(f=>{
+    seen.add(f.name);
+    const prev = st.files[f.name];
+    if(prev && prev.size===f.size && prev.lastModified===f.lastModified){ matched++; return; }
+    const res = syncFileToRow(kind, f.name);
+    st.files[f.name] = {size:f.size, lastModified:f.lastModified};
+    if(res==='added') added++;
+    else if(prev) updated++;
+    else matched++;
+  });
+  let removed=0;
+  Object.keys(st.files).forEach(n=>{ if(!seen.has(n)){ delete st.files[n]; removed++; } });
+  st.folderName = folderName;
+  st.lastSync = new Date().toLocaleTimeString();
+  renderSyncBar(kind);
+  refreshEntityTables(kind);
+  alert(`Folder synced: ${folderName}\n${added} added, ${updated} updated, ${removed} removed, ${matched} unchanged.`);
+}
+function renderSyncBar(kind){
+  const map = {contracts:'contractsSyncBar', rfq:'rfqSyncBar', po:'poSyncBar'};
+  const el = document.getElementById(map[kind]);
+  if(!el) return;
+  const st = folderSyncState[kind];
+  const n = Object.keys(st.files).length;
+  el.innerHTML = st.folderName
+    ? `<span>📁 ${st.folderName} — ${n} file${n!==1?'s':''} synced ${st.lastSync}</span> <button class="btn btn-ghost" style="padding:3px 8px; font-size:11px;" onclick="openFolderSync('${kind}')">Sync now</button>`
+    : `<span style="color:var(--text-muted);">No folder linked — files sync from your desktop on demand.</span>`;
+}
+function refreshEntityTables(kind){
+  if(kind==='contracts'){ renderStats(); renderTable(); }
+  else if(kind==='rfq'){ renderRfqStats(); renderRfqTabs(); renderRfqTable(rfqActiveTab); }
+  else if(kind==='po'){ renderPoStats(); renderPoTabs(); renderPoTable(poActiveTab); }
+}
+['contracts','rfq','po'].forEach(k=>{ try{renderSyncBar(k);}catch(_){} });
 function download(filename, text){
   const blob = new Blob([text], {type:'application/json'});
   const url = URL.createObjectURL(blob);
