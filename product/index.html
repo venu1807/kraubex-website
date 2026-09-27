@@ -5068,7 +5068,7 @@ function openAssignModalObj(agentObj){
   document.getElementById('assignTitle').textContent = `Assign task to ${agentObj.name}`;
   document.getElementById('assignTaskInput').value = agentObj.task || '';
   const idx = selectedIndexes();
-  const extra = idx.length ? `${idx.length} contract(s) selected: ${idx.map(n=>contracts[n].id).join(', ')}` : '';
+  const extra = (!window.assignContextText && idx.length) ? `${idx.length} contract(s) selected: ${idx.map(n=>contracts[n].id).join(', ')}` : '';
   document.getElementById('assignContext').textContent = [window.assignContextText, extra].filter(Boolean).join(' • ') || `${agentObj.name} will pick up the task and report back with results.`;
   renderAssignInstructions(pendingAgent);
   document.getElementById('assignOverlay').classList.add('show');
