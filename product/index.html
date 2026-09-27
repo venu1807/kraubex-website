@@ -920,7 +920,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
           Download selected
         </button>
-        <button class="btn btn-primary" onclick="newContractChoice()">
+        <button class="btn btn-primary" onclick="createNewContract()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
           New contract
         </button>
@@ -5690,12 +5690,6 @@ function deleteContract(i){
     renderTable();
     clearSelection();
   }
-}
-function newContractChoice(){
-  const c = prompt('New contract — choose:\n1. From template\n2. Upload file', '1');
-  if(c===null) return;
-  if((c||'').trim()==='2'){ document.getElementById('fileInput').click(); return; }
-  createNewContract();
 }
 function createNewContract(){
   openTemplatePicker('contract', (t)=>openTemplateDoc('contract', t));
