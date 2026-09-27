@@ -1845,7 +1845,7 @@ function domainIconFor(deptName, color){
 function domainAgentCardHTML(dept, domainAgent){
   const sel = getAgentModel(domainAgent.name);
   return `
-    <div class="agent-card domain-agent-card" style="cursor:pointer; border:2px solid var(--headline); background:linear-gradient(135deg, var(--card) 0%, var(--bg) 100%);" onclick="openAssignModalObj({name:'${domainAgent.name.replace(/'/g,"\\'")}', desc:'${domainAgent.desc.replace(/'/g,"\\'")}', tag:'${domainAgent.tag}', color:'${domainAgent.color}'})">
+    <div class="agent-card domain-agent-card" style="border:2px solid var(--headline); background:linear-gradient(135deg, var(--card) 0%, var(--bg) 100%);">
       <div class="agent-card-top">
         ${domainIconFor(dept.name, domainAgent.color)}
         <div class="agent-name-row">
@@ -1876,7 +1876,7 @@ function domainAgentCardHTML(dept, domainAgent){
 
 function agentCardHTML(a, i){
   return `
-    <div class="agent-card" style="cursor:pointer;" onclick="openAssignModal(${i})">
+    <div class="agent-card">
       <div class="agent-card-top">
         ${iconFor(a)}
         <div class="agent-name-row">
@@ -2122,7 +2122,7 @@ function openDeptAgent(slug, idx){
 
 function deptAgentCardHTML(a, slug, i){
   return `
-    <div class="agent-card" style="cursor:pointer;" onclick="openDeptAgent('${slug}', ${i})">
+    <div class="agent-card">
       <div class="agent-card-top">
         ${iconFor(a)}
         <div class="agent-name-row">
@@ -4985,8 +4985,7 @@ function assignRowEntity(id){
   const found = resolveEntityRef(id);
   if(!found){ alert('Reference not found: '+id); return; }
   pendingEntityRef = found;
-  const def = (agents||[]).find(a=>a.group==='skill') || agents[0];
-  openAssignModalObj(def);
+  openAssignPicker();
   const inp = document.getElementById('assignEntityInput');
   if(inp) inp.value = found.id;
   renderAssignEntity();
@@ -5042,7 +5041,7 @@ function populateAssignAgents(){
   if(!sel) return;
   assignAgentChoices = buildAssignAgentChoices();
   const cur = (window.pendingAgent && window.pendingAgent.name) || '';
-  sel.innerHTML = assignAgentChoices.map((a,i)=>`<option value="${i}" ${a.name===cur?'selected':''}>${a.name} — ${a.tag||''}</option>`).join('');
+  sel.innerHTML = `<option value="">Select an agent…</option>` + assignAgentChoices.map((a,i)=>`<option value="${i}" ${a.name===cur?'selected':''}>${a.name} — ${a.tag||''}</option>`).join('');
 }
 function renderAssignInstructions(a){
   const instr = generateAgentInstructions(a);
@@ -5059,7 +5058,21 @@ function onAssignAgentChange(){
   if(!a) return;
   pendingAgent = a;
   document.getElementById('assignTitle').textContent = `Assign task to ${a.name}`;
+  const taskInput = document.getElementById('assignTaskInput');
+  if(taskInput && !taskInput.value.trim()) taskInput.value = a.task || '';
   renderAssignInstructions(a);
+}
+function openAssignPicker(){
+  pendingAgent = null;
+  document.getElementById('assignTitle').textContent = 'Assign to agent';
+  const idx = selectedIndexes();
+  document.getElementById('assignContext').textContent = idx.length
+    ? `${idx.length} contract(s) selected: ${idx.map(n=>contracts[n].id).join(', ')}`
+    : '';
+  document.getElementById('agentInstructions').innerHTML = '<p class="assign-sub">Choose a skill agent from the Agent dropdown above — the assign card will open for that agent.</p>';
+  buildAssignEntityList();
+  populateAssignAgents();
+  document.getElementById('assignOverlay').classList.add('show');
 }
 function openAssignModalObj(agentObj){
   pendingAgent = agentObj;
@@ -5375,8 +5388,7 @@ function assignSelectedRfqs(){
   const ids = rfqSelectedIds();
   if(!ids.length){ alert('Select at least one RFQ first.'); return; }
   if(ids.length===1){ assignRowEntity(ids[0]); return; }
-  const def = (agents||[]).find(a=>a.group==='skill') || agents[0];
-  openAssignModalObj(def);
+  openAssignPicker();
   const inp = document.getElementById('assignTaskInput');
   if(inp) inp.value = `Review RFQs: ${ids.join(', ')}`;
   const einp = document.getElementById('assignEntityInput');
@@ -5414,8 +5426,7 @@ function assignSelectedPos(){
   const ids = poSelectedIds();
   if(!ids.length){ alert('Select at least one purchase order first.'); return; }
   if(ids.length===1){ assignRowEntity(ids[0]); return; }
-  const def = (agents||[]).find(a=>a.group==='skill') || agents[0];
-  openAssignModalObj(def);
+  openAssignPicker();
   const inp = document.getElementById('assignTaskInput');
   if(inp) inp.value = `Review purchase orders: ${ids.join(', ')}`;
   const einp = document.getElementById('assignEntityInput');
@@ -5534,8 +5545,7 @@ function downloadSelected(){
 function assignAgent(){
   const idx = selectedIndexes();
   if(!idx.length) return;
-  const def = (agents||[]).find(a=>a.group==='skill') || agents[0];
-  openAssignModalObj(def);
+  openAssignPicker();
   const inp = document.getElementById('assignTaskInput');
   if(inp) inp.value = `Review contracts: ${idx.map(n=>contracts[n].id).join(', ')}`;
 }
