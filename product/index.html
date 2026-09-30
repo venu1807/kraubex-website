@@ -5206,7 +5206,8 @@ function confirmAssignTask(){
 const uploadedBy = {
   'RFQ-2026-014':'Sarah Chen','RFI-2026-009':'Tousif','RFQ-2026-013':'Priya Patel','RFQ-2026-012':'Marcus Weber','RFI-2026-008':'Anish','RFQ-2026-011':'Elena Fischer',
   'PO-2026-1042':'Marcus Weber','PO-2026-1058':'Elena Fischer','PO-2026-1057':'David Schulz','PO-2026-1049':'Priya Patel','PO-2026-1033':'Praveen Gitta','PO-2026-1061':'Krishna',
-  'CNT-2025-001':'Sarah Chen','CNT-2025-002':'Marcus Weber','CNT-2025-003':'Elena Fischer','CNT-2025-004':'David Schulz','CNT-2025-005':'Priya Patel',
+  'CNT-2025-001':'Sarah Chen','CNT-2025-002':'Marcus Weber','CNT-2025-003':'Elena Fischer','CNT-2025-004':'David Schulz','CNT-2025-005':'Priya Patel','CNT-2025-006':'Anish',
+  'RFQ-2026-015':'Krishna','PO-2026-1063':'Aisha Rahman',
 };
 function uploaderCell(id){
   const n = uploadedBy[id]||'—';
@@ -5244,11 +5245,12 @@ const contracts = [
   {id:'CNT-2025-003', supplier:'Precision Steel Co.', sub:'Net 30', cat:'CNC machining', value:'€320.000', status:'Active', renewal:'Expiring', end:'30 Nov 2025'},
   {id:'CNT-2025-004', supplier:'Industrial Metals Ltd', sub:'Net 60', cat:'Structural', value:'€590.000', status:'Active', renewal:'Expiring', end:'31 Jan 2025'},
   {id:'CNT-2025-005', supplier:'Deutsche Stahlbau', sub:'Net 30', cat:'Construction', value:'€890.000', status:'Expired', renewal:'Expired', end:'31 Dec 2024'},
+  {id:'CNT-2025-006', supplier:'PharmaGen GmbH', sub:'Net 45', cat:'Pharma', value:'€320.000', status:'Active', renewal:'Normal', end:'30 Jun 2026'},
 ];
 
 const stats = [
-  {label:'Total contracts', value:'5'},
-  {label:'Active', value:'4'},
+  {label:'Total contracts', value:'6'},
+  {label:'Active', value:'5'},
   {label:'Pending', value:'0'},
   {label:'Expired', value:'1'},
   {label:'Expiring soon', value:'2', accent:true},
@@ -5822,6 +5824,7 @@ const rfqs = [
   {id:'RFQ-2026-012', title:'Precision machined engine components', type:'RFQ', suppliers:['AutoParts Excellence','Precision Steel Co.'], status:'Closed', due:'20 Sep 2026'},
   {id:'RFI-2026-008', title:'Construction steel supply capacity 2027', type:'RFI', suppliers:['Deutsche Stahlbau','SteelSphere GmbH'], status:'Open', due:'5 Nov 2026'},
   {id:'RFQ-2026-011', title:'Sheet metal fabrication — new product line', type:'RFQ', suppliers:['MetalWorks Industries'], status:'Closed', due:'10 Sep 2026'},
+  {id:'RFQ-2026-015', title:'API sourcing — paracetamol batch', type:'RFQ', suppliers:['PharmaGen GmbH'], status:'Open', due:'12 Nov 2026'},
 ];
 let rfqActiveTab = 'all';
 function rfqStatusTag(v){
@@ -6593,6 +6596,7 @@ const purchaseOrders = [
   {id:'PO-2026-1049', supplier:'GreenEnergy Partners', category:'Solar installation', value:'€132.000', status:'Open', orderDate:'15 Sep 2026'},
   {id:'PO-2026-1033', supplier:'Deutsche Stahlbau', category:'Construction steel', value:'€890.000', status:'Cancelled', orderDate:'3 Jul 2026'},
   {id:'PO-2026-1061', supplier:'Precision Steel Co.', category:'CNC machining', value:'€24.750', status:'Pending approval', orderDate:'5 Oct 2026'},
+  {id:'PO-2026-1063', supplier:'PharmaGen GmbH', category:'Pharma', value:'€88.400', status:'Open', orderDate:'8 Oct 2026'},
 ];
 let poActiveTab = 'all';
 function poStatusTag(v){
