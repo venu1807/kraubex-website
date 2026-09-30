@@ -743,6 +743,17 @@
   .tmpl-desc{font-size:11.5px; color:var(--text-muted); margin:2px 0 0;}
   .tmpl-go{color:var(--text-muted); font-size:15px; flex-shrink:0;}
   .tmpl-row:hover .tmpl-go{color:var(--headline);}
+  .tdoc h4{margin:0 0 8px; color:var(--subhead); font-size:12px; text-transform:uppercase; letter-spacing:.05em;}
+  .tdoc h5{margin:18px 0 6px; color:var(--subhead); font-size:13.5px; border-bottom:1px solid var(--border); padding-bottom:4px;}
+  .tdoc h5 .n{color:var(--headline); margin-right:6px;}
+  .tdoc p, .tdoc li{font-size:13px; line-height:1.75; color:#2B3541;}
+  .tdoc ul{padding-left:20px; margin:6px 0;}
+  .tdoc-f{background:#FCE9DD; border:none; border-bottom:1px dashed var(--headline); padding:0 4px; color:#7A2A00; font-size:13px; font-family:inherit; border-radius:3px; min-width:90px;}
+  .tdoc-f:disabled{background:transparent; border-bottom:1px solid var(--subhead); color:var(--ink); font-weight:600;}
+  .tdoc-f:focus{outline:2px solid var(--headline); outline-offset:1px; background:#fff;}
+  .tdoc-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:12px 0;}
+  .tdoc-box{border:1px solid var(--border); border-radius:8px; padding:10px 12px;}
+  .tdoc-meta{display:flex; gap:18px; flex-wrap:wrap; font-size:12.5px; color:var(--text-muted); margin-top:4px;}
   .oc-model-dropdown{position:absolute; left:0; right:0; bottom:calc(100% + 6px); background:var(--card); border:1px solid var(--border); border-radius:10px; box-shadow:0 12px 28px rgba(0,0,0,.14); max-height:240px; overflow-y:auto; display:none; z-index:12; padding:6px;}
   .oc-model-dropdown.show{display:block;}
   .oc-model-group{font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.04em; text-transform:uppercase; padding:6px 8px 2px;}
@@ -1421,7 +1432,7 @@
 </div>
 
 <div class="assign-overlay" id="templateDocOverlay" onclick="if(event.target===this) closeTemplateDoc()">
-  <div class="assign-modal" style="width:560px;">
+  <div class="assign-modal" style="width:720px;">
     <h3 id="templateDocTitle">New record</h3>
     <p class="assign-sub">Document preview — edit the fields, then create the final version.</p>
     <div id="templateDocBody"></div>
@@ -5848,7 +5859,7 @@ function renderRfqTable(tab){
     </tr>`).join('');
 }
 const contractTemplates = [
-  {name:'Standard supply agreement', cat:'Raw materials', sub:'Net 30', value:'€0', renewal:'Normal'},
+  {name:'Standard supply agreement', cat:'Raw materials', sub:'Net 30', value:'€0', renewal:'Normal', full:'ssa'},
   {name:'Framework agreement', cat:'General', sub:'Net 45', value:'€0', renewal:'Normal'},
   {name:'NDA', cat:'Legal', sub:'—', value:'—', renewal:'—'},
 ];
@@ -5930,7 +5941,8 @@ function openTemplateDoc(kind, t){
     {k:'category', label:'Category', v:t.category||'General'},
     {k:'value', label:'Value', v:t.value||'€0'},
   ];
-  window.templateDoc = {kind, tname:(t.name||'Blank'), fields, edit:false};
+  window.templateDoc = {kind, tname:(t.name||'Blank'), fields, edit:false, full:(t.full||'')};
+  if(window.templateDoc.full==='ssa' && !window.templateDoc.edit){ window.templateDoc.edit = true; }
   document.getElementById('templateDocTitle').textContent = (titles[kind]||'New record') + ' · ' + (t.name||'Blank');
   renderTemplateDoc();
   document.getElementById('templateDocOverlay').classList.add('show');
@@ -5938,6 +5950,7 @@ function openTemplateDoc(kind, t){
 function renderTemplateDoc(){
   const d = window.templateDoc;
   if(!d) return;
+  if(d.full==='ssa'){ renderTemplateFullDoc(); return; }
   const inp = 'width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:13px;';
   document.getElementById('templateDocBody').innerHTML = d.fields.map(f=>{
     let ctrl;
@@ -5959,8 +5972,68 @@ function templateDocValues(){
 }
 function toggleTemplateDocEdit(){
   const d = window.templateDoc; if(!d) return;
+  if(d.full==='ssa') ssaHarvest();
   d.edit = !d.edit;
   renderTemplateDoc();
+}
+function ssaHarvest(){
+  const d = window.templateDoc; if(!d) return;
+  d.fullVals = d.fullVals || {};
+  document.querySelectorAll('#templateDocBody [id^="tmpl-f-"]').forEach(el=>{ d.fullVals[el.id.replace('tmpl-f-','')] = el.value; });
+}
+function ssaField(key, preset){
+  const d = window.templateDoc;
+  const v = (d.fullVals && d.fullVals[key]!==undefined) ? d.fullVals[key] : preset;
+  const esc = String(v).replace(/"/g,'&quot;');
+  const dis = d.edit ? '' : ' disabled';
+  return `<input class="tdoc-f" id="tmpl-f-${key}" value="${esc}"${dis}>`;
+}
+function renderTemplateFullDoc(){
+  const d = window.templateDoc;
+  const F = ssaField;
+  document.getElementById('templateDocBody').innerHTML = `
+  <div class="tdoc">
+    <div class="tdoc-grid">
+      <div class="tdoc-box"><h4>Buyer</h4>
+        <p>${F('bname','[Buyer Legal Name]')}</p>
+        <p>${F('baddr','[Registered Address]')}</p>
+        <p>Rep.: ${F('brep','[Name, Title]')}</p>
+      </div>
+      <div class="tdoc-box"><h4>Supplier</h4>
+        <p>${F('supplier','[Supplier Legal Name]')}</p>
+        <p>${F('saddr','[Registered Address]')}</p>
+        <p>Rep.: ${F('srep','[Name, Title]')}</p>
+      </div>
+    </div>
+    <div class="tdoc-meta"><div>Effective date: ${F('effdate','[DD Mon YYYY]')}</div><div>Contract ID: auto on create</div></div>
+    <h5><span class="n">1.</span>Scope of Supply</h5>
+    <p>Supplier shall manufacture, sell and deliver the goods described in ${F('sched','[Schedule A / SKU list]')} ("Goods"), in the quantities and intervals set out in Buyer's purchase orders issued under this Agreement.</p>
+    <h5><span class="n">2.</span>Pricing &amp; Payment Terms</h5>
+    <ul>
+      <li>Unit pricing per Schedule A; prices fixed for ${F('months','[12 months]')} unless renegotiated under Clause 8.</li>
+      <li>Payment terms: ${F('sub','Net 30')} from invoice date.</li>
+      <li>Currency: ${F('curr','EUR')}. Late payment accrues interest per §288 BGB.</li>
+    </ul>
+    <h5><span class="n">3.</span>Delivery &amp; Logistics</h5>
+    <p>Delivery terms: ${F('deliv','[Incoterm, e.g. DAP Bielefeld]')}. Delivery within ${F('ddays','[X]')} business days of order confirmation. Partial shipments ${F('partial','[permitted / not permitted]')} without Buyer's written consent.</p>
+    <h5><span class="n">4.</span>Quality &amp; Inspection</h5>
+    <p>Goods shall conform to Schedule A and applicable ${F('iso','[ISO / industry]')} standards. Buyer may reject non-conforming Goods within ${F('qadays','[X]')} days of receipt; replacements at Supplier's cost.</p>
+    <h5><span class="n">5.</span>Warranties</h5>
+    <p>Supplier warrants Goods free from defects for ${F('warm','[X months]')} from delivery, and holds all licenses/permits required to supply the Goods.</p>
+    <h5><span class="n">6.</span>Liability &amp; Indemnity</h5>
+    <p>Liability for breach limited to ${F('value','[amount / % of annual order value]')}, except gross negligence, wilful misconduct, or confidentiality breach, which remain uncapped.</p>
+    <h5><span class="n">7.</span>Term &amp; Termination</h5>
+    <p>Runs for ${F('term','[12 / 24 months]')} from the Effective Date, auto-renewing for ${F('renewterm','[12-month]')} terms unless either party gives ${F('notice',"[90 days']")} written notice. Termination for uncured material breach after ${F('breach',"[30 days']")} notice.</p>
+    <h5><span class="n">8.</span>Compliance &amp; Confidentiality</h5>
+    <p>Supplier complies with supply-chain, anti-corruption and data-protection law (incl. GDPR). Confidential information shall not be disclosed without prior written consent.</p>
+    <h5><span class="n">9.</span>Governing Law &amp; Disputes</h5>
+    <p>Governed by the laws of ${F('country','[Germany]')}. Disputes go to the courts of ${F('city','[Bielefeld]')}.</p>
+    <div class="tdoc-grid" style="margin-top:20px;">
+      <div class="tdoc-box">Signature — Buyer<br>${F('signb','[Name, Date]')}</div>
+      <div class="tdoc-box">Signature — Supplier<br>${F('signs','[Name, Date]')}</div>
+    </div>
+  </div>`;
+  document.getElementById('templateDocEditBtn').textContent = d.edit ? 'Lock' : 'Edit';
 }
 function createTemplateDoc(){
   const d = window.templateDoc; if(!d) return;
