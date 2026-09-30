@@ -759,6 +759,17 @@
   .tdoc-brand{font-size:15px; font-weight:800; color:var(--subhead);}
   .tdoc-brand small{display:block; font-size:10.5px; font-weight:400; color:var(--text-muted);}
   .tdoc-foot{margin-top:26px; padding-top:10px; border-top:1px solid var(--border); display:flex; justify-content:space-between; gap:10px; font-size:11px; color:var(--text-muted);}
+  .tdoc-items{width:100%; border-collapse:collapse; margin:10px 0 6px; font-size:13px;}
+  .tdoc-items th{background:var(--subhead); color:#fff; text-align:left; padding:7px 9px; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em;}
+  .tdoc-items th:first-child{border-radius:6px 0 0 0;}
+  .tdoc-items td{border-bottom:1px solid var(--border); padding:4px 6px; vertical-align:top;}
+  .tdoc-items input{width:100%; border:none; background:transparent; font-size:13px; color:var(--ink); font-family:inherit; padding:4px 2px;}
+  .tdoc-items input:disabled{color:var(--ink);}
+  .tdoc-items input:not(:disabled){background:#FCE9DD; border-bottom:1px dashed var(--headline); border-radius:3px;}
+  .tdoc-items input:focus{outline:2px solid var(--headline); outline-offset:-2px; background:#fff;}
+  .tdoc-rowdel{color:var(--text-muted); cursor:pointer; text-align:center; width:30px; font-size:15px;}
+  .tdoc-rowdel:hover{color:var(--headline);}
+  .tdoc-addrow{background:transparent; border:1px dashed var(--subhead); color:var(--subhead); font-size:12px; font-weight:700; padding:6px 13px; border-radius:6px; cursor:pointer; margin-top:2px;}
   .oc-model-dropdown{position:absolute; left:0; right:0; bottom:calc(100% + 6px); background:var(--card); border:1px solid var(--border); border-radius:10px; box-shadow:0 12px 28px rgba(0,0,0,.14); max-height:240px; overflow-y:auto; display:none; z-index:12; padding:6px;}
   .oc-model-dropdown.show{display:block;}
   .oc-model-group{font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.04em; text-transform:uppercase; padding:6px 8px 2px;}
@@ -5869,7 +5880,7 @@ const contractTemplates = [
   {name:'NDA', cat:'Legal', sub:'—', value:'—', renewal:'—', full:'nda'},
 ];
 const rfqTemplates = [
-  {name:'Standard RFQ (goods)', type:'RFQ'},
+  {name:'Standard RFQ (goods)', type:'RFQ', full:'rfq-std'},
   {name:'RFI — information request', type:'RFI'},
   {name:'Spot buy RFQ', type:'RFQ'},
 ];
@@ -5957,6 +5968,7 @@ function renderTemplateDoc(){
   if(!d) return;
   if(d.full==='ssa'){ renderTemplateFullDoc(); return; }
   if(d.full==='fwa'){ renderTemplateFwaDoc(); return; }
+  if(d.full==='rfq-std'){ renderTemplateRfqDoc(); return; }
   if(d.full==='nda'){ renderTemplateNdaDoc(); return; }
   const inp = 'width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:13px;';
   document.getElementById('templateDocBody').innerHTML = d.fields.map(f=>{
@@ -6081,6 +6093,80 @@ function renderTemplateNdaDoc(){
   </div>`;
   document.getElementById('templateDocEditBtn').textContent = d.edit ? 'Lock' : 'Edit';
 }
+function renderTemplateRfqDoc(){
+  const d = window.templateDoc;
+  const F = ssaField;
+  if(!d.fullRows) d.fullRows = [{item:'[Item name / part number]', spec:'[material, grade, dimensions]', qty:'[Qty]', unit:'[unit]'}];
+  const rows = d.fullRows.map((r,i)=>`
+      <tr>
+        <td><input id="tmpl-ri-${i}-item" value="${String(r.item).replace(/"/g,'&quot;')}"${d.edit?'':' disabled'}></td>
+        <td><input id="tmpl-ri-${i}-spec" value="${String(r.spec).replace(/"/g,'&quot;')}"${d.edit?'':' disabled'}></td>
+        <td><input id="tmpl-ri-${i}-qty" value="${String(r.qty).replace(/"/g,'&quot;')}"${d.edit?'':' disabled'}></td>
+        <td><input id="tmpl-ri-${i}-unit" value="${String(r.unit).replace(/"/g,'&quot;')}"${d.edit?'':' disabled'}></td>
+        <td class="tdoc-rowdel" onclick="rfqDocDelRow(${i})" title="Delete row">×</td>
+      </tr>`).join('');
+  document.getElementById('templateDocBody').innerHTML = `
+  <div class="tdoc">
+    <div class="tdoc-head">
+      <img src="../assets/kraubex-logo.png" alt="Kraubex AI logo">
+      <div class="tdoc-brand">Kraubex AI<small>Supplier Contract Management</small></div>
+    </div>
+    <div class="tdoc-meta"><div>RFQ title: ${F('title','[RFQ title — e.g. Structural steel Q3]')}</div><div>Type: RFQ (goods)</div><div>Due: ${F('due','[DD Mon YYYY]')}</div><div>RFQ ID: auto on create</div></div>
+    <div class="tdoc-grid" style="margin-top:12px;">
+      <div class="tdoc-box"><h4>Issuing Buyer</h4>
+        <p>${F('bname','[Buyer Legal Name]')}</p>
+        <p>${F('baddr','[Registered Address]')}</p>
+        <p>Rep.: ${F('brep','[Name, Title]')}</p>
+      </div>
+      <div class="tdoc-box"><h4>Invited Supplier</h4>
+        <p>${F('sname','[Supplier Legal Name]')}</p>
+        <p>${F('saddr','[Registered Address]')}</p>
+        <p>Rep.: ${F('srep','[Name, Title]')}</p>
+      </div>
+    </div>
+    <div class="tdoc-meta"><div>Effective date: ${F('effdate','[DD Mon YYYY]')}</div></div>
+    <h5><span class="n">1.</span>Purpose &amp; Scope</h5>
+    <p>This RFQ invites a formal quotation for the goods below. It is not an order — Buyer may award all, part, or none of the volume.</p>
+    <h5><span class="n">2.</span>Items Requested</h5>
+    <table class="tdoc-items"><thead><tr><th>Item / SKU</th><th>Specification</th><th>Qty</th><th>Unit</th><th></th></tr></thead>
+    <tbody>${rows}</tbody></table>
+    <button class="tdoc-addrow" onclick="rfqDocAddRow()">+ Add item</button>
+    <h5><span class="n">3.</span>Delivery Requirements</h5>
+    <p>Location: ${F('site','[Site / address]')}. Required date: ${F('deldate','[DD Mon YYYY]')}. Incoterm: ${F('incoterm','[e.g. DAP]')}.</p>
+    <h5><span class="n">4.</span>Quotation Requirements</h5>
+    <ul>
+      <li>Unit and total price in ${F('curr','[currency, EUR]')};</li>
+      <li>Lead time, MOQ and volume tiers; payment terms offered.</li>
+    </ul>
+    <h5><span class="n">5.</span>Submission Deadline</h5>
+    <p>Quotes due by ${F('subdead','[DD Mon YYYY, HH:MM CET]')} to ${F('subemail','[contact email]')}.</p>
+    <h5><span class="n">6.</span>Evaluation Criteria</h5>
+    <p>Evaluated on ${F('evalcrit','[price / lead time / quality — weighting]')}.</p>
+    <h5><span class="n">7.</span>Validity Period</h5>
+    <p>Prices valid at least ${F('valid30','[30 days]')} from submission.</p>
+    <h5><span class="n">8.</span>Confidentiality</h5>
+    <p>This RFQ is confidential — no disclosure without Buyer's written consent.</p>
+    <div class="tdoc-grid" style="margin-top:20px;">
+      <div class="tdoc-box">Signature — Buyer<br>${F('signb','[Name, Date]')}</div>
+      <div class="tdoc-box">Signature — Supplier<br>${F('signs','[Name, Date]')}</div>
+    </div>
+    <div class="tdoc-foot"><span>© 2026 Kraubex AI · Confidential</span><span>Generated ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span><span>Page 1 of 1</span></div>
+  </div>`;
+  document.getElementById('templateDocEditBtn').textContent = d.edit ? 'Lock' : 'Edit';
+}
+function rfqDocAddRow(){
+  const d = window.templateDoc; if(!d) return;
+  ssaHarvest();
+  d.fullRows = d.fullRows || [];
+  d.fullRows.push({item:'[Item]', spec:'[Specification]', qty:'[Qty]', unit:'[unit]'});
+  renderTemplateDoc();
+}
+function rfqDocDelRow(i){
+  const d = window.templateDoc; if(!d || !d.fullRows || d.fullRows.length<=1) return;
+  ssaHarvest();
+  d.fullRows.splice(i,1);
+  renderTemplateDoc();
+}
 function toggleTemplateDocEdit(){
   const d = window.templateDoc; if(!d) return;
   if(d.full) ssaHarvest();
@@ -6091,6 +6177,16 @@ function ssaHarvest(){
   const d = window.templateDoc; if(!d) return;
   d.fullVals = d.fullVals || {};
   document.querySelectorAll('#templateDocBody [id^="tmpl-f-"]').forEach(el=>{ d.fullVals[el.id.replace('tmpl-f-','')] = el.value; });
+  const ri = {};
+  document.querySelectorAll('#templateDocBody [id^="tmpl-ri-"]').forEach(el=>{
+    const m = el.id.match(/^tmpl-ri-(\d+)-(\w+)$/);
+    if(!m) return;
+    const i = parseInt(m[1],10);
+    ri[i] = ri[i] || {};
+    ri[i][m[2]] = el.value;
+  });
+  const rows = Object.keys(ri).sort((a,b)=>a-b).map(k=>({item:ri[k].item||'', spec:ri[k].spec||'', qty:ri[k].qty||'', unit:ri[k].unit||''}));
+  if(rows.length) d.fullRows = rows;
 }
 function ssaField(key, preset){
   const d = window.templateDoc;
