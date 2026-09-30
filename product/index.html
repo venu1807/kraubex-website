@@ -5866,7 +5866,7 @@ function renderRfqTable(tab){
 const contractTemplates = [
   {name:'Standard supply agreement', cat:'Raw materials', sub:'Net 30', value:'€0', renewal:'Normal', full:'ssa'},
   {name:'Framework agreement', cat:'General', sub:'Net 45', value:'€0', renewal:'Normal', full:'fwa'},
-  {name:'NDA', cat:'Legal', sub:'—', value:'—', renewal:'—'},
+  {name:'NDA', cat:'Legal', sub:'—', value:'—', renewal:'—', full:'nda'},
 ];
 const rfqTemplates = [
   {name:'Standard RFQ (goods)', type:'RFQ'},
@@ -5957,6 +5957,7 @@ function renderTemplateDoc(){
   if(!d) return;
   if(d.full==='ssa'){ renderTemplateFullDoc(); return; }
   if(d.full==='fwa'){ renderTemplateFwaDoc(); return; }
+  if(d.full==='nda'){ renderTemplateNdaDoc(); return; }
   const inp = 'width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:13px;';
   document.getElementById('templateDocBody').innerHTML = d.fields.map(f=>{
     let ctrl;
@@ -6018,6 +6019,58 @@ function renderTemplateFwaDoc(){
     <p>Runs for ${F('term24','[24 months]')} from the Effective Date, auto-renewing for ${F('renew12','[12-month]')} terms unless either party gives ${F('notice90',"[90 days']")} written notice. Termination does not affect confirmed Call-Off Orders.</p>
     <h5><span class="n">8.</span>Compliance &amp; Confidentiality</h5>
     <p>Supplier complies with supply-chain due-diligence, anti-corruption and data-protection law (incl. GDPR). Pricing and forecasts stay confidential without prior written consent.</p>
+    <h5><span class="n">9.</span>Governing Law &amp; Disputes</h5>
+    <p>Governed by the laws of ${F('country','[Germany]')}. Disputes go to the courts of ${F('city','[Bielefeld]')}.</p>
+    <div class="tdoc-grid" style="margin-top:20px;">
+      <div class="tdoc-box">Signature — Buyer<br>${F('signb','[Name, Date]')}</div>
+      <div class="tdoc-box">Signature — Supplier<br>${F('signs','[Name, Date]')}</div>
+    </div>
+    <div class="tdoc-foot"><span>© 2026 Kraubex AI · Confidential</span><span>Generated ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span><span>Page 1 of 1</span></div>
+  </div>`;
+  document.getElementById('templateDocEditBtn').textContent = d.edit ? 'Lock' : 'Edit';
+}
+function renderTemplateNdaDoc(){
+  const d = window.templateDoc;
+  const F = ssaField;
+  document.getElementById('templateDocBody').innerHTML = `
+  <div class="tdoc">
+    <div class="tdoc-head">
+      <img src="../assets/kraubex-logo.png" alt="Kraubex AI logo">
+      <div class="tdoc-brand">Kraubex AI<small>Supplier Contract Management</small></div>
+    </div>
+    <div class="tdoc-grid">
+      <div class="tdoc-box"><h4>Disclosing/Receiving Party A</h4>
+        <p>${F('aname','[Buyer Legal Name]')}</p>
+        <p>${F('aaddr','[Registered Address]')}</p>
+        <p>Rep.: ${F('arep','[Name, Title]')}</p>
+      </div>
+      <div class="tdoc-box"><h4>Disclosing/Receiving Party B</h4>
+        <p>${F('supplier','[Supplier Legal Name]')}</p>
+        <p>${F('saddr','[Registered Address]')}</p>
+        <p>Rep.: ${F('srep','[Name, Title]')}</p>
+      </div>
+    </div>
+    <div class="tdoc-meta"><div>Effective date: ${F('effdate','[DD Mon YYYY]')}</div><div>Contract ID: auto on create</div></div>
+    <h5><span class="n">1.</span>Purpose</h5>
+    <p>The parties wish to explore a potential ${F('purpose','[supply / partnership]')} relationship and protect confidential business, technical, or financial information disclosed while doing so.</p>
+    <h5><span class="n">2.</span>Definition of Confidential Information</h5>
+    <p>"Confidential Information" means any non-public information disclosed by either party — pricing, specifications, supplier lists, roadmaps, know-how — marked confidential or reasonably understood as such.</p>
+    <h5><span class="n">3.</span>Exclusions</h5>
+    <ul>
+      <li>Already public through no fault of the receiving party;</li>
+      <li>Lawfully known before disclosure, or independently developed;</li>
+      <li>Required by law or court order, with prior notice where permitted.</li>
+    </ul>
+    <h5><span class="n">4.</span>Obligations of the Receiving Party</h5>
+    <p>Use Confidential Information solely to evaluate the potential relationship, protect it with at least reasonable care, and share only with employees/advisors under equivalent obligations.</p>
+    <h5><span class="n">5.</span>Term</h5>
+    <p>Effective on the Effective Date for ${F('term2y','[2 years]')}. Confidentiality survives ${F('surv3y','[3 years]')} generally, indefinitely for trade secrets.</p>
+    <h5><span class="n">6.</span>Return or Destruction</h5>
+    <p>On request or termination, return or destroy all Confidential Information except archival copies kept per backup/compliance policy.</p>
+    <h5><span class="n">7.</span>No License or Obligation</h5>
+    <p>Nothing here grants any license or obligates either party to any further agreement or purchase.</p>
+    <h5><span class="n">8.</span>Remedies</h5>
+    <p>Unauthorized disclosure may cause irreparable harm; the non-breaching party may seek injunctive relief plus any other remedy.</p>
     <h5><span class="n">9.</span>Governing Law &amp; Disputes</h5>
     <p>Governed by the laws of ${F('country','[Germany]')}. Disputes go to the courts of ${F('city','[Bielefeld]')}.</p>
     <div class="tdoc-grid" style="margin-top:20px;">
