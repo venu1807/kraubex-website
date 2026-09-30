@@ -769,6 +769,10 @@
   .tdoc-items input:focus{outline:2px solid var(--headline); outline-offset:-2px; background:#fff;}
   .tdoc-rowdel{color:var(--text-muted); cursor:pointer; text-align:center; width:30px; font-size:15px;}
   .tdoc-rowdel:hover{color:var(--headline);}
+  .tdoc-grand{display:flex; justify-content:flex-end; gap:10px; margin-top:10px; font-size:14px; padding-top:10px; border-top:2px solid var(--subhead);}
+  .tdoc-grand .gl{color:var(--text-muted); font-weight:600;}
+  .tdoc-grand .gv{color:var(--headline); font-weight:900; font-size:17px;}
+  .tdoc-items td.linetotal{font-weight:600; color:var(--subhead); white-space:nowrap;}
   .tdoc-addrow{background:transparent; border:1px dashed var(--subhead); color:var(--subhead); font-size:12px; font-weight:700; padding:6px 13px; border-radius:6px; cursor:pointer; margin-top:2px;}
   .oc-model-dropdown{position:absolute; left:0; right:0; bottom:calc(100% + 6px); background:var(--card); border:1px solid var(--border); border-radius:10px; box-shadow:0 12px 28px rgba(0,0,0,.14); max-height:240px; overflow-y:auto; display:none; z-index:12; padding:6px;}
   .oc-model-dropdown.show{display:block;}
@@ -5885,7 +5889,7 @@ const rfqTemplates = [
   {name:'Spot buy RFQ', type:'RFQ', full:'rfq-spot'},
 ];
 const poTemplates = [
-  {name:'Standard PO', category:'General', value:'€0'},
+  {name:'Standard PO', category:'General', value:'€0', full:'po-std'},
   {name:'Raw materials PO', category:'Raw materials', value:'€0'},
   {name:'Services PO', category:'Services', value:'€0'},
 ];
@@ -5970,6 +5974,7 @@ function renderTemplateDoc(){
   if(d.full==='fwa'){ renderTemplateFwaDoc(); return; }
   if(d.full==='rfq-std'){ renderTemplateRfqDoc(); return; }
   if(d.full==='rfq-spot'){ renderTemplateSpotDoc(); return; }
+  if(d.full==='po-std'){ renderTemplatePoDoc(); return; }
   if(d.full==='rfi'){ renderTemplateRfiDoc(); return; }
   if(d.full==='nda'){ renderTemplateNdaDoc(); return; }
   const inp = 'width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:13px;';
@@ -6275,6 +6280,82 @@ function renderTemplateSpotDoc(){
   </div>`;
   document.getElementById('templateDocEditBtn').textContent = d.edit ? 'Lock' : 'Edit';
 }
+function poNum(v){ const n = parseFloat(String(v).replace(/[^0-9.,-]/g,'').replace(',','.')); return isNaN(n)?null:n; }
+function poFmt(n){ return '€' + n.toLocaleString('de-DE',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+function poTotals(){
+  const d = window.templateDoc; if(!d || !d.fullRows) return null;
+  let sum = 0, any = false;
+  d.fullRows.forEach((r,i)=>{
+    const qEl = document.getElementById('tmpl-ri-'+i+'-qty');
+    const pEl = document.getElementById('tmpl-ri-'+i+'-price');
+    const tEl = document.getElementById('tmpl-lt-'+i);
+    const q = qEl ? poNum(qEl.value) : null;
+    const p = pEl ? poNum(pEl.value) : null;
+    const lt = (q!==null && p!==null) ? q*p : null;
+    if(tEl) tEl.textContent = lt!==null ? poFmt(lt) : '—';
+    if(lt!==null){ sum += lt; any = true; }
+  });
+  const g = document.getElementById('poGrandTotal');
+  if(g) g.textContent = any ? poFmt(sum) : '€0.00';
+  return any ? poFmt(sum) : null;
+}
+function renderTemplatePoDoc(){
+  const d = window.templateDoc;
+  const F = ssaField;
+  d.itemCols = [{k:'desc',label:'Description'},{k:'qty',label:'Qty'},{k:'price',label:'Unit Price (€)'}];
+  if(!d.fullRows) d.fullRows = [{desc:'[Item / service description]', qty:'1', price:'0.00'}];
+  const cols = d.itemCols;
+  const head = cols.map(c=>`<th>${c.label}</th>`).join('') + '<th>Line Total</th><th></th>';
+  const rows = d.fullRows.map((r,i)=>{
+    const tds = cols.map(c=>`<td><input id="tmpl-ri-${i}-${c.k}" value="${String(r[c.k]??'').replace(/"/g,'&quot;')}"${d.edit?'':' disabled'}></td>`).join('');
+    return `<tr>${tds}<td class="tdoc-linetotal" id="tmpl-lt-${i}">—</td><td class="tdoc-rowdel" onclick="rfqDocDelRow(${i})" title="Delete row">×</td></tr>`;
+  }).join('');
+  document.getElementById('templateDocBody').innerHTML = `
+  <div class="tdoc">
+    <div class="tdoc-head">
+      <img src="../assets/kraubex-logo.png" alt="Kraubex AI logo">
+      <div class="tdoc-brand">Kraubex AI</div>
+    </div>
+    <div class="tdoc-meta"><div>PO title: ${F('title','[PO title — e.g. Q3 steel top-up]')}</div><div>Category: General</div><div>PO Number: auto on create</div></div>
+    <div class="tdoc-grid" style="margin-top:12px;">
+      <div class="tdoc-box"><h4>Buyer (Issuer)</h4>
+        <p>${F('bname','[Buyer Legal Name]')}</p>
+        <p>${F('baddr','[Registered Address]')}</p>
+        <p>Rep.: ${F('brep','[Name, Title]')}</p>
+      </div>
+      <div class="tdoc-box"><h4>Supplier (Vendor)</h4>
+        <p>${F('supplier','[Supplier Legal Name]')}</p>
+        <p>${F('saddr','[Registered Address]')}</p>
+        <p>Rep.: ${F('srep','[Name, Title]')}</p>
+      </div>
+    </div>
+    <div class="tdoc-meta"><div>Order date: ${F('orderDate','[DD Mon YYYY]')}</div></div>
+    <h5><span class="n">1.</span>Order Details</h5>
+    <p>Requested delivery date: ${F('deldate','[DD Mon YYYY]')} · Delivery address: ${F('site','[Site / address]')}</p>
+    <h5><span class="n">2.</span>Line Items</h5>
+    <table class="tdoc-items"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>
+    <button class="tdoc-addrow" onclick="rfqDocAddRow()">+ Add line item</button>
+    <div class="tdoc-grand"><span class="gl">Order total:</span><span class="gv" id="poGrandTotal">€0.00</span></div>
+    <h5><span class="n">3.</span>Payment Terms</h5>
+    <p>Payment terms ${F('sub','Net 30')} from invoice date, currency ${F('curr','EUR')}. Invoices must reference the PO Number.</p>
+    <h5><span class="n">4.</span>Delivery &amp; Acceptance</h5>
+    <p>Incoterm ${F('incoterm','[e.g. DAP]')}. Inspection and acceptance within ${F('inspectdays','[X]')} business days; rejects return at Supplier's cost.</p>
+    <h5><span class="n">5.</span>Cost Center / Approval</h5>
+    <p>Cost center ${F('costcenter','[Code]')} · Requested by ${F('reqby','[Name]')} · Approved by ${F('apprby','[Name, Title]')}</p>
+    <h5><span class="n">6.</span>Cancellation</h5>
+    <p>Buyer may cancel in writing before shipment without penalty.</p>
+    <h5><span class="n">7.</span>Governing Terms</h5>
+    <p>Governed by Buyer's standard purchasing terms and any underlying framework or supply agreement.</p>
+    <div class="tdoc-grid" style="margin-top:20px;">
+      <div class="tdoc-box">Signature — Buyer<br>${F('signb','[Name, Date]')}</div>
+      <div class="tdoc-box">Signature — Supplier<br>${F('signs','[Name, Date]')}</div>
+    </div>
+    <div class="tdoc-foot"><span>© 2026 Kraubex AI · Confidential</span><span>Generated ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span><span>Page 1 of 1</span></div>
+  </div>`;
+  document.getElementById('templateDocEditBtn').textContent = d.edit ? 'Lock' : 'Edit';
+  document.querySelectorAll('#templateDocBody [id^="tmpl-ri-"]').forEach(el=>{ el.addEventListener('input', poTotals); });
+  poTotals();
+}
 function toggleTemplateDocEdit(){
   const d = window.templateDoc; if(!d) return;
   if(d.full) ssaHarvest();
@@ -6373,7 +6454,10 @@ function createTemplateDoc(){
     renderRfqTable('all');
   } else {
     const num = 1062 + purchaseOrders.length;
-    purchaseOrders.unshift({id:`PO-2026-${num}`, supplier:v.supplier.trim(), category:v.category||'General', value:v.value||'€0', status:'Open', orderDate:'Today'});
+    const gt = (window.templateDoc && window.templateDoc.full==='po-std') ? poTotals() : null;
+    const odEl = document.getElementById('tmpl-f-orderDate');
+    const od = odEl ? odEl.value.trim() : '';
+    purchaseOrders.unshift({id:`PO-2026-${num}`, supplier:v.supplier.trim(), category:v.category||'General', value:gt||v.value||'€0', status:'Open', orderDate:od||'Today'});
     renderPoTable('all');
   }
   closeTemplateDoc();
