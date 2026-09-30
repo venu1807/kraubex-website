@@ -754,6 +754,11 @@
   .tdoc-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:12px 0;}
   .tdoc-box{border:1px solid var(--border); border-radius:8px; padding:10px 12px;}
   .tdoc-meta{display:flex; gap:18px; flex-wrap:wrap; font-size:12.5px; color:var(--text-muted); margin-top:4px;}
+  .tdoc-head{display:flex; align-items:center; gap:12px; padding-bottom:12px; margin-bottom:6px; border-bottom:3px solid var(--headline);}
+  .tdoc-head img{width:44px; height:44px; border-radius:9px; object-fit:cover;}
+  .tdoc-brand{font-size:15px; font-weight:800; color:var(--subhead);}
+  .tdoc-brand small{display:block; font-size:10.5px; font-weight:400; color:var(--text-muted);}
+  .tdoc-foot{margin-top:26px; padding-top:10px; border-top:1px solid var(--border); display:flex; justify-content:space-between; gap:10px; font-size:11px; color:var(--text-muted);}
   .oc-model-dropdown{position:absolute; left:0; right:0; bottom:calc(100% + 6px); background:var(--card); border:1px solid var(--border); border-radius:10px; box-shadow:0 12px 28px rgba(0,0,0,.14); max-height:240px; overflow-y:auto; display:none; z-index:12; padding:6px;}
   .oc-model-dropdown.show{display:block;}
   .oc-model-group{font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:.04em; text-transform:uppercase; padding:6px 8px 2px;}
@@ -5993,6 +5998,10 @@ function renderTemplateFullDoc(){
   const F = ssaField;
   document.getElementById('templateDocBody').innerHTML = `
   <div class="tdoc">
+    <div class="tdoc-head">
+      <img src="../assets/kraubex-logo.png" alt="Kraubex AI logo">
+      <div class="tdoc-brand">Kraubex AI<small>Supplier Contract Management</small></div>
+    </div>
     <div class="tdoc-grid">
       <div class="tdoc-box"><h4>Buyer</h4>
         <p>${F('bname','[Buyer Legal Name]')}</p>
@@ -6032,6 +6041,7 @@ function renderTemplateFullDoc(){
       <div class="tdoc-box">Signature — Buyer<br>${F('signb','[Name, Date]')}</div>
       <div class="tdoc-box">Signature — Supplier<br>${F('signs','[Name, Date]')}</div>
     </div>
+    <div class="tdoc-foot"><span>© 2026 Kraubex AI · Confidential</span><span>Generated ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span><span>Page 1 of 1</span></div>
   </div>`;
   document.getElementById('templateDocEditBtn').textContent = d.edit ? 'Lock' : 'Edit';
 }
