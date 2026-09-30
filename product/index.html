@@ -5882,7 +5882,7 @@ const contractTemplates = [
 const rfqTemplates = [
   {name:'Standard RFQ (goods)', type:'RFQ', full:'rfq-std'},
   {name:'RFI — information request', type:'RFI', full:'rfi'},
-  {name:'Spot buy RFQ', type:'RFQ'},
+  {name:'Spot buy RFQ', type:'RFQ', full:'rfq-spot'},
 ];
 const poTemplates = [
   {name:'Standard PO', category:'General', value:'€0'},
@@ -5969,6 +5969,7 @@ function renderTemplateDoc(){
   if(d.full==='ssa'){ renderTemplateFullDoc(); return; }
   if(d.full==='fwa'){ renderTemplateFwaDoc(); return; }
   if(d.full==='rfq-std'){ renderTemplateRfqDoc(); return; }
+  if(d.full==='rfq-spot'){ renderTemplateSpotDoc(); return; }
   if(d.full==='rfi'){ renderTemplateRfiDoc(); return; }
   if(d.full==='nda'){ renderTemplateNdaDoc(); return; }
   const inp = 'width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:13px;';
@@ -6097,15 +6098,8 @@ function renderTemplateNdaDoc(){
 function renderTemplateRfqDoc(){
   const d = window.templateDoc;
   const F = ssaField;
+  d.itemCols = [{k:'item',label:'Item / SKU'},{k:'spec',label:'Specification'},{k:'qty',label:'Qty'},{k:'unit',label:'Unit'}];
   if(!d.fullRows) d.fullRows = [{item:'[Item name / part number]', spec:'[material, grade, dimensions]', qty:'[Qty]', unit:'[unit]'}];
-  const rows = d.fullRows.map((r,i)=>`
-      <tr>
-        <td><input id="tmpl-ri-${i}-item" value="${String(r.item).replace(/"/g,'&quot;')}"${d.edit?'':' disabled'}></td>
-        <td><input id="tmpl-ri-${i}-spec" value="${String(r.spec).replace(/"/g,'&quot;')}"${d.edit?'':' disabled'}></td>
-        <td><input id="tmpl-ri-${i}-qty" value="${String(r.qty).replace(/"/g,'&quot;')}"${d.edit?'':' disabled'}></td>
-        <td><input id="tmpl-ri-${i}-unit" value="${String(r.unit).replace(/"/g,'&quot;')}"${d.edit?'':' disabled'}></td>
-        <td class="tdoc-rowdel" onclick="rfqDocDelRow(${i})" title="Delete row">×</td>
-      </tr>`).join('');
   document.getElementById('templateDocBody').innerHTML = `
   <div class="tdoc">
     <div class="tdoc-head">
@@ -6129,9 +6123,7 @@ function renderTemplateRfqDoc(){
     <h5><span class="n">1.</span>Purpose &amp; Scope</h5>
     <p>This RFQ invites a formal quotation for the goods below. It is not an order — Buyer may award all, part, or none of the volume.</p>
     <h5><span class="n">2.</span>Items Requested</h5>
-    <table class="tdoc-items"><thead><tr><th>Item / SKU</th><th>Specification</th><th>Qty</th><th>Unit</th><th></th></tr></thead>
-    <tbody>${rows}</tbody></table>
-    <button class="tdoc-addrow" onclick="rfqDocAddRow()">+ Add item</button>
+    ${rfqItemsTableHtml()}
     <h5><span class="n">3.</span>Delivery Requirements</h5>
     <p>Location: ${F('site','[Site / address]')}. Required date: ${F('deldate','[DD Mon YYYY]')}. Incoterm: ${F('incoterm','[e.g. DAP]')}.</p>
     <h5><span class="n">4.</span>Quotation Requirements</h5>
@@ -6155,11 +6147,24 @@ function renderTemplateRfqDoc(){
   </div>`;
   document.getElementById('templateDocEditBtn').textContent = d.edit ? 'Lock' : 'Edit';
 }
+function rfqItemsTableHtml(){
+  const d = window.templateDoc;
+  const cols = d.itemCols || [{k:'item',label:'Item'},{k:'spec',label:'Specification'},{k:'qty',label:'Qty'},{k:'unit',label:'Unit'}];
+  const head = cols.map(c=>`<th>${c.label}</th>`).join('') + '<th></th>';
+  const rows = (d.fullRows||[]).map((r,i)=>{
+    const tds = cols.map(c=>`<td><input id="tmpl-ri-${i}-${c.k}" value="${String(r[c.k]??'').replace(/"/g,'&quot;')}"${d.edit?'':' disabled'}></td>`).join('');
+    return `<tr>${tds}<td class="tdoc-rowdel" onclick="rfqDocDelRow(${i})" title="Delete row">×</td></tr>`;
+  }).join('');
+  return `<table class="tdoc-items"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table><button class="tdoc-addrow" onclick="rfqDocAddRow()">+ Add item</button>`;
+}
 function rfqDocAddRow(){
   const d = window.templateDoc; if(!d) return;
   ssaHarvest();
   d.fullRows = d.fullRows || [];
-  d.fullRows.push({item:'[Item]', spec:'[Specification]', qty:'[Qty]', unit:'[unit]'});
+  const cols = d.itemCols || [{k:'item'},{k:'spec'},{k:'qty'},{k:'unit'}];
+  const o = {};
+  cols.forEach(c=>{ o[c.k] = '[' + (c.label||c.k) + ']'; });
+  d.fullRows.push(o);
   renderTemplateDoc();
 }
 function rfqDocDelRow(i){
@@ -6211,6 +6216,57 @@ function renderTemplateRfiDoc(){
     <p>Matching respondents may be invited to a call or formal RFQ — no guaranteed follow-up.</p>
     <h5><span class="n">7.</span>Confidentiality</h5>
     <p>Information shared here is confidential, used solely to evaluate this opportunity.</p>
+    <div class="tdoc-grid" style="margin-top:20px;">
+      <div class="tdoc-box">Signature — Buyer<br>${F('signb','[Name, Date]')}</div>
+      <div class="tdoc-box">Signature — Supplier<br>${F('signs','[Name, Date]')}</div>
+    </div>
+    <div class="tdoc-foot"><span>© 2026 Kraubex AI · Confidential</span><span>Generated ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span><span>Page 1 of 1</span></div>
+  </div>`;
+  document.getElementById('templateDocEditBtn').textContent = d.edit ? 'Lock' : 'Edit';
+}
+function renderTemplateSpotDoc(){
+  const d = window.templateDoc;
+  const F = ssaField;
+  d.itemCols = [{k:'item',label:'Item / Part No.'},{k:'qty',label:'Qty'},{k:'unit',label:'Unit'},{k:'sub',label:'Substitute OK?'}];
+  if(!d.fullRows) d.fullRows = [{item:'[Item description / part number]', qty:'[Qty]', unit:'[unit]', sub:'[Yes/No]'}];
+  document.getElementById('templateDocBody').innerHTML = `
+  <div class="tdoc">
+    <div class="tdoc-head">
+      <img src="../assets/kraubex-logo.png" alt="Kraubex AI logo">
+      <div class="tdoc-brand">Kraubex AI</div>
+    </div>
+    <div class="tdoc-meta"><div>Spot RFQ title: ${F('title','[Spot title — e.g. Emergency bearings]')}</div><div>Type: Spot RFQ</div><div>Due: ${F('due','[DD Mon YYYY]')}</div><div>RFQ ID: auto on create</div></div>
+    <div class="tdoc-grid" style="margin-top:12px;">
+      <div class="tdoc-box"><h4>Requesting Buyer</h4>
+        <p>${F('bname','[Buyer Legal Name]')}</p>
+        <p>${F('baddr','[Registered Address]')}</p>
+        <p>Rep.: ${F('brep','[Name, Title]')}</p>
+      </div>
+      <div class="tdoc-box"><h4>Quoting Supplier</h4>
+        <p>${F('sname','[Supplier Legal Name]')}</p>
+        <p>${F('saddr','[Registered Address]')}</p>
+        <p>Rep.: ${F('srep','[Name, Title]')}</p>
+      </div>
+    </div>
+    <div class="tdoc-meta"><div>Effective date: ${F('effdate','[DD Mon YYYY]')}</div></div>
+    <h5><span class="n">1.</span>Purpose</h5>
+    <p>One-off, non-recurring purchase outside framework terms. Speed beats volume pricing — quote against actual current availability.</p>
+    <h5><span class="n">2.</span>Item &amp; Quantity</h5>
+    ${rfqItemsTableHtml()}
+    <h5><span class="n">3.</span>Required Delivery</h5>
+    <p>Needed by ${F('needdate','[DD Mon YYYY]')} at ${F('site','[Site / address]')}. Firm date — flag immediately if it cannot be met.</p>
+    <h5><span class="n">4.</span>Quote Requirements</h5>
+    <ul>
+      <li>Unit and total price in ${F('curr','[EUR]')}, including any expedite/rush fee;</li>
+      <li>Confirmed stock or manufacturing lead time;</li>
+      <li>Shipping method and cost for the required date.</li>
+    </ul>
+    <h5><span class="n">5.</span>Response Deadline</h5>
+    <p>Respond by ${F('subdead','[DD Mon, HH:MM CET]')} to ${F('subcontact','[contact email / phone]')} — a call ahead of the written quote is welcome.</p>
+    <h5><span class="n">6.</span>Payment Terms</h5>
+    <p>Standard terms ${F('payterms','Net 30')}; prepayment for unlisted items must be stated clearly.</p>
+    <h5><span class="n">7.</span>No Framework Commitment</h5>
+    <p>No ongoing relationship, preferred status, or pricing precedent is established.</p>
     <div class="tdoc-grid" style="margin-top:20px;">
       <div class="tdoc-box">Signature — Buyer<br>${F('signb','[Name, Date]')}</div>
       <div class="tdoc-box">Signature — Supplier<br>${F('signs','[Name, Date]')}</div>
