@@ -5881,7 +5881,7 @@ const contractTemplates = [
 ];
 const rfqTemplates = [
   {name:'Standard RFQ (goods)', type:'RFQ', full:'rfq-std'},
-  {name:'RFI — information request', type:'RFI'},
+  {name:'RFI — information request', type:'RFI', full:'rfi'},
   {name:'Spot buy RFQ', type:'RFQ'},
 ];
 const poTemplates = [
@@ -5969,6 +5969,7 @@ function renderTemplateDoc(){
   if(d.full==='ssa'){ renderTemplateFullDoc(); return; }
   if(d.full==='fwa'){ renderTemplateFwaDoc(); return; }
   if(d.full==='rfq-std'){ renderTemplateRfqDoc(); return; }
+  if(d.full==='rfi'){ renderTemplateRfiDoc(); return; }
   if(d.full==='nda'){ renderTemplateNdaDoc(); return; }
   const inp = 'width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:13px;';
   document.getElementById('templateDocBody').innerHTML = d.fields.map(f=>{
@@ -6166,6 +6167,57 @@ function rfqDocDelRow(i){
   ssaHarvest();
   d.fullRows.splice(i,1);
   renderTemplateDoc();
+}
+function renderTemplateRfiDoc(){
+  const d = window.templateDoc;
+  const F = ssaField;
+  document.getElementById('templateDocBody').innerHTML = `
+  <div class="tdoc">
+    <div class="tdoc-head">
+      <img src="../assets/kraubex-logo.png" alt="Kraubex AI logo">
+      <div class="tdoc-brand">Kraubex AI</div>
+    </div>
+    <div class="tdoc-meta"><div>RFI title: ${F('title','[RFI title — e.g. Cloud ERP hosting]')}</div><div>Type: RFI (discovery)</div><div>Due: ${F('due','[DD Mon YYYY]')}</div><div>RFI ID: auto on create</div></div>
+    <div class="tdoc-grid" style="margin-top:12px;">
+      <div class="tdoc-box"><h4>Issuing Buyer</h4>
+        <p>${F('bname','[Buyer Legal Name]')}</p>
+        <p>${F('baddr','[Registered Address]')}</p>
+        <p>Rep.: ${F('brep','[Name, Title]')}</p>
+      </div>
+      <div class="tdoc-box"><h4>Invited Respondent</h4>
+        <p>${F('sname','[Supplier Legal Name]')}</p>
+        <p>${F('saddr','[Registered Address]')}</p>
+        <p>Rep.: ${F('srep','[Name, Title]')}</p>
+      </div>
+    </div>
+    <div class="tdoc-meta"><div>Effective date: ${F('effdate','[DD Mon YYYY]')}</div></div>
+    <h5><span class="n">1.</span>Purpose</h5>
+    <p>Buyer is gathering information on ${F('scope','[capability / market / category]')} to inform a future sourcing decision. No commitment, no guaranteed tender inclusion.</p>
+    <h5><span class="n">2.</span>Background</h5>
+    <p>${F('background','[1–2 sentences: new line, diversification, capability gap…]')}</p>
+    <h5><span class="n">3.</span>Information Requested</h5>
+    <ul>
+      <li>Company overview: size, locations, certifications;</li>
+      <li>Capability description for ${F('cattech','[category / technology]')};</li>
+      <li>Reference customers or case studies, where permitted;</li>
+      <li>Indicative pricing model (not a binding quote);</li>
+      <li>Current capacity and typical lead times.</li>
+    </ul>
+    <h5><span class="n">4.</span>Response Format</h5>
+    <p>Please respond in ${F('respformat','[Word / PDF, max X pages]')} covering each item above.</p>
+    <h5><span class="n">5.</span>Submission Deadline</h5>
+    <p>Responses due by ${F('subdead','[DD Mon YYYY]')} to ${F('subemail','[contact email]')}.</p>
+    <h5><span class="n">6.</span>Next Steps</h5>
+    <p>Matching respondents may be invited to a call or formal RFQ — no guaranteed follow-up.</p>
+    <h5><span class="n">7.</span>Confidentiality</h5>
+    <p>Information shared here is confidential, used solely to evaluate this opportunity.</p>
+    <div class="tdoc-grid" style="margin-top:20px;">
+      <div class="tdoc-box">Signature — Buyer<br>${F('signb','[Name, Date]')}</div>
+      <div class="tdoc-box">Signature — Supplier<br>${F('signs','[Name, Date]')}</div>
+    </div>
+    <div class="tdoc-foot"><span>© 2026 Kraubex AI · Confidential</span><span>Generated ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span><span>Page 1 of 1</span></div>
+  </div>`;
+  document.getElementById('templateDocEditBtn').textContent = d.edit ? 'Lock' : 'Edit';
 }
 function toggleTemplateDocEdit(){
   const d = window.templateDoc; if(!d) return;
