@@ -3371,9 +3371,72 @@ function renderInsightsBody(subview){
     </div>`;
 }
 
+const companyProfileDefaults = {name:'Kraubex AI GmbH', tagline:'Multi-agent procurement system · Registered in Germany (EU) · Signed in as You (Administrator, Account Owner)', office:'Bielefeld, Germany', legal:'GmbH · Commercial Register (HRB), Amtsgericht Bielefeld', vat:'DE — as per registration certificate', dpo:'dpo@kraubex.de (Art. 37 GDPR)', residency:'EU/EEA only — no transfers to third countries without Chapter V safeguards', retention:'procurement records 10 yrs (GoBD/AO) · logs 12 mo · DPIA on file'};
+const kxStore = {
+  get(k){ try{ return window.localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ window.localStorage.setItem(k,v); }catch(e){} }
+};
+let companyProfile = Object.assign({}, companyProfileDefaults);
+try{ const raw = window.localStorage.getItem('kx_company'); if(raw) companyProfile = Object.assign({}, companyProfileDefaults, JSON.parse(raw)); }catch(e){}
+function settingHtml(key){ const o = kxStore.get('kx_setting_'+key); return (o!==null && o!==undefined && o!=='') ? o : SETTING_INFO[key].html; }
+function editBtnHtml(key){ return '<button class="btn btn-ghost" style="padding:6px 12px; font-size:13px;" data-editkey="'+key+'" onclick="toggleSettingEdit(this)">Edit</button>'; }
+function settingBodyEl(){
+  const ov = document.getElementById('settingOverlay');
+  const scope = ov || document.getElementById('secBody-settings');
+  return scope ? scope.querySelector('.setting-edit-body') : null;
+}
+function editBtnsEl(){
+  const ov = document.getElementById('settingOverlay');
+  const scope = ov || document.getElementById('secBody-settings');
+  return scope ? scope.querySelector('[data-editbtns]') : null;
+}
+function toggleSettingEdit(btn){
+  const key = btn.getAttribute('data-editkey');
+  const bodyEl = settingBodyEl(); if(!bodyEl || !key) return;
+  bodyEl.dataset.editKey = key;
+  bodyEl.contentEditable = 'true'; bodyEl.focus();
+  bodyEl.style.outline = '2px dashed var(--headline)'; bodyEl.style.outlineOffset = '4px'; bodyEl.style.borderRadius = '8px';
+  const holder = editBtnsEl();
+  if(holder) holder.innerHTML = '<button class="btn btn-primary" style="padding:6px 12px; font-size:13px;" onclick="saveSettingEdit()">Save</button> <button class="btn btn-ghost" style="padding:6px 12px; font-size:13px;" onclick="cancelSettingEdit()">Cancel</button>';
+}
+function finishSettingEdit(key){
+  const bodyEl = settingBodyEl();
+  if(bodyEl){ bodyEl.contentEditable = 'false'; bodyEl.style.outline = ''; bodyEl.style.outlineOffset = ''; }
+  const holder = editBtnsEl();
+  if(holder) holder.innerHTML = editBtnHtml(key);
+}
+function saveSettingEdit(){
+  const bodyEl = settingBodyEl(); if(!bodyEl) return;
+  const key = bodyEl.dataset.editKey;
+  kxStore.set('kx_setting_'+key, bodyEl.innerHTML);
+  finishSettingEdit(key);
+}
+function cancelSettingEdit(){
+  const bodyEl = settingBodyEl(); if(!bodyEl) return;
+  const key = bodyEl.dataset.editKey;
+  finishSettingEdit(key);
+  if(document.getElementById('settingOverlay')){ openSettingDetail(key); }
+  else { renderSettingsBody(window.kxSettingsView); }
+}
+function openCompanyEditor(){
+  closeSettingDetail();
+  const ov = document.createElement('div');
+  ov.className = 'wf-overlay show'; ov.id = 'settingOverlay';
+  ov.onclick = e=>{ if(e.target===ov) closeSettingDetail(); };
+  const fields = [['name','Company name'],['tagline','Tagline'],['office','Registered office'],['legal','Legal form / register'],['vat','VAT ID'],['dpo','Data Protection Officer'],['residency','Data residency'],['retention','Retention']];
+  ov.innerHTML = '<div class="wf-modal" style="max-width:640px; height:auto; max-height:86vh;"><div class="wf-modal-head"><div><h3>Edit company profile</h3><p>Shows on the Settings overview card</p></div><button class="wf-close" onclick="closeSettingDetail()" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div style="padding:18px 20px; max-height:70vh; overflow:auto;">' + fields.map(f=>'<label style="display:block; font-size:13px; font-weight:600; margin:10px 0 4px;">'+f[1]+'</label><input id="kx-c-'+f[0]+'" type="text" value="'+String(companyProfile[f[0]]).replace(/"/g,'&quot;')+'" style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border); font-size:14px; font-family:inherit;">').join('') + '<div style="display:flex; gap:8px; margin-top:16px;"><button class="btn btn-ghost" onclick="closeSettingDetail()">Cancel</button><button class="btn btn-primary" onclick="saveCompanyProfile()">Save</button></div></div></div>';
+  document.body.appendChild(ov);
+}
+function saveCompanyProfile(){
+  ['name','tagline','office','legal','vat','dpo','residency','retention'].forEach(k=>{ const el = document.getElementById('kx-c-'+k); if(el) companyProfile[k] = el.value; });
+  kxStore.set('kx_company', JSON.stringify(companyProfile));
+  closeSettingDetail();
+  selectSubview('settings','all');
+}
 const SETTING_SUBVIEW_MAP = {'org-company':'Company','org-dept':'Departments','org-loc':'Locations','org-config':'Business configuration','users':'Users','teams':'Teams','roles':'Roles','permissions':'Permissions','rbac':'RBAC','ai-policies':'AI policies','agent-perms':'Agent permissions','appr-policies':'Approval policies','model-config':'Model configuration','guardrails':'Guardrails','audit':'Audit logs','data-sources':'Data sources','retention':'Retention','security':'Security','privacy':'Privacy','notifications':'Notifications','integrations':'Integrations','api-keys':'API keys','webhooks':'Webhooks','sys-logs':'System logs','billing':'Subscription & usage'};
 function renderSettingsBody(subview){
   const body = document.getElementById('secBody-settings');
+  window.kxSettingsView = subview || 'all';
   const detailKey = SETTING_SUBVIEW_MAP[subview];
   if(detailKey && typeof SETTING_INFO !== 'undefined' && SETTING_INFO[detailKey]){
     const info = SETTING_INFO[detailKey];
@@ -3382,9 +3445,10 @@ function renderSettingsBody(subview){
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
         <h4 style="margin:0; font-size:17px;">${detailKey}</h4>
         <span style="color:var(--text-muted); font-size:13px;">${info.sub||''}</span>
-        <a href="javascript:void(0)" onclick="selectSubview('settings','all')" style="margin-left:auto; font-size:13px; color:var(--headline);">← Overview section in Settings</a>
+        <span data-editbtns="1" style="margin-left:auto;"><button class="btn btn-ghost" style="padding:6px 12px; font-size:13px;" data-editkey="${detailKey}" onclick="toggleSettingEdit(this)">Edit</button></span>
+        <a href="javascript:void(0)" onclick="selectSubview('settings','all')" style="font-size:13px; color:var(--headline);">← Overview section in Settings</a>
       </div>
-      <div style="margin-top:10px;">${info.html}</div>
+      <div class="setting-edit-body" style="margin-top:10px;">${settingHtml(detailKey)}</div>
     </div>`;
     return;
   }
@@ -3401,18 +3465,19 @@ function renderSettingsBody(subview){
       <div style="display:flex; align-items:center; gap:14px; margin-bottom:6px;">
         <img src="../assets/kraubex-logo.png" alt="Kraubex AI" style="width:46px; height:46px; border-radius:10px; object-fit:contain; background:#fff; border:1px solid var(--border);">
         <div>
-          <h4 style="margin:0; font-size:17px;">Kraubex AI GmbH</h4>
-          <div style="color:var(--text-muted); font-size:13px;">Multi-agent procurement system · Registered in Germany (EU) · Signed in as <b>You</b> (Administrator, Account Owner)</div>
+          <h4 style="margin:0; font-size:17px;">${companyProfile.name}</h4>
+          <div style="color:var(--text-muted); font-size:13px;">${companyProfile.tagline}</div>
         </div>
-        <span class="tag tag-open" style="margin-left:auto;">EU AI Act aligned</span>
+        <span class="tag tag-open">EU AI Act aligned</span>
+        <button class="btn btn-ghost" style="padding:6px 12px; font-size:13px; margin-left:8px;" onclick="openCompanyEditor()">Edit</button>
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px 28px; font-size:13.5px; margin:10px 0;">
-        <div><b>Registered office:</b> Bielefeld, Germany</div>
-        <div><b>Legal form:</b> GmbH · Commercial Register (HRB), Amtsgericht Bielefeld</div>
-        <div><b>VAT ID (USt-IdNr.):</b> DE — as per registration certificate</div>
-        <div><b>Data Protection Officer:</b> dpo@kraubex.de (Art. 37 GDPR)</div>
-        <div><b>Data residency:</b> EU/EEA only — no transfers to third countries without Chapter V safeguards</div>
-        <div><b>Retention:</b> procurement records 10 yrs (GoBD/AO) · logs 12 mo · DPIA on file</div>
+        <div><b>Registered office:</b> ${companyProfile.office}</div>
+        <div><b>Legal form:</b> ${companyProfile.legal}</div>
+        <div><b>VAT ID (USt-IdNr.):</b> ${companyProfile.vat}</div>
+        <div><b>Data Protection Officer:</b> ${companyProfile.dpo}</div>
+        <div><b>Data residency:</b> ${companyProfile.residency}</div>
+        <div><b>Retention:</b> ${companyProfile.retention}</div>
       </div>
       <h4 style="margin:12px 0 6px; font-size:14px;">European regulation posture — EU AI Act (Regulation (EU) 2024/1689), the strictest AI regime worldwide</h4>
       <ul style="margin:0; padding-left:18px; font-size:13.5px; display:grid; gap:4px;">
@@ -3436,14 +3501,14 @@ function renderSettingsBody(subview){
 }
 
 const SETTING_INFO = {
-'Company': {sub:'Legal identity · Kraubex AI GmbH', html:`
+'Company': {sub:'Legal identity', html:`
   <table><tr><th style="width:220px;">Field</th><th>Value</th></tr>
-  <tr><td>Legal name</td><td><b>Kraubex AI GmbH</b></td></tr>
-  <tr><td>Registered office</td><td>Bielefeld, Germany (EU)</td></tr>
-  <tr><td>Legal form / register</td><td>GmbH · Commercial Register (HRB), Amtsgericht Bielefeld</td></tr>
-  <tr><td>VAT ID (USt-IdNr.)</td><td>DE — as per registration certificate</td></tr>
+  <tr><td>Legal name</td><td><b>${companyProfile.name}</b></td></tr>
+  <tr><td>Registered office</td><td>${companyProfile.office} (EU)</td></tr>
+  <tr><td>Legal form / register</td><td>${companyProfile.legal}</td></tr>
+  <tr><td>VAT ID (USt-IdNr.)</td><td>${companyProfile.vat}</td></tr>
   <tr><td>Managing director</td><td>You (Account Owner)</td></tr>
-  <tr><td>Data Protection Officer</td><td>dpo@kraubex.de (Art. 37 GDPR)</td></tr>
+  <tr><td>Data Protection Officer</td><td>${companyProfile.dpo}</td></tr>
   <tr><td>EU AI Act role</td><td>Provider of the agent platform · <span class="tag tag-open">Aligned</span></td></tr></table>`},
 'Departments': {sub:'Business units using Kraubex', html:`
   <table><tr><th>Department</th><th>Head</th><th>Members</th></tr>
@@ -3641,7 +3706,7 @@ function openSettingDetail(key){
   const ov = document.createElement('div');
   ov.className = 'wf-overlay show'; ov.id = 'settingOverlay';
   ov.onclick = e=>{ if(e.target===ov) closeSettingDetail(); };
-  ov.innerHTML = '<div class="wf-modal" style="max-width:640px; height:auto; max-height:86vh;"><div class="wf-modal-head"><div><h3 id="wfModalTitle">'+key+'</h3><p id="wfModalDept">'+(info.sub||'')+'</p></div><button class="wf-close" onclick="closeSettingDetail()" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div style="padding:18px 20px; max-height:70vh; overflow:auto;">'+info.html+'</div></div>';
+  ov.innerHTML = '<div class="wf-modal" style="max-width:640px; height:auto; max-height:86vh;"><div class="wf-modal-head"><div><h3 id="wfModalTitle">'+key+'</h3><p id="wfModalDept">'+(info.sub||'')+'</p></div><div style="display:flex; align-items:center; gap:8px;"><span data-editbtns="1">'+editBtnHtml(key)+'</span><button class="wf-close" onclick="closeSettingDetail()" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div><div class="setting-edit-body" style="padding:18px 20px; max-height:70vh; overflow:auto;">'+settingHtml(key)+'</div></div>';
   document.body.appendChild(ov);
 }
 function closeSettingDetail(){ const o=document.getElementById('settingOverlay'); if(o) o.remove(); }
