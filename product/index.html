@@ -405,6 +405,7 @@
   .tag-expired{background:#F7C1C1; color:#791F1F;}
   .tag-upcoming{background:#FAEEDA; color:#633806;}
   .tag-normal{background:#E6F1FB; color:#0C447C;}
+  .tag-open{background:#EAF3DE; color:#27500A;}
   .tag-cat{background:#EEEDFE; color:#3C3489;}
   .actions{display:flex; gap:8px; justify-content:flex-end; white-space:nowrap;}
   .icon-btn{width:28px; height:28px; border-radius:6px; border:none; background:transparent; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-muted);}
@@ -3380,7 +3381,7 @@ function renderSettingsBody(subview){
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
         <h4 style="margin:0; font-size:17px;">${detailKey}</h4>
         <span style="color:var(--text-muted); font-size:13px;">${info.sub||''}</span>
-        <a href="javascript:void(0)" onclick="selectSubview('settings','all')" style="margin-left:auto; font-size:13px; color:var(--headline);">← All settings</a>
+        <a href="javascript:void(0)" onclick="selectSubview('settings','all')" style="margin-left:auto; font-size:13px; color:var(--headline);">← Overview section in Settings</a>
       </div>
       <div style="margin-top:10px;">${info.html}</div>
     </div>`;
@@ -3405,8 +3406,8 @@ function renderSettingsBody(subview){
         <span class="tag tag-open" style="margin-left:auto;">EU AI Act aligned</span>
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px 28px; font-size:13.5px; margin:10px 0;">
-        <div><b>Registered office:</b> Frankfurt am Main, Germany</div>
-        <div><b>Legal form:</b> GmbH · Commercial Register (HRB), Amtsgericht Frankfurt</div>
+        <div><b>Registered office:</b> Bielefeld, Germany</div>
+        <div><b>Legal form:</b> GmbH · Commercial Register (HRB), Amtsgericht Bielefeld</div>
         <div><b>VAT ID (USt-IdNr.):</b> DE — as per registration certificate</div>
         <div><b>Data Protection Officer:</b> dpo@kraubex.de (Art. 37 GDPR)</div>
         <div><b>Data residency:</b> EU/EEA only — no transfers to third countries without Chapter V safeguards</div>
@@ -3436,8 +3437,8 @@ const SETTING_INFO = {
 'Company': {sub:'Legal identity · Kraubex AI GmbH', html:`
   <table><tr><th style="width:220px;">Field</th><th>Value</th></tr>
   <tr><td>Legal name</td><td><b>Kraubex AI GmbH</b></td></tr>
-  <tr><td>Registered office</td><td>Frankfurt am Main, Germany (EU)</td></tr>
-  <tr><td>Legal form / register</td><td>GmbH · Commercial Register (HRB), Amtsgericht Frankfurt</td></tr>
+  <tr><td>Registered office</td><td>Bielefeld, Germany (EU)</td></tr>
+  <tr><td>Legal form / register</td><td>GmbH · Commercial Register (HRB), Amtsgericht Bielefeld</td></tr>
   <tr><td>VAT ID (USt-IdNr.)</td><td>DE — as per registration certificate</td></tr>
   <tr><td>Managing director</td><td>You (Account Owner)</td></tr>
   <tr><td>Data Protection Officer</td><td>dpo@kraubex.de (Art. 37 GDPR)</td></tr>
@@ -3629,7 +3630,7 @@ const SETTING_INFO = {
   <tr><td>Agent runs (Oct)</td><td>62% of 50,000</td></tr>
   <tr><td>Documents stored</td><td>41% of 100 GB</td></tr>
   <tr><td>EU data processing</td><td><span class="tag tag-open">Included</span></td></tr></table>
-  <p style="color:var(--text-muted); font-size:13px;">Invoicing: Kraubex AI GmbH, Frankfurt am Main · invoices@kraubex.de · SEPA, Net 30.</p>`},
+  <p style="color:var(--text-muted); font-size:13px;">Invoicing: Kraubex AI GmbH, Bielefeld · invoices@kraubex.de · SEPA, Net 30.</p>`},
 };
 function openSettingDetail(key){
   const info = SETTING_INFO[key]; if(!info) return;
