@@ -3639,7 +3639,7 @@ function openSettingDetail(key){
   const ov = document.createElement('div');
   ov.className = 'wf-overlay show'; ov.id = 'settingOverlay';
   ov.onclick = e=>{ if(e.target===ov) closeSettingDetail(); };
-  ov.innerHTML = '<div class="wf-modal" style="max-width:760px;"><div class="wf-modal-head"><div><h3 id="wfModalTitle">'+key+'</h3><p id="wfModalDept">'+(info.sub||'')+'</p></div><button class="wf-close" onclick="closeSettingDetail()" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div style="padding:18px 20px; max-height:70vh; overflow:auto;">'+info.html+'</div></div>';
+  ov.innerHTML = '<div class="wf-modal" style="max-width:640px; height:auto; max-height:86vh;"><div class="wf-modal-head"><div><h3 id="wfModalTitle">'+key+'</h3><p id="wfModalDept">'+(info.sub||'')+'</p></div><button class="wf-close" onclick="closeSettingDetail()" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div style="padding:18px 20px; max-height:70vh; overflow:auto;">'+info.html+'</div></div>';
   document.body.appendChild(ov);
 }
 function closeSettingDetail(){ const o=document.getElementById('settingOverlay'); if(o) o.remove(); }
