@@ -3431,7 +3431,7 @@ function renderSettingsBody(subview){
     <div class="settings-group">
       <h4>${g.title}</h4>
       ${g.rows.map(r=>`<div class="settings-row" onclick="openSettingDetail('${r}')"><span>${r}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></div>`).join('')}
-    </div>`).join('');
+    </div>`).join('') + '<p class="hint" style="text-align:right;">Settings build 01-Oct-2026-C</p>';
 }
 
 const SETTING_INFO = {
