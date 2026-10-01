@@ -3369,8 +3369,23 @@ function renderInsightsBody(subview){
     </div>`;
 }
 
+const SETTING_SUBVIEW_MAP = {'org-company':'Company','org-dept':'Departments','org-loc':'Locations','org-config':'Business configuration','users':'Users','teams':'Teams','roles':'Roles','permissions':'Permissions','rbac':'RBAC','ai-policies':'AI policies','agent-perms':'Agent permissions','appr-policies':'Approval policies','model-config':'Model configuration','guardrails':'Guardrails','audit':'Audit logs','data-sources':'Data sources','retention':'Retention','security':'Security','privacy':'Privacy','notifications':'Notifications','integrations':'Integrations','api-keys':'API keys','webhooks':'Webhooks','sys-logs':'System logs','billing':'Subscription & usage'};
 function renderSettingsBody(subview){
   const body = document.getElementById('secBody-settings');
+  const detailKey = SETTING_SUBVIEW_MAP[subview];
+  if(detailKey && typeof SETTING_INFO !== 'undefined' && SETTING_INFO[detailKey]){
+    const info = SETTING_INFO[detailKey];
+    body.innerHTML = `
+    <div class="settings-group" style="border:1px solid var(--border); border-radius:12px; padding:18px 20px; background:var(--card);">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+        <h4 style="margin:0; font-size:17px;">${detailKey}</h4>
+        <span style="color:var(--text-muted); font-size:13px;">${info.sub||''}</span>
+        <a href="javascript:void(0)" onclick="selectSubview('settings','all')" style="margin-left:auto; font-size:13px; color:var(--headline);">← All settings</a>
+      </div>
+      <div style="margin-top:10px;">${info.html}</div>
+    </div>`;
+    return;
+  }
   const groups = [
     {title:'Organization', rows:['Company','Departments','Locations','Business configuration']},
     {title:'Users & access', rows:['Users','Teams','Roles','Permissions','RBAC']},
