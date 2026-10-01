@@ -3413,8 +3413,225 @@ function renderSettingsBody(subview){
   body.innerHTML = companyCard + groups.map(g=>`
     <div class="settings-group">
       <h4>${g.title}</h4>
-      ${g.rows.map(r=>`<div class="settings-row" onclick="alert('${r}')"><span>${r}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></div>`).join('')}
+      ${g.rows.map(r=>`<div class="settings-row" onclick="openSettingDetail('${r}')"><span>${r}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></div>`).join('')}
     </div>`).join('');
+}
+
+const SETTING_INFO = {
+'Company': {sub:'Legal identity · Kraubex AI GmbH', html:`
+  <table><tr><th style="width:220px;">Field</th><th>Value</th></tr>
+  <tr><td>Legal name</td><td><b>Kraubex AI GmbH</b></td></tr>
+  <tr><td>Registered office</td><td>Frankfurt am Main, Germany (EU)</td></tr>
+  <tr><td>Legal form / register</td><td>GmbH · Commercial Register (HRB), Amtsgericht Frankfurt</td></tr>
+  <tr><td>VAT ID (USt-IdNr.)</td><td>DE — as per registration certificate</td></tr>
+  <tr><td>Managing director</td><td>You (Account Owner)</td></tr>
+  <tr><td>Data Protection Officer</td><td>dpo@kraubex.de (Art. 37 GDPR)</td></tr>
+  <tr><td>EU AI Act role</td><td>Provider of the agent platform · <span class="tag tag-open">Aligned</span></td></tr></table>`},
+'Departments': {sub:'Business units using Kraubex', html:`
+  <table><tr><th>Department</th><th>Head</th><th>Members</th></tr>
+  <tr><td>Procurement</td><td>Sarah Chen</td><td>4</td></tr>
+  <tr><td>Finance</td><td>Marcus Weber</td><td>3</td></tr>
+  <tr><td>Supply Chain</td><td>Priya Patel</td><td>3</td></tr>
+  <tr><td>Operations</td><td>David Schulz</td><td>2</td></tr>
+  <tr><td>IT &amp; Security</td><td>Tom Richter</td><td>2</td></tr>
+  <tr><td>Legal &amp; Compliance</td><td>Elena Fischer</td><td>2</td></tr>
+  <tr><td>Sales</td><td>James Okoye</td><td>2</td></tr>
+  <tr><td>R&amp;D / Data</td><td>Mei Lin</td><td>3</td></tr>
+  <tr><td>Sustainability</td><td>Fatima Al-Sayed</td><td>2</td></tr></table>`},
+'Locations': {sub:'All sites inside the EU/EEA', html:`
+  <table><tr><th>Office</th><th>Location</th><th>Function</th></tr>
+  <tr><td>Headquarters</td><td>Frankfurt am Main, DE</td><td>Management, Finance, Legal, DPO</td></tr>
+  <tr><td>Tech hub</td><td>Berlin, DE</td><td>Engineering, AI platform</td></tr>
+  <tr><td>Operations</td><td>München, DE</td><td>Procurement, Supply chain</td></tr>
+  <tr><td>Shared services</td><td>Warszawa, PL</td><td>Support, Data operations</td></tr></table>
+  <p style="color:var(--text-muted); font-size:13px;">No sites outside the EU/EEA — no third-country data transfers in the default configuration.</p>`},
+'Business configuration': {sub:'Tenant-wide defaults', html:`
+  <table><tr><th style="width:220px;">Setting</th><th>Value</th></tr>
+  <tr><td>Base currency</td><td>EUR (€)</td></tr>
+  <tr><td>Languages</td><td>English, Deutsch</td></tr>
+  <tr><td>Time zone</td><td>Europe/Berlin (CET/CEST)</td></tr>
+  <tr><td>Fiscal year</td><td>January – December</td></tr>
+  <tr><td>Number / date format</td><td>German (1.234,56 · TT.MM.JJJJ)</td></tr>
+  <tr><td>PO numbering</td><td>PO-2026-####, auto-increment</td></tr>
+  <tr><td>RFQ numbering</td><td>RFQ-2026-### / RFI-2026-###</td></tr>
+  <tr><td>Contract numbering</td><td>CNT-2025-###</td></tr></table>`},
+'Users': {sub:'Everyone with access · you are the Account Owner', html:`
+  <table><tr><th>Name</th><th>Role</th><th>Status</th></tr>
+  <tr><td><b>You</b></td><td>Administrator, Account Owner</td><td><span class="tag tag-open">Active</span></td></tr>
+  <tr><td>Sarah Chen</td><td>Procurement Lead</td><td><span class="tag tag-open">Active</span></td></tr>
+  <tr><td>Marcus Weber</td><td>Finance Manager</td><td><span class="tag tag-open">Active</span></td></tr>
+  <tr><td>Priya Patel</td><td>Supply Chain Analyst</td><td><span class="tag tag-open">Active</span></td></tr>
+  <tr><td>Tom Richter</td><td>IT Support</td><td><span class="tag tag-open">Active</span></td></tr>
+  <tr><td>Elena Fischer</td><td>Legal Counsel</td><td><span class="tag tag-open">Active</span></td></tr>
+  <tr><td>James Okoye</td><td>Sales Director</td><td><span class="tag tag-open">Active</span></td></tr>
+  <tr><td>Nadia Hoffmann</td><td>HR Business Partner</td><td><span class="tag tag-open">Active</span></td></tr>
+  <tr><td>Lucas Meyer</td><td>Data Analyst</td><td><span class="tag tag-open">Active</span></td></tr>
+  <tr><td>Aisha Rahman</td><td>Quality Manager</td><td><span class="tag tag-open">Active</span></td></tr>
+  <tr><td>David Schulz</td><td>Operations Lead</td><td><span class="tag tag-open">Active</span></td></tr>
+  <tr><td>Mei Lin</td><td>R&amp;D Engineer</td><td><span class="tag tag-open">Active</span></td></tr>
+  <tr><td>Oliver Braun</td><td>Cybersecurity Analyst</td><td><span class="tag tag-open">Active</span></td></tr>
+  <tr><td>Fatima Al-Sayed</td><td>Sustainability Lead</td><td><span class="tag tag-open">Active</span></td></tr>
+  <tr><td>Noah Becker</td><td>Product Manager</td><td><span class="tag tag-open">Active</span></td></tr>
+  <tr><td>Praveen Gitta</td><td>Procurement Specialist</td><td><span class="tag tag-open">Active</span></td></tr>
+  <tr><td>Tousif</td><td>Sourcing Analyst</td><td><span class="tag tag-open">Active</span></td></tr>
+  <tr><td>Anish</td><td>Data Engineer</td><td><span class="tag tag-open">Active</span></td></tr>
+  <tr><td>Krishna</td><td>QA Analyst</td><td><span class="tag tag-open">Active</span></td></tr></table>`},
+'Teams': {sub:'Collaboration groups (Channels)', html:`
+  <table><tr><th>Team / channel</th><th>Purpose</th><th>Members</th></tr>
+  <tr><td># general</td><td>Company-wide announcements</td><td>7</td></tr>
+  <tr><td># procurement</td><td>Procurement team channel</td><td>4</td></tr>
+  <tr><td># finance</td><td>Finance team channel</td><td>3</td></tr>
+  <tr><td># supply-chain</td><td>Supply chain team channel</td><td>3</td></tr>
+  <tr><td># it-helpdesk</td><td>IT support requests</td><td>3</td></tr>
+  <tr><td># announcements</td><td>Leadership announcements</td><td>4</td></tr></table>`},
+'Roles': {sub:'What each role may do', html:`
+  <table><tr><th>Role</th><th>Scope</th></tr>
+  <tr><td><b>Administrator</b></td><td>Full access incl. users, billing, integrations (you)</td></tr>
+  <tr><td>Procurement Lead</td><td>Suppliers, RFQs, contracts, POs up to €50k</td></tr>
+  <tr><td>Finance Manager</td><td>Approvals, budgets, invoices, payments</td></tr>
+  <tr><td>Approver</td><td>Approve / reject assigned items only</td></tr>
+  <tr><td>Member</td><td>Create and view own-department items</td></tr>
+  <tr><td>Viewer</td><td>Read-only dashboards and reports</td></tr></table>`},
+'Permissions': {sub:'Granular capabilities assigned via roles', html:`
+  <table><tr><th>Area</th><th>Permissions</th></tr>
+  <tr><td>Connect</td><td>connector:read, connector:write</td></tr>
+  <tr><td>Procurement</td><td>rfq:create, rfq:publish, po:create, contract:sign</td></tr>
+  <tr><td>Workflows</td><td>workflow:run, workflow:edit, workflow:publish</td></tr>
+  <tr><td>Approvals</td><td>approval:decide, approval:delegate</td></tr>
+  <tr><td>Admin</td><td>user:manage, billing:manage, integration:manage, audit:read</td></tr></table>`},
+'RBAC': {sub:'Role × capability matrix', html:`
+  <table><tr><th>Capability</th><th>Admin</th><th>Lead</th><th>Approver</th><th>Member</th><th>Viewer</th></tr>
+  <tr><td>Manage users &amp; billing</td><td>✓</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+  <tr><td>Publish workflows / integrations</td><td>✓</td><td>✓</td><td>—</td><td>—</td><td>—</td></tr>
+  <tr><td>Create RFQ / PO / contract</td><td>✓</td><td>✓</td><td>—</td><td>✓</td><td>—</td></tr>
+  <tr><td>Approve items</td><td>✓</td><td>✓</td><td>✓</td><td>—</td><td>—</td></tr>
+  <tr><td>View dashboards</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr></table>`},
+'AI policies': {sub:'Binding rules for all AI use (reviewed quarterly)', html:`
+  <ol style="margin:0; padding-left:18px; font-size:13.5px; display:grid; gap:6px;">
+  <li><b>Data minimisation:</b> agents access only the data their task requires; customer data is never used to train models.</li>
+  <li><b>EU processing only:</b> inference and storage inside the EU/EEA; any sub-processor change needs DPO sign-off.</li>
+  <li><b>Human oversight:</b> payments, contract signatures and supplier awards always need a human decision (Arts. 14, 26 AI Act).</li>
+  <li><b>Prohibited uses (Art. 5):</b> no social scoring, manipulation, exploitation of vulnerabilities, or biometric identification.</li>
+  <li><b>Transparency (Art. 50):</b> AI-generated content is labelled; people are told when they interact with AI.</li>
+  <li><b>Incident duty:</b> serious incidents are reported to the AI Office / market surveillance; breaches to the DPO within 72h.</li>
+  <li><b>AI literacy (Art. 4):</b> every operator completes capability/risk training before receiving write permissions.</li></ol>`},
+'Agent permissions': {sub:'Autonomy level per agent family', html:`
+  <table><tr><th>Agent family</th><th>Autonomy</th><th>Approval gate</th></tr>
+  <tr><td>Strategic sourcing / RFQ drafting</td><td>Supervised</td><td>Publish needs Lead</td></tr>
+  <tr><td>Contract analysis</td><td>Supervised</td><td>Signature needs Legal + you</td></tr>
+  <tr><td>Supplier risk monitoring</td><td>Autonomous read</td><td>Escalations only</td></tr>
+  <tr><td>Invoice matching / posting</td><td>Approval-required</td><td>Finance Manager</td></tr>
+  <tr><td>Logistics tracking</td><td>Autonomous read</td><td>Delay alerts auto-sent</td></tr>
+  <tr><td>IT support / HR onboarding</td><td>Supervised</td><td>System changes need IT</td></tr>
+  <tr><td>Legal &amp; sustainability review</td><td>Read-only advise</td><td>Decision stays human</td></tr></table>`},
+'Approval policies': {sub:'Four-eyes principle, thresholds in EUR', html:`
+  <table><tr><th>Value</th><th>Required approvals</th></tr>
+  <tr><td>≤ €5,000</td><td>Direct manager (auto-logged)</td></tr>
+  <tr><td>€5,001 – €50,000</td><td>Department lead + Finance</td></tr>
+  <tr><td>€50,001 – €250,000</td><td>Finance Manager + Procurement Lead</td></tr>
+  <tr><td>&gt; €250,000</td><td>Executive (you) + Legal</td></tr>
+  <tr><td>Any contract signature</td><td>Legal Counsel + Account Owner</td></tr></table>`},
+'Model configuration': {sub:'LLMs behind the agents · EU processing', html:`
+  <table><tr><th>Use</th><th>Primary model</th><th>Fallback</th></tr>
+  <tr><td>Drafting / reasoning</td><td>EU-hosted flagship model</td><td>EU-hosted efficient model</td></tr>
+  <tr><td>Extraction / matching</td><td>EU-hosted efficient model</td><td>Rules engine</td></tr>
+  <tr><td>Embeddings / search</td><td>EU-hosted embeddings</td><td>Keyword search</td></tr></table>
+  <p style="color:var(--text-muted); font-size:13px;">Temperature capped at 0.3 for finance/legal tasks · EU data-processing addenda signed · no customer data used for training.</p>`},
+'Guardrails': {sub:'Live safety controls — untick to simulate off', html:`
+  <table><tr><th>Guardrail</th><th>Status</th></tr>
+  <tr><td>PII redaction in prompts &amp; logs</td><td><input type="checkbox" checked onchange="this.closest('tr').style.opacity=this.checked?1:.45"></td></tr>
+  <tr><td>Prompt-injection shield</td><td><input type="checkbox" checked onchange="this.closest('tr').style.opacity=this.checked?1:.45"></td></tr>
+  <tr><td>Output grounding (quote sources)</td><td><input type="checkbox" checked onchange="this.closest('tr').style.opacity=this.checked?1:.45"></td></tr>
+  <tr><td>EU-only processing enforcement</td><td><input type="checkbox" checked onchange="this.closest('tr').style.opacity=this.checked?1:.45"></td></tr>
+  <tr><td>Per-run budget cap</td><td><input type="checkbox" checked onchange="this.closest('tr').style.opacity=this.checked?1:.45"></td></tr>
+  <tr><td>Human approval gates on money &amp; signatures</td><td><input type="checkbox" checked onchange="this.closest('tr').style.opacity=this.checked?1:.45"></td></tr></table>`},
+'Audit logs': {sub:'Immutable trail · retained 12 months', html:`
+  <table><tr><th>When</th><th>Actor</th><th>Action</th><th>Object</th></tr>
+  <tr><td>01 Oct 2026 09:41</td><td>You</td><td>Published</td><td>PO-2026-1071 (€410,000)</td></tr>
+  <tr><td>01 Oct 2026 09:12</td><td>Anish</td><td>Created</td><td>RFQ-2026-017</td></tr>
+  <tr><td>30 Sep 2026 16:03</td><td>Marcus Weber</td><td>Approved</td><td>PO-2026-1065</td></tr>
+  <tr><td>30 Sep 2026 11:27</td><td>Sourcing Agent</td><td>Drafted (human pending)</td><td>RFQ-2026-020</td></tr>
+  <tr><td>29 Sep 2026 15:44</td><td>Elena Fischer</td><td>Reviewed</td><td>CNT-2025-008</td></tr>
+  <tr><td>29 Sep 2026 10:02</td><td>You</td><td>Changed role</td><td>Tousif → Sourcing Analyst</td></tr></table>`},
+'Data sources': {sub:'Where Kraubex reads and writes', html:`
+  <table><tr><th>Source</th><th>Direction</th><th>Status</th></tr>
+  <tr><td>SAP S/4HANA</td><td>Read / write</td><td><span class="tag tag-open">Connected</span></td></tr>
+  <tr><td>DATEV (finance)</td><td>Export</td><td><span class="tag tag-open">Connected</span></td></tr>
+  <tr><td>Supplier EDI / email ingest</td><td>Read</td><td><span class="tag tag-open">Connected</span></td></tr>
+  <tr><td>Teams / Slack</td><td>Notify</td><td><span class="tag tag-open">Connected</span></td></tr>
+  <tr><td>Document upload (manual)</td><td>Read</td><td><span class="tag tag-open">Active</span></td></tr></table>`},
+'Retention': {sub:'Schedule · German commercial &amp; tax law (GoBD/AO)', html:`
+  <table><tr><th>Category</th><th>Period</th><th>Basis</th></tr>
+  <tr><td>Contracts, POs, invoices</td><td>10 years</td><td>§147 AO / GoBD</td></tr>
+  <tr><td>RFQ/RFI records</td><td>6 years</td><td>Vergabe / internal policy</td></tr>
+  <tr><td>Audit &amp; system logs</td><td>12 months</td><td>AI Act logging duty</td></tr>
+  <tr><td>Team messages</td><td>90 days</td><td>Data minimisation</td></tr>
+  <tr><td>Backups</td><td>30 days, EU vault</td><td>ISO 27001 A.8.13</td></tr></table>`},
+'Security': {sub:'Technical &amp; organisational measures', html:`
+  <ul style="margin:0; padding-left:18px; font-size:13.5px; display:grid; gap:4px;">
+  <li><b>Access:</b> SSO via Microsoft Entra ID (SAML/OIDC) · MFA enforced for all 19 users · session timeout 30 min.</li>
+  <li><b>Encryption:</b> AES-256 at rest (EU vault) · TLS 1.3 in transit · customer-managed keys available on Enterprise.</li>
+  <li><b>Assurance:</b> annual penetration test · quarterly vulnerability scans · ISO/IEC 27001 aligned ISMS.</li>
+  <li><b>Separation:</b> production / staging / dev tenants isolated; suppliers never see internal data.</li></ul>`},
+'Privacy': {sub:'GDPR operating model', html:`
+  <ul style="margin:0; padding-left:18px; font-size:13.5px; display:grid; gap:4px;">
+  <li><b>Controller:</b> Kraubex AI GmbH · <b>DPO:</b> dpo@kraubex.de (Art. 37).</li>
+  <li><b>Rights:</b> access, rectification, erasure, restriction, portability — answered within 30 days via this panel.</li>
+  <li><b>DPIAs</b> on file for agent automation and supplier scoring; <b>DPAs</b> signed with all sub-processors (EU only).</li>
+  <li><b>Breach path:</b> report to DPO immediately → supervisory authority within 72h → data subjects where required.</li></ul>`},
+'Notifications': {sub:'Choose how each event reaches you', html:`
+  <table><tr><th>Event</th><th>Email</th><th>Teams</th><th>In-app</th></tr>
+  <tr><td>Approval requested</td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td></tr>
+  <tr><td>PO / contract signed</td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox" checked></td></tr>
+  <tr><td>RFQ response received</td><td><input type="checkbox"></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td></tr>
+  <tr><td>Risk / delay alert</td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td></tr>
+  <tr><td>Weekly digest</td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr></table>`},
+'Integrations': {sub:'Live system links (see Connect page)', html:`
+  <table><tr><th>System</th><th>Status</th><th>Last sync</th></tr>
+  <tr><td>SAP S/4HANA</td><td><span class="tag tag-open">Connected</span></td><td>01 Oct 2026 08:15</td></tr>
+  <tr><td>DATEV</td><td><span class="tag tag-open">Connected</span></td><td>30 Sep 2026 23:40</td></tr>
+  <tr><td>Microsoft Teams</td><td><span class="tag tag-open">Connected</span></td><td>live</td></tr>
+  <tr><td>Slack</td><td><span class="tag tag-cat">Available</span></td><td>—</td></tr>
+  <tr><td>SMTP mail ingest</td><td><span class="tag tag-open">Connected</span></td><td>live</td></tr></table>`},
+'API keys': {sub:'Programmatic access · keys shown once at creation', html:`
+  <table id="apiKeysTable"><tr><th>Name</th><th>Key</th><th>Scope</th><th></th></tr>
+  <tr><td>Production</td><td><code>sk-live-7f3a••••••••</code></td><td>read / write</td><td><button class="sel-btn" onclick="this.closest('tr').remove()">Revoke</button></td></tr>
+  <tr><td>Reporting (read-only)</td><td><code>sk-rep-9c1e••••••••</code></td><td>read</td><td><button class="sel-btn" onclick="this.closest('tr').remove()">Revoke</button></td></tr></table>
+  <button class="sel-btn agent" onclick="addApiKeyRow()">+ New key</button>`},
+'Webhooks': {sub:'Event push to your endpoints', html:`
+  <table><tr><th>Endpoint</th><th>Events</th><th></th></tr>
+  <tr><td><code>https://erp.kraubex.de/hooks/po</code></td><td>po.signed, po.cancelled</td><td><button class="sel-btn" onclick="this.textContent='✓ delivered'; this.disabled=true;">Send test</button></td></tr>
+  <tr><td><code>https://erp.kraubex.de/hooks/rfq</code></td><td>rfq.response, rfq.closed</td><td><button class="sel-btn" onclick="this.textContent='✓ delivered'; this.disabled=true;">Send test</button></td></tr></table>`},
+'System logs': {sub:'Last 5 entries · full export in audit', html:`
+  <pre style="background:#0B2A4A; color:#D7E6F5; border-radius:8px; padding:12px; font-size:12px; overflow:auto;">2026-10-01 09:41:02 INFO  approval granted by you on PO-2026-1071
+2026-10-01 09:12:47 INFO  agent run sourcing-agent#4821 completed (4.2s, EU-west)
+2026-10-01 08:15:00 INFO  sap sync ok — 214 objects, 0 conflicts
+2026-09-30 23:40:11 WARN  datev export retry 1 succeeded
+2026-09-30 16:03:55 INFO  approval granted by marcus.weber on PO-2026-1065</pre>`},
+'Subscription & usage': {sub:'Enterprise EU · renews 31 Dec 2026', html:`
+  <table><tr><th>Item</th><th>Usage</th></tr>
+  <tr><td>Seats</td><td>19 / 25 used</td></tr>
+  <tr><td>Agent runs (Oct)</td><td>62% of 50,000</td></tr>
+  <tr><td>Documents stored</td><td>41% of 100 GB</td></tr>
+  <tr><td>EU data processing</td><td><span class="tag tag-open">Included</span></td></tr></table>
+  <p style="color:var(--text-muted); font-size:13px;">Invoicing: Kraubex AI GmbH, Frankfurt am Main · invoices@kraubex.de · SEPA, Net 30.</p>`},
+};
+function openSettingDetail(key){
+  const info = SETTING_INFO[key]; if(!info) return;
+  closeSettingDetail();
+  const ov = document.createElement('div');
+  ov.className = 'wf-overlay'; ov.id = 'settingOverlay';
+  ov.onclick = e=>{ if(e.target===ov) closeSettingDetail(); };
+  ov.innerHTML = '<div class="wf-modal" style="max-width:760px;"><div class="wf-modal-head"><div><h3 id="wfModalTitle">'+key+'</h3><p id="wfModalDept">'+(info.sub||'')+'</p></div><button class="wf-close" onclick="closeSettingDetail()" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div style="padding:18px 20px; max-height:70vh; overflow:auto;">'+info.html+'</div></div>';
+  document.body.appendChild(ov);
+}
+function closeSettingDetail(){ const o=document.getElementById('settingOverlay'); if(o) o.remove(); }
+function addApiKeyRow(){
+  const t = document.getElementById('apiKeysTable'); if(!t) return;
+  const suffix = Math.random().toString(36).slice(2,10);
+  const tr = document.createElement('tr');
+  tr.innerHTML = '<td>New key</td><td><code>sk-live-'+suffix+'••••••••</code></td><td>read / write</td><td><button class="sel-btn" onclick="this.closest(\'tr\').remove()">Revoke</button></td>';
+  t.appendChild(tr);
 }
 
 const teamChannels = [
