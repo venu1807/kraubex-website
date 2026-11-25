@@ -2605,6 +2605,32 @@ const workflows = [
     }},
     {type:'action', label:'Record audit trail in Knowledge', sub:'Action', detail:'Writes which data/documents were used and who decided what to the Knowledge graph for traceability.', owner:'System', config:'Knowledge: AuditTrail · Graph: Decision lineage'},
   ]},
+  {id:'WF-012', name:'Supplier certificate expiry monitoring', dept:'Procurement', status:'Active', lastRun:'1h ago', createdBy:'Aisha Rahman', nodes:[
+    {type:'trigger', label:'Daily document scan', sub:'Scheduled trigger', detail:'Daily 06:00 scan over the supplier base: certificates, audit reports, quality agreements.', owner:'System', config:'Cron: 0 6 * * * · Scope: All suppliers'},
+    {type:'agent', label:'Supplier Risk Agent', sub:'Monitor documents', detail:'Checks every supplier document for expiry; flags any expiring within 30 days.', owner:'Supplier Risk Agent', config:'Rule: expiry <= 30d · Sources: Supplier Arena'},
+    {type:'action', label:'Notify QA + Procurement lead', sub:'Action', detail:'Notifies QA and procurement lead of flagged expiring certificates.', owner:'System', config:'Channel: Teams + Email · Template: CertExpiry_Alert'},
+    {type:'condition', label:'Certificate expiring <= 30 days?', sub:'Condition', detail:'Branches on whether any certificate is within the 30-day window.', config:'Expression: flaggedCount > 0', branches:{
+      yes: [
+        {type:'agent', label:'Supplier Risk Agent', sub:'Draft update request', detail:'Drafts a request to the supplier for the updated document (template + missing-doc list).', owner:'Supplier Risk Agent', config:'Template: CertUpdate_Request · Attach: missing docs'},
+        {type:'human', label:'Aisha Rahman (QA)', sub:'Reviews & approves request', detail:'Quality assurance reviews and approves the drafted request before sending.', owner:'Aisha Rahman · Quality', config:'SLA: 24h · Approval required'},
+        {type:'action', label:'Send request to supplier', sub:'Action', detail:'Sends the approved request to the supplier via email/portal (SLA 14 days).', owner:'System', config:'Channel: Email/Portal · SLA: 14d'},
+        {type:'condition', label:'Updated document received within SLA?', sub:'Condition', detail:'Checks whether the supplier returned the updated document within 14 days.', config:'Expression: response.received && response.days <= 14', branches:{
+          yes: [
+            {type:'action', label:'Update Supplier Arena record', sub:'Action', detail:'Stores the new document, updates expiry date and status in Supplier Arena.', owner:'System', config:'Supplier Arena: Doc.update · Status: Current'},
+            {type:'action', label:'Close ticket + audit log', sub:'Action', detail:'Closes the ticket and writes the full decision trail to the audit log.', owner:'System', config:'Audit: CertRenewal_Closed'}
+          ],
+          no: [
+            {type:'action', label:'Send reminder to supplier', sub:'Action', detail:'Sends a reminder with escalation notice to the supplier.', owner:'System', config:'Channel: Email · Template: CertReminder'},
+            {type:'human', label:'Sarah Chen (Procurement lead)', sub:'Escalates / follows up', detail:'Procurement lead follows up with the supplier and decides next steps.', owner:'Sarah Chen · Procurement', config:'SLA: 5d · Escalation'},
+            {type:'action', label:'Audit log (escalated)', sub:'Action', detail:'Records the escalation and outstanding status in the audit trail.', owner:'System', config:'Audit: CertRenewal_Escalated'}
+          ]
+        }}
+      ],
+      no: [
+        {type:'action', label:'Log check - no action', sub:'Action', detail:'Records that all certificates are current; no action required.', owner:'System', config:'Audit: CertCheck_OK'}
+      ]
+    }},
+  ]},
 ];
 if(!window.wfFilters) window.wfFilters = {search:'', dept:'all', creator:'all'};
 if(!window.taskFilters) window.taskFilters = {search:'', type:'all', agent:'all', creator:'all', status:'all'};
