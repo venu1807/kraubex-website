@@ -2590,7 +2590,7 @@ const workflows = [
     }},
     {type:'action', label:'Notify regulatory', sub:'Action', detail:'Sends the approval pack to regulatory affairs.', owner:'System', config:'Channel: Email • Pack: Approval_Pack'},
   ]},
-  {id:'WF-011', name:'Medical supplies ordering with audit trail', dept:'Healthcare', status:'Active', lastRun:'2h ago', createdBy:'You', nodes:[
+  {id:'WF-011', name:'Medical supplies ordering with audit trail', dept:'Healthcare', status:'Active', lastRun:'2h ago', createdBy:'Marcus Weber', nodes:[
     {type:'trigger', label:'Medical supply request submitted', sub:'Trigger', detail:'Clinical unit submits a medical-supply requisition (items, quantities, urgency).', owner:'System', config:'Source: Requisition Portal · Form: MedSupply_v1'},
     {type:'agent', label:'Purchase Agent', sub:'Prepare order from request', detail:'Agent drafts the order from the request: matches items to approved suppliers, quantities and pricing.', owner:'Purchase Agent', config:'Policy: MedSupply-P01 · Catalog: Medical'},
     {type:'human', label:'Department head', sub:'Approves order', detail:'Department head reviews and approves the prepared medical-supply order.', owner:'Department head · Healthcare', config:'SLA: 24h · Approval required'},
@@ -2605,7 +2605,7 @@ const workflows = [
     }},
     {type:'action', label:'Record audit trail in Knowledge', sub:'Action', detail:'Writes which data/documents were used and who decided what to the Knowledge graph for traceability.', owner:'System', config:'Knowledge: AuditTrail · Graph: Decision lineage'},
   ]},
-  {id:'WF-012', name:'Supplier certificate expiry monitoring', dept:'Procurement', status:'Active', lastRun:'1h ago', createdBy:'Tousif', nodes:[
+  {id:'WF-012', name:'Supplier certificate expiry monitoring', dept:'Procurement', status:'Active', lastRun:'1h ago', createdBy:'Elena Fischer', nodes:[
     {type:'trigger', label:'Daily document scan', sub:'Scheduled trigger', detail:'Daily 06:00 scan over the supplier base: certificates, audit reports, quality agreements.', owner:'System', config:'Cron: 0 6 * * * · Scope: All suppliers'},
     {type:'agent', label:'Supplier Risk Agent', sub:'Monitor documents', detail:'Checks every supplier document for expiry; flags any expiring within 30 days.', owner:'Supplier Risk Agent', config:'Rule: expiry <= 30d · Sources: Supplier Arena'},
     {type:'action', label:'Notify QA + Procurement lead', sub:'Action', detail:'Notifies QA and procurement lead of flagged expiring certificates.', owner:'System', config:'Channel: Teams + Email · Template: CertExpiry_Alert'},
@@ -2631,7 +2631,7 @@ const workflows = [
       ]
     }},
   ]},
-  {id:'WF-013', name:'Reorder with approval', dept:'Wholesale', status:'Active', lastRun:'30m ago', createdBy:'Priya Patel', nodes:[
+  {id:'WF-013', name:'Reorder with approval', dept:'Wholesale', status:'Active', lastRun:'30m ago', createdBy:'Nadia Hoffmann', nodes:[
     {type:'trigger', label:'Daily stock check', sub:'Scheduled trigger', detail:'Daily scan of inventory against demand thresholds across thousands of articles.', owner:'System', config:'Cron: 0 5 * * * · Scope: All SKUs'},
     {type:'agent', label:'Procurement Analytics Agent', sub:'Check stock vs demand', detail:'Compares current stock levels against demand forecasts and creates reorder suggestions.', owner:'Procurement Analytics Agent', config:'Model: Analytics-v2 · Lookahead: 14d'},
     {type:'agent', label:'Sourcing Agent', sub:'Compare supplier terms', detail:'Compares available suppliers on price, lead time and MOQ for each suggested reorder.', owner:'Sourcing Agent', config:'Sources: Supplier Arena · Criteria: cost, lead time, MOQ'},
@@ -2646,7 +2646,7 @@ const workflows = [
       ]
     }},
   ]},
-  {id:'WF-014', name:'Subcontractor quotes collection', dept:'Construction', status:'Active', lastRun:'45m ago', createdBy:'Priya Patel', nodes:[
+  {id:'WF-014', name:'Subcontractor quotes collection', dept:'Construction', status:'Active', lastRun:'45m ago', createdBy:'David Schulz', nodes:[
     {type:'trigger', label:'New project quote request', sub:'Trigger', detail:'Fires when a new project is created and subcontractor quotes are needed.', owner:'System', config:'Source: Project Portal · Event: Project.created'},
     {type:'agent', label:'Sourcing Agent', sub:'Send quote requests', detail:'Sends the quote request to all approved subcontractors for the trade.', owner:'Sourcing Agent', config:'Template: RFQ_Subcontractor · Channel: Email'},
     {type:'agent', label:'Quote Evaluation Agent', sub:'Collect & compare quotes', detail:'Collects responses and builds a side-by-side comparison: price, timeline, terms.', owner:'Quote Evaluation Agent', config:'Model: Eval-v2 · Parse: PDF/Email'},
@@ -2654,7 +2654,7 @@ const workflows = [
     {type:'action', label:'Award subcontract', sub:'Action', detail:'Awards the subcontract, notifies the chosen subcontractor and losers.', owner:'System', config:'ERP: Subcontract.award · Notify: all bidders'},
     {type:'action', label:'Record decision in Knowledge', sub:'Action', detail:'Stores the comparison and decision rationale in the Knowledge graph.', owner:'System', config:'Knowledge: Decision lineage · Audit trail'},
   ]},
-  {id:'WF-015', name:'Supplier price spike response', dept:'Manufacturing', status:'Active', lastRun:'20m ago', createdBy:'Priya Patel', nodes:[
+  {id:'WF-015', name:'Supplier price spike response', dept:'Manufacturing', status:'Active', lastRun:'20m ago', createdBy:'Oliver Braun', nodes:[
     {type:'trigger', label:'Supplier price increase received', sub:'Trigger', detail:'Fires when a key supplier raises the price of a component (e.g. +8% steel).', owner:'System', config:'Source: ERP/Email · Event: PriceChange'},
     {type:'agent', label:'Sourcing Agent', sub:'Find alternative suppliers', detail:'Finds alternative suppliers for the component using supplier base, past orders and current prices.', owner:'Sourcing Agent', config:'Sources: Supplier Arena, PO history, market prices'},
     {type:'agent', label:'Procurement Analytics Agent', sub:'Show budget impact', detail:'Computes budget impact per scenario for each alternative supplier.', owner:'Procurement Analytics Agent', config:'Model: Analytics-v2 · Scenarios: price, lead time'},
@@ -3227,6 +3227,11 @@ const workflowStats = {
   'Pharma batch quality release':{runs:34, successRate:93, avgTime:'2h 10m'},
   'Cold chain excursion review':{runs:58, successRate:89, avgTime:'5h 45m'},
   'Pharma artwork approval':{runs:19, successRate:95, avgTime:'1d 6h'},
+  'Medical supplies ordering with audit trail':{runs:22, successRate:94, avgTime:'3h 15m'},
+  'Supplier certificate expiry monitoring':{runs:30, successRate:97, avgTime:'1h 20m'},
+  'Reorder with approval':{runs:18, successRate:92, avgTime:'45m'},
+  'Subcontractor quotes collection':{runs:11, successRate:85, avgTime:'2d 3h'},
+  'Supplier price spike response':{runs:6, successRate:100, avgTime:'2m 30s'},
 };
 function nextWorkflowId(){
   const nums = workflows.map(w=>parseInt(String(w.id||'').slice(3),10)).filter(n=>!isNaN(n));
