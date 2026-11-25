@@ -1821,7 +1821,13 @@ const kraubexModels = [
   {id:'kraubex-ft', name:'Kraubex FT', provider:'Kraubex AI', desc:'Procurement fine-tune'},
 ];
 const agentModels = {};
-function getAgentModel(name){ return agentModels[name] || 'gpt-6-astra'; }
+function defaultModelForAgent(name){
+  if(agentModels[name]) return agentModels[name];
+  const idx = Math.abs(hashStr(name)) % kraubexModels.length;
+  agentModels[name] = kraubexModels[idx].id;
+  return agentModels[name];
+}
+function getAgentModel(name){ return agentModels[name] || defaultModelForAgent(name); }
 function setAgentModel(name, modelId){ agentModels[name]=modelId; }
 function modelOptionsHtml(selectedId){
   return kraubexModels.map(m=>`<option value="${m.id}" ${m.id===selectedId?'selected':''}>${m.name} — ${m.provider}</option>`).join('');
