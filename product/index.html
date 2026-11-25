@@ -2525,7 +2525,7 @@ const workflows = [
       ]
     }},
   ]},
-  {id:'WF-003', name:'Invoice 3-way match', dept:'Finance', status:'Active', lastRun:'35m ago', createdBy:'Marcus Weber', nodes:[
+  {id:'WF-003', name:'Invoice 3-way match', dept:'Finance', status:'Active', lastRun:'35m ago', createdBy:'Priya Patel', nodes:[
     {type:'trigger', label:'Invoice received', sub:'Trigger', detail:'Inbound invoice via email or EDI.', owner:'System', config:'Channel: Email/EDI • Parse: OCR'},
     {type:'agent', label:'Finance Agent', sub:'Match invoice, PO, and GRN', detail:'Validates price, quantity and receipt against PO/GRN.', owner:'Finance Agent', config:'Match tolerance: 2% / Qty exact'},
     {type:'condition', label:'All three match?', sub:'Condition', detail:'Branches on 3-way match result.', config:'Rule: invoice==PO==GRN', branches:{
@@ -2533,14 +2533,14 @@ const workflows = [
       no: [{type:'human', label:'Marcus Weber', sub:'Reviews flagged discrepancy', detail:'Finance reviews mismatches and resolves.', owner:'Marcus Weber • Finance', config:'SLA: 24h • Escalation: CFO if >€10K'}]
     }},
   ]},
-  {id:'WF-004', name:'Contract renewal alert', dept:'Legal & Contracts', status:'Scheduled', lastRun:'—', createdBy:'Elena Fischer', nodes:[
+  {id:'WF-004', name:'Contract renewal alert', dept:'Legal & Contracts', status:'Scheduled', lastRun:'-', createdBy:'Sarah Chen', nodes:[
     {type:'trigger', label:'90 days before expiry', sub:'Scheduled trigger', detail:'Scheduled check scans contracts 90 days before end date.', owner:'System', config:'Cron: 0 9 * * * • Lookahead: 90d'},
     {type:'agent', label:'Contract Life Cycle Management Agent', sub:'Review contract terms', detail:'Analyzes terms, pricing, and renewal clauses.', owner:'Contract Life Cycle Management Agent', config:'Model: CLM-v2 • Sources: Contracts DB'},
     {type:'action', label:'Draft renewal request', sub:'Action', detail:'Generates renewal draft for legal review.', owner:'System', config:'Template: Renewal_Request_v1'},
     {type:'human', label:'Elena Fischer', sub:'Reviews and signs off', detail:'Legal counsel reviews and approves draft.', owner:'Elena Fischer • Legal', config:'SLA: 5 days • Sign-off required'},
     {type:'action', label:'Notify contract owner', sub:'Action', detail:'Notifies owner of renewal status.', owner:'System', config:'Channel: Email • CC: Legal'},
   ]},
-  {id:'WF-005', name:'Candidate screening', dept:'Human Resources', status:'Draft', lastRun:'—', createdBy:'Nadia Hoffmann', nodes:[
+  {id:'WF-005', name:'Candidate screening', dept:'Human Resources', status:'Draft', lastRun:'-', createdBy:'Anish', nodes:[
     {type:'trigger', label:'New application received', sub:'Trigger', detail:'ATS event when candidate applies.', owner:'System', config:'ATS: Workday • Event: Application.created'},
     {type:'agent', label:'Recruiting Agent', sub:'Screen resume against role', detail:'Screens CV against JD using LLM scoring.', owner:'Recruiting Agent', config:'Model: Recruit-v1 • Threshold: 70'},
     {type:'condition', label:'Meets minimum criteria?', sub:'Condition', detail:'Pass/fail on screening score.', config:'Threshold: score >= 70', branches:{
@@ -2581,7 +2581,7 @@ const workflows = [
     }},
     {type:'action', label:'Notify QA', sub:'Action', detail:'Sends the excursion outcome to QA on-call.', owner:'System', config:'Channel: Teams • Template: Excursion_Outcome'},
   ]},
-  {id:'WF-010', name:'Pharma artwork approval', dept:'Quality', status:'Active', lastRun:'5h ago', createdBy:'Aisha Rahman', nodes:[
+  {id:'WF-010', name:'Pharma artwork approval', dept:'Quality', status:'Active', lastRun:'5h ago', createdBy:'Krishna', nodes:[
     {type:'trigger', label:'Artwork proof uploaded', sub:'Trigger', detail:'Fires when the agency uploads the SKU-412 artwork proof.', owner:'System', config:'Source: DAM • SKU-412'},
     {type:'agent', label:'Compliance Agent', sub:'Check regulatory text', detail:'Validates SmPC text, fonts and warning symbols.', owner:'Compliance Agent', config:'Rules: EU-QRD v10'},
     {type:'condition', label:'Proof compliant?', sub:'Condition', detail:'Branches on the automated compliance score.', config:'Threshold: score >= 95', branches:{
@@ -2590,7 +2590,7 @@ const workflows = [
     }},
     {type:'action', label:'Notify regulatory', sub:'Action', detail:'Sends the approval pack to regulatory affairs.', owner:'System', config:'Channel: Email • Pack: Approval_Pack'},
   ]},
-  {id:'WF-011', name:'Medical supplies ordering with audit trail', dept:'Healthcare', status:'Active', lastRun:'2h ago', createdBy:'Aisha Rahman', nodes:[
+  {id:'WF-011', name:'Medical supplies ordering with audit trail', dept:'Healthcare', status:'Active', lastRun:'2h ago', createdBy:'You', nodes:[
     {type:'trigger', label:'Medical supply request submitted', sub:'Trigger', detail:'Clinical unit submits a medical-supply requisition (items, quantities, urgency).', owner:'System', config:'Source: Requisition Portal · Form: MedSupply_v1'},
     {type:'agent', label:'Purchase Agent', sub:'Prepare order from request', detail:'Agent drafts the order from the request: matches items to approved suppliers, quantities and pricing.', owner:'Purchase Agent', config:'Policy: MedSupply-P01 · Catalog: Medical'},
     {type:'human', label:'Department head', sub:'Approves order', detail:'Department head reviews and approves the prepared medical-supply order.', owner:'Department head · Healthcare', config:'SLA: 24h · Approval required'},
@@ -2605,7 +2605,7 @@ const workflows = [
     }},
     {type:'action', label:'Record audit trail in Knowledge', sub:'Action', detail:'Writes which data/documents were used and who decided what to the Knowledge graph for traceability.', owner:'System', config:'Knowledge: AuditTrail · Graph: Decision lineage'},
   ]},
-  {id:'WF-012', name:'Supplier certificate expiry monitoring', dept:'Procurement', status:'Active', lastRun:'1h ago', createdBy:'Aisha Rahman', nodes:[
+  {id:'WF-012', name:'Supplier certificate expiry monitoring', dept:'Procurement', status:'Active', lastRun:'1h ago', createdBy:'Tousif', nodes:[
     {type:'trigger', label:'Daily document scan', sub:'Scheduled trigger', detail:'Daily 06:00 scan over the supplier base: certificates, audit reports, quality agreements.', owner:'System', config:'Cron: 0 6 * * * · Scope: All suppliers'},
     {type:'agent', label:'Supplier Risk Agent', sub:'Monitor documents', detail:'Checks every supplier document for expiry; flags any expiring within 30 days.', owner:'Supplier Risk Agent', config:'Rule: expiry <= 30d · Sources: Supplier Arena'},
     {type:'action', label:'Notify QA + Procurement lead', sub:'Action', detail:'Notifies QA and procurement lead of flagged expiring certificates.', owner:'System', config:'Channel: Teams + Email · Template: CertExpiry_Alert'},
@@ -3220,22 +3220,22 @@ function renderTasksBody(subview){
   const body = document.getElementById('secBody-tasks');
   if(!window.tasksList) window.tasksList = [
     {id:'TSK-001', name:'Review SteelSphere contract renewal', agent:'Contract Life Cycle Management Agent', status:'In progress', type:'Decision', createdBy:'Sarah Chen', createdAt:'2h ago', date:'24 Sep 2026', priority:'High', desc:'SteelSphere GmbH €680k contract expires 19 Mar 2026 — review renewal terms.'},
-    {id:'TSK-002', name:'Benchmark copper pricing', agent:'Price Optimizer Agent', status:'Waiting for data', type:'Research', createdBy:'Marcus Weber', createdAt:'5h ago', date:'24 Sep 2026', priority:'Medium', desc:'Compare LME copper pricing across 4 suppliers.'},
-    {id:'TSK-003', name:'Screen 4 new candidates', agent:'Human Resources Domain Agent', status:'Running', type:'Analysis', createdBy:'Nadia Hoffmann', createdAt:'1d ago', date:'23 Sep 2026', priority:'Medium', desc:'Shortlist 4 machinist candidates for the Bielefeld plant.'},
+    {id:'TSK-002', name:'Benchmark copper pricing', agent:'Price Optimizer Agent', status:'Waiting for data', type:'Research', createdBy:'Praveen Gitta', createdAt:'5h ago', date:'24 Sep 2026', priority:'Medium', desc:'Compare LME copper pricing across 4 suppliers.'},
+    {id:'TSK-003', name:'Screen 4 new candidates', agent:'Human Resources Domain Agent', status:'Running', type:'Analysis', createdBy:'Mei Lin', createdAt:'1d ago', date:'23 Sep 2026', priority:'Medium', desc:'Shortlist 4 machinist candidates for the Bielefeld plant.'},
     {id:'TSK-004', name:'Draft Q3 ESG report', agent:'ESG & Sustainability Domain Agent', status:'Completed', type:'Document', createdBy:'Fatima Al-Sayed', createdAt:'3d ago', date:'21 Sep 2026', priority:'Medium', desc:'Compile Q3 emissions, waste and water metrics.'},
-    {id:'TSK-005', name:'Reconcile March invoices', agent:'Finance Domain Agent', status:'Failed', type:'Action', createdBy:'David Schulz', createdAt:'6h ago', date:'24 Sep 2026', priority:'High', desc:'Match 214 March invoices to POs and receipts.'},
-    {id:'TSK-006', name:'Approve Q2 vendor payments', agent:'Finance Domain Agent', status:'In progress', type:'Approval', createdBy:'Elena Fischer', createdAt:'4h ago', date:'24 Sep 2026', priority:'High', desc:'Release €42,900 payment run for 11 vendors.'},
+    {id:'TSK-005', name:'Reconcile March invoices', agent:'Finance Domain Agent', status:'Failed', type:'Action', createdBy:'James Okoye', createdAt:'6h ago', date:'24 Sep 2026', priority:'High', desc:'Match 214 March invoices to POs and receipts.'},
+    {id:'TSK-006', name:'Approve Q2 vendor payments', agent:'Finance Domain Agent', status:'In progress', type:'Approval', createdBy:'Fatima Al-Sayed', createdAt:'4h ago', date:'24 Sep 2026', priority:'High', desc:'Release €42,900 payment run for 11 vendors.'},
     {id:'TSK-007', name:'Onboard new steel supplier', agent:'Contract Life Cycle Management Agent', status:'Waiting for data', type:'Onboarding', createdBy:'Priya Patel', createdAt:'1d ago', date:'23 Sep 2026', priority:'Medium', desc:'Complete qualification for 2 new steel vendors.'},
     {id:'TSK-008', name:'Negotiate SteelSphere volume discount', agent:'Contract Life Cycle Management Agent', status:'In progress', type:'Negotiation', createdBy:'Praveen Gitta', createdAt:'1h ago', date:'25 Sep 2026', priority:'High', desc:'Target 8% volume discount on the Q4 structural steel batch.'},
     {id:'TSK-009', name:'Verify copper supplier quotes', agent:'Price Optimizer Agent', status:'Running', type:'Research', createdBy:'Tousif', createdAt:'3h ago', date:'25 Sep 2026', priority:'Medium', desc:'Cross-check top 3 copper quotes against the LME index.'},
     {id:'TSK-010', name:'Prepare onboarding docs for new hires', agent:'Human Resources Domain Agent', status:'Waiting for data', type:'Document', createdBy:'Anish', createdAt:'7h ago', date:'24 Sep 2026', priority:'Low', desc:'Collect contracts, tax forms and equipment requests.'},
     {id:'TSK-011', name:'Track Q3 carbon offset purchases', agent:'ESG & Sustainability Domain Agent', status:'In progress', type:'Tracking', createdBy:'Krishna', createdAt:'2d ago', date:'23 Sep 2026', priority:'Medium', desc:'Reconcile offset certificates with the emissions ledger.'},
     {id:'TSK-012', name:'Approve AutoParts invoice batch', agent:'Finance Domain Agent', status:'Waiting for data', type:'Approval', createdBy:'Marcus Weber', createdAt:'8h ago', date:'24 Sep 2026', priority:'High', desc:'92 invoices totalling €214,500 awaiting release.'},
-    {id:'TSK-013', name:'Renew Deutsche Stahlbau contract', agent:'Contract Life Cycle Management Agent', status:'Failed', type:'Contract', createdBy:'Elena Fischer', createdAt:'2d ago', date:'23 Sep 2026', priority:'High', desc:'Renewal blocked — expired ISO 3834 certificate.'},
+    {id:'TSK-013', name:'Renew Deutsche Stahlbau contract', agent:'Contract Life Cycle Management Agent', status:'Failed', type:'Contract', createdBy:'Sarah Chen', createdAt:'2d ago', date:'23 Sep 2026', priority:'High', desc:'Renewal blocked — expired ISO 3834 certificate.'},
     {id:'TSK-014', name:'Monthly spend consolidation', agent:'Finance Domain Agent', status:'Completed', type:'Report', createdBy:'Priya Patel', createdAt:'4d ago', date:'21 Sep 2026', priority:'Low', desc:'August spend rolled up across 6 cost centers.'},
     {id:'TSK-015', name:'Release batch B-2026-0841', agent:'Quality Domain Agent', status:'In progress', type:'Approval', createdBy:'Krishna', createdAt:'2h ago', date:'25 Sep 2026', priority:'High', desc:'Review CoA and release documents for batch B-2026-0841.'},
     {id:'TSK-016', name:'Investigate cold-chain excursion SH-2210', agent:'Quality Domain Agent', status:'Running', type:'Incident', createdBy:'Anish', createdAt:'4h ago', date:'25 Sep 2026', priority:'Medium', desc:'Analyze logger data for the SH-2210 temperature excursion.'},
-    {id:'TSK-017', name:'Approve artwork proof SKU-412', agent:'Quality Domain Agent', status:'Waiting for data', type:'Approval', createdBy:'Aisha Rahman', createdAt:'6h ago', date:'25 Sep 2026', priority:'Medium', desc:'Check agency proof against the QRD template.'},
+    {id:'TSK-017', name:'Approve artwork proof SKU-412', agent:'Quality Domain Agent', status:'Waiting for data', type:'Approval', createdBy:'Krishna', createdAt:'6h ago', date:'25 Sep 2026', priority:'Medium', desc:'Check agency proof against the QRD template.'},
     {id:'TSK-018', name:'Backfill batch genealogy L2', agent:'Quality Domain Agent', status:'Completed', type:'Data', createdBy:'Anish', createdAt:'1d ago', date:'24 Sep 2026', priority:'Low', desc:'Backfill genealogy links for production line L2.'},
     {id:'TSK-019', name:'Calibrate stability chambers', agent:'Quality Domain Agent', status:'Waiting for data', type:'Maintenance', createdBy:'Krishna', createdAt:'2d ago', date:'23 Sep 2026', priority:'Medium', desc:'Annual calibration due for chambers SC-01 and SC-02.'},
     {id:'TSK-020', name:'Source carriers for new route', agent:'Sourcing Agent', status:'Running', type:'Sourcing', createdBy:'You', createdAt:'1h ago', date:'25 Nov 2026', priority:'High', desc:'Find and compare carriers for the new route, based on cost, reliability and past performance.'},
