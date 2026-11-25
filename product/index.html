@@ -2497,7 +2497,7 @@ function renderObservabilityBody(body){
 }
 
 const workflows = [
-  {id:'WF-001', name:'PO auto-approval under €5K', dept:'Procurement', status:'Active', lastRun:'2h ago', createdBy:'You', nodes:[
+  {id:'WF-001', name:'PO auto-approval under €5K', dept:'Procurement', industry:'Manufacturing', status:'Active', lastRun:'2h ago', createdBy:'You', nodes:[
     {type:'trigger', label:'New PO created', sub:'Trigger', detail:'Fires when a PO is created in SAP/Dynamics. Filters: dept=Procurement.', owner:'System', config:'Event PO.created • Dept = Procurement'},
     {type:'condition', label:'Amount < €5,000?', sub:'Condition', detail:'Checks PO total against auto-approval threshold. Evaluates PO.amount < 5000.', config:'Expression: PO.amount < 5000 • Threshold = €5,000', branches:{
       yes: [
@@ -2510,7 +2510,7 @@ const workflows = [
     }},
     {type:'action', label:'Notify requester', sub:'Action', detail:'Sends notification with approval outcome and next steps.', config:'Channel: Email + Teams • Template: PO_Notify'},
   ]},
-  {id:'WF-002', name:'Supplier onboarding', dept:'Procurement', status:'Active', lastRun:'1d ago', createdBy:'Sarah Chen', nodes:[
+  {id:'WF-002', name:'Supplier onboarding', dept:'Procurement', industry:'Manufacturing', status:'Active', lastRun:'1d ago', createdBy:'Sarah Chen', nodes:[
     {type:'trigger', label:'New supplier submitted', sub:'Trigger', detail:'Supplier intake form submitted via portal.', owner:'System', config:'Source: Supplier Portal • Form: Onboard_v2'},
     {type:'agent', label:'Supplier Intelligence Agent', sub:'Gather company data', detail:'Collects firmographic, certifications, and references.', owner:'Supplier Intelligence Agent', config:'Sources: Dun & Bradstreet, Web, ERP'},
     {type:'agent', label:'Supplier Risk Agent', sub:'Run risk screening', detail:'Scores financial, compliance, geo and ESG risk.', owner:'Supplier Risk Agent', config:'Model: Risk-v3 • Threshold: 65'},
@@ -2525,7 +2525,7 @@ const workflows = [
       ]
     }},
   ]},
-  {id:'WF-003', name:'Invoice 3-way match', dept:'Finance', status:'Active', lastRun:'35m ago', createdBy:'Priya Patel', nodes:[
+  {id:'WF-003', name:'Invoice 3-way match', dept:'Finance', industry:'Manufacturing', status:'Active', lastRun:'35m ago', createdBy:'Priya Patel', nodes:[
     {type:'trigger', label:'Invoice received', sub:'Trigger', detail:'Inbound invoice via email or EDI.', owner:'System', config:'Channel: Email/EDI • Parse: OCR'},
     {type:'agent', label:'Finance Agent', sub:'Match invoice, PO, and GRN', detail:'Validates price, quantity and receipt against PO/GRN.', owner:'Finance Agent', config:'Match tolerance: 2% / Qty exact'},
     {type:'condition', label:'All three match?', sub:'Condition', detail:'Branches on 3-way match result.', config:'Rule: invoice==PO==GRN', branches:{
@@ -2533,14 +2533,14 @@ const workflows = [
       no: [{type:'human', label:'Marcus Weber', sub:'Reviews flagged discrepancy', detail:'Finance reviews mismatches and resolves.', owner:'Marcus Weber • Finance', config:'SLA: 24h • Escalation: CFO if >€10K'}]
     }},
   ]},
-  {id:'WF-004', name:'Contract renewal alert', dept:'Legal & Contracts', status:'Scheduled', lastRun:'-', createdBy:'Sarah Chen', nodes:[
+  {id:'WF-004', name:'Contract renewal alert', dept:'Legal & Contracts', industry:'Manufacturing', status:'Scheduled', lastRun:'-', createdBy:'Sarah Chen', nodes:[
     {type:'trigger', label:'90 days before expiry', sub:'Scheduled trigger', detail:'Scheduled check scans contracts 90 days before end date.', owner:'System', config:'Cron: 0 9 * * * • Lookahead: 90d'},
     {type:'agent', label:'Contract Life Cycle Management Agent', sub:'Review contract terms', detail:'Analyzes terms, pricing, and renewal clauses.', owner:'Contract Life Cycle Management Agent', config:'Model: CLM-v2 • Sources: Contracts DB'},
     {type:'action', label:'Draft renewal request', sub:'Action', detail:'Generates renewal draft for legal review.', owner:'System', config:'Template: Renewal_Request_v1'},
     {type:'human', label:'Elena Fischer', sub:'Reviews and signs off', detail:'Legal counsel reviews and approves draft.', owner:'Elena Fischer • Legal', config:'SLA: 5 days • Sign-off required'},
     {type:'action', label:'Notify contract owner', sub:'Action', detail:'Notifies owner of renewal status.', owner:'System', config:'Channel: Email • CC: Legal'},
   ]},
-  {id:'WF-005', name:'Candidate screening', dept:'Human Resources', status:'Draft', lastRun:'-', createdBy:'Anish', nodes:[
+  {id:'WF-005', name:'Candidate screening', dept:'Human Resources', industry:'Manufacturing', status:'Draft', lastRun:'-', createdBy:'Anish', nodes:[
     {type:'trigger', label:'New application received', sub:'Trigger', detail:'ATS event when candidate applies.', owner:'System', config:'ATS: Workday • Event: Application.created'},
     {type:'agent', label:'Recruiting Agent', sub:'Screen resume against role', detail:'Screens CV against JD using LLM scoring.', owner:'Recruiting Agent', config:'Model: Recruit-v1 • Threshold: 70'},
     {type:'condition', label:'Meets minimum criteria?', sub:'Condition', detail:'Pass/fail on screening score.', config:'Threshold: score >= 70', branches:{
@@ -2548,14 +2548,14 @@ const workflows = [
       no: [{type:'action', label:'Send rejection email', sub:'Action', detail:'Sends polite rejection with feedback.', owner:'System', config:'Template: Reject_Candidate'}]
     }},
   ]},
-  {id:'WF-006', name:'Quarterly ESG report', dept:'ESG & Sustainability', status:'Completed', lastRun:'3d ago', createdBy:'Fatima Al-Sayed', nodes:[
+  {id:'WF-006', name:'Quarterly ESG report', dept:'ESG & Sustainability', industry:'Manufacturing', status:'Completed', lastRun:'3d ago', createdBy:'Fatima Al-Sayed', nodes:[
     {type:'trigger', label:'Quarter end', sub:'Scheduled trigger', detail:'Fires at quarter-end close.', owner:'System', config:'Cron: 0 0 1 */3 *'},
     {type:'agent', label:'Sustainability Reporting Agent', sub:'Compile emissions & metrics', detail:'Aggregates carbon, waste, water metrics.', owner:'Sustainability Reporting Agent', config:'Sources: ESG DB, IoT'},
     {type:'agent', label:'Procurement Analytics Agent', sub:'Add spend-based ESG data', detail:'Adds supplier spend ESG weighting.', owner:'Procurement Analytics Agent', config:'Model: ESG-Spend-v1'},
     {type:'action', label:'Generate report draft', sub:'Action', detail:'Renders PDF draft with charts.', owner:'System', config:'Template: ESG_Q_Report'},
     {type:'human', label:'Fatima Al-Sayed', sub:'Signs off on final report', detail:'CSO reviews and signs final ESG report.', owner:'Fatima Al-Sayed • ESG', config:'Sign-off: required • Publish: intranet'},
   ]},
-  {id:'WF-007', name:'Vendor risk re-score', dept:'Risk', status:'Failed', lastRun:'6h ago', createdBy:'You', nodes:[
+  {id:'WF-007', name:'Vendor risk re-score', dept:'Risk', industry:'Manufacturing', status:'Failed', lastRun:'6h ago', createdBy:'You', nodes:[
     {type:'trigger', label:'Weekly schedule', sub:'Scheduled trigger', detail:'Weekly batch re-scores all active vendors.', owner:'System', config:'Cron: 0 6 * * 1'},
     {type:'agent', label:'Supplier Risk Agent', sub:'Re-score all active vendors', detail:'Re-runs risk models for active supplier base.', owner:'Supplier Risk Agent', config:'Batch: all active • Model: Risk-v3'},
     {type:'condition', label:'Score dropped significantly?', sub:'Condition', detail:'Flags vendors with >15% drop.', config:'Condition: drop > 15%', branches:{
@@ -2563,7 +2563,7 @@ const workflows = [
       no: [{type:'action', label:'Update risk dashboard', sub:'Action', detail:'Updates dashboard with latest scores, no alert.', owner:'System', config:'Dashboard: Risk_Overview'}]
     }},
   ]},
-  {id:'WF-008', name:'Pharma batch quality release', dept:'Quality', status:'Active', lastRun:'1h ago', createdBy:'Krishna', nodes:[
+  {id:'WF-008', name:'Pharma batch quality release', dept:'Quality', industry:'Healthcare', status:'Active', lastRun:'1h ago', createdBy:'Krishna', nodes:[
     {type:'trigger', label:'Batch ready for release', sub:'Trigger', detail:'Fires when MES posts finished batch B-2026-0841.', owner:'System', config:'Event MES.batch_ready • Plant = Bielefeld'},
     {type:'agent', label:'QA Agent', sub:'Review CoA and records', detail:'Checks certificate of analysis and batch record completeness.', owner:'QA Agent', config:'Spec: PH-Q-011 • CoA required'},
     {type:'condition', label:'CoA within spec?', sub:'Condition', detail:'Branches on certificate results vs registered spec.', config:'Rule: all params within spec', branches:{
@@ -2572,7 +2572,7 @@ const workflows = [
     }},
     {type:'action', label:'Notify warehouse', sub:'Action', detail:'Sends release/hold outcome to the warehouse team.', owner:'System', config:'Channel: Email • Template: Batch_Outcome'},
   ]},
-  {id:'WF-009', name:'Cold chain excursion review', dept:'Supply Chain', status:'Active', lastRun:'3h ago', createdBy:'Anish', nodes:[
+  {id:'WF-009', name:'Cold chain excursion review', dept:'Supply Chain', industry:'Healthcare', status:'Active', lastRun:'3h ago', createdBy:'Anish', nodes:[
     {type:'trigger', label:'Logger excursion alert', sub:'Trigger', detail:'Fires when a shipment logger breaches the 2–8°C band.', owner:'System', config:'Source: Logger API • Band: 2-8C'},
     {type:'agent', label:'Supply Chain Agent', sub:'Pull logger data', detail:'Downloads time-series logger data for shipment SH-2210.', owner:'Supply Chain Agent', config:'Window: shipment duration'},
     {type:'condition', label:'Excursion > 30 min?', sub:'Condition', detail:'Branches on cumulative out-of-band duration.', config:'Threshold: 30 min', branches:{
@@ -2581,7 +2581,7 @@ const workflows = [
     }},
     {type:'action', label:'Notify QA', sub:'Action', detail:'Sends the excursion outcome to QA on-call.', owner:'System', config:'Channel: Teams • Template: Excursion_Outcome'},
   ]},
-  {id:'WF-010', name:'Pharma artwork approval', dept:'Quality', status:'Active', lastRun:'5h ago', createdBy:'Krishna', nodes:[
+  {id:'WF-010', name:'Pharma artwork approval', dept:'Quality', industry:'Healthcare', status:'Active', lastRun:'5h ago', createdBy:'Krishna', nodes:[
     {type:'trigger', label:'Artwork proof uploaded', sub:'Trigger', detail:'Fires when the agency uploads the SKU-412 artwork proof.', owner:'System', config:'Source: DAM • SKU-412'},
     {type:'agent', label:'Compliance Agent', sub:'Check regulatory text', detail:'Validates SmPC text, fonts and warning symbols.', owner:'Compliance Agent', config:'Rules: EU-QRD v10'},
     {type:'condition', label:'Proof compliant?', sub:'Condition', detail:'Branches on the automated compliance score.', config:'Threshold: score >= 95', branches:{
@@ -2590,7 +2590,7 @@ const workflows = [
     }},
     {type:'action', label:'Notify regulatory', sub:'Action', detail:'Sends the approval pack to regulatory affairs.', owner:'System', config:'Channel: Email • Pack: Approval_Pack'},
   ]},
-  {id:'WF-011', name:'Medical supplies ordering with audit trail', dept:'Healthcare', status:'Active', lastRun:'2h ago', createdBy:'Marcus Weber', nodes:[
+  {id:'WF-011', name:'Medical supplies ordering with audit trail', dept:'Procurement', industry:'Healthcare', status:'Active', lastRun:'2h ago', createdBy:'Marcus Weber', nodes:[
     {type:'trigger', label:'Medical supply request submitted', sub:'Trigger', detail:'Clinical unit submits a medical-supply requisition (items, quantities, urgency).', owner:'System', config:'Source: Requisition Portal · Form: MedSupply_v1'},
     {type:'agent', label:'Purchase Agent', sub:'Prepare order from request', detail:'Agent drafts the order from the request: matches items to approved suppliers, quantities and pricing.', owner:'Purchase Agent', config:'Policy: MedSupply-P01 · Catalog: Medical'},
     {type:'human', label:'Department head', sub:'Approves order', detail:'Department head reviews and approves the prepared medical-supply order.', owner:'Department head · Healthcare', config:'SLA: 24h · Approval required'},
@@ -2605,7 +2605,7 @@ const workflows = [
     }},
     {type:'action', label:'Record audit trail in Knowledge', sub:'Action', detail:'Writes which data/documents were used and who decided what to the Knowledge graph for traceability.', owner:'System', config:'Knowledge: AuditTrail · Graph: Decision lineage'},
   ]},
-  {id:'WF-012', name:'Supplier certificate expiry monitoring', dept:'Procurement', status:'Active', lastRun:'1h ago', createdBy:'Elena Fischer', nodes:[
+  {id:'WF-012', name:'Supplier certificate expiry monitoring', dept:'Procurement', industry:'Healthcare', status:'Active', lastRun:'1h ago', createdBy:'Elena Fischer', nodes:[
     {type:'trigger', label:'Daily document scan', sub:'Scheduled trigger', detail:'Daily 06:00 scan over the supplier base: certificates, audit reports, quality agreements.', owner:'System', config:'Cron: 0 6 * * * · Scope: All suppliers'},
     {type:'agent', label:'Supplier Risk Agent', sub:'Monitor documents', detail:'Checks every supplier document for expiry; flags any expiring within 30 days.', owner:'Supplier Risk Agent', config:'Rule: expiry <= 30d · Sources: Supplier Arena'},
     {type:'action', label:'Notify QA + Procurement lead', sub:'Action', detail:'Notifies QA and procurement lead of flagged expiring certificates.', owner:'System', config:'Channel: Teams + Email · Template: CertExpiry_Alert'},
@@ -2631,7 +2631,7 @@ const workflows = [
       ]
     }},
   ]},
-  {id:'WF-013', name:'Reorder with approval', dept:'Wholesale', status:'Active', lastRun:'30m ago', createdBy:'Nadia Hoffmann', nodes:[
+  {id:'WF-013', name:'Reorder with approval', dept:'Procurement', industry:'Wholesale', status:'Active', lastRun:'30m ago', createdBy:'Nadia Hoffmann', nodes:[
     {type:'trigger', label:'Daily stock check', sub:'Scheduled trigger', detail:'Daily scan of inventory against demand thresholds across thousands of articles.', owner:'System', config:'Cron: 0 5 * * * · Scope: All SKUs'},
     {type:'agent', label:'Procurement Analytics Agent', sub:'Check stock vs demand', detail:'Compares current stock levels against demand forecasts and creates reorder suggestions.', owner:'Procurement Analytics Agent', config:'Model: Analytics-v2 · Lookahead: 14d'},
     {type:'agent', label:'Sourcing Agent', sub:'Compare supplier terms', detail:'Compares available suppliers on price, lead time and MOQ for each suggested reorder.', owner:'Sourcing Agent', config:'Sources: Supplier Arena · Criteria: cost, lead time, MOQ'},
@@ -2646,7 +2646,7 @@ const workflows = [
       ]
     }},
   ]},
-  {id:'WF-014', name:'Subcontractor quotes collection', dept:'Construction', status:'Active', lastRun:'45m ago', createdBy:'David Schulz', nodes:[
+  {id:'WF-014', name:'Subcontractor quotes collection', dept:'Procurement', industry:'Construction', status:'Active', lastRun:'45m ago', createdBy:'David Schulz', nodes:[
     {type:'trigger', label:'New project quote request', sub:'Trigger', detail:'Fires when a new project is created and subcontractor quotes are needed.', owner:'System', config:'Source: Project Portal · Event: Project.created'},
     {type:'agent', label:'Sourcing Agent', sub:'Send quote requests', detail:'Sends the quote request to all approved subcontractors for the trade.', owner:'Sourcing Agent', config:'Template: RFQ_Subcontractor · Channel: Email'},
     {type:'agent', label:'Quote Evaluation Agent', sub:'Collect & compare quotes', detail:'Collects responses and builds a side-by-side comparison: price, timeline, terms.', owner:'Quote Evaluation Agent', config:'Model: Eval-v2 · Parse: PDF/Email'},
@@ -2654,7 +2654,7 @@ const workflows = [
     {type:'action', label:'Award subcontract', sub:'Action', detail:'Awards the subcontract, notifies the chosen subcontractor and losers.', owner:'System', config:'ERP: Subcontract.award · Notify: all bidders'},
     {type:'action', label:'Record decision in Knowledge', sub:'Action', detail:'Stores the comparison and decision rationale in the Knowledge graph.', owner:'System', config:'Knowledge: Decision lineage · Audit trail'},
   ]},
-  {id:'WF-015', name:'Supplier price spike response', dept:'Manufacturing', status:'Active', lastRun:'20m ago', createdBy:'Oliver Braun', nodes:[
+  {id:'WF-015', name:'Supplier price spike response', dept:'Procurement', industry:'Manufacturing', status:'Active', lastRun:'20m ago', createdBy:'Oliver Braun', nodes:[
     {type:'trigger', label:'Supplier price increase received', sub:'Trigger', detail:'Fires when a key supplier raises the price of a component (e.g. +8% steel).', owner:'System', config:'Source: ERP/Email · Event: PriceChange'},
     {type:'agent', label:'Sourcing Agent', sub:'Find alternative suppliers', detail:'Finds alternative suppliers for the component using supplier base, past orders and current prices.', owner:'Sourcing Agent', config:'Sources: Supplier Arena, PO history, market prices'},
     {type:'agent', label:'Procurement Analytics Agent', sub:'Show budget impact', detail:'Computes budget impact per scenario for each alternative supplier.', owner:'Procurement Analytics Agent', config:'Model: Analytics-v2 · Scenarios: price, lead time'},
@@ -2662,7 +2662,7 @@ const workflows = [
     {type:'human', label:'Buyer', sub:'Reviews & decides', detail:'Buyer reviews the shortlist and decides whether to switch suppliers.', owner:'Buyer · Manufacturing', config:'SLA: 24h · Decision required'},
     {type:'action', label:'Notify requester', sub:'Action', detail:'Sends the decision outcome and next steps to the requester.', owner:'System', config:'Channel: Email + Teams · Template: PriceSpike_Decision'},
   ]},
-  {id:'WF-016', name:'Automatic RFQ for recurring parts', dept:'Manufacturing', status:'Active', lastRun:'15m ago', createdBy:'Marcus Weber', nodes:[
+  {id:'WF-016', name:'Automatic RFQ for recurring parts', dept:'Procurement', industry:'Manufacturing', status:'Active', lastRun:'15m ago', createdBy:'Marcus Weber', nodes:[
     {type:'trigger', label:'Recurring part reorder due', sub:'Scheduled trigger', detail:'Fires on schedule for parts flagged as recurring in the catalog.', owner:'System', config:'Cron: 0 7 * * 1 · Scope: Recurring parts'},
     {type:'agent', label:'Sourcing Agent', sub:'Send RFQs to approved suppliers', detail:'Sends quote requests (RFQs) to all approved suppliers for the recurring parts.', owner:'Sourcing Agent', config:'Template: RFQ_Recurring · Channel: Email/Portal'},
     {type:'agent', label:'Quote Evaluation Agent', sub:'Collect & compare offers', detail:'Collects responses and builds a comparison of price, terms and delivery.', owner:'Quote Evaluation Agent', config:'Model: Eval-v2 · Parse: PDF/Email'},
@@ -2670,7 +2670,7 @@ const workflows = [
     {type:'action', label:'Place order', sub:'Action', detail:'Releases the approved order to the chosen supplier and posts to ERP.', owner:'System', config:'ERP API: PO.create · Notify: requester'},
     {type:'action', label:'Record decision in Knowledge', sub:'Action', detail:'Stores the comparison and decision rationale in the Knowledge graph.', owner:'System', config:'Knowledge: Decision lineage · Audit trail'},
   ]},
-  {id:'WF-017', name:'Fleet maintenance purchasing with approval', dept:'Transport', status:'Active', lastRun:'1h ago', createdBy:'Oliver Braun', nodes:[
+  {id:'WF-017', name:'Fleet maintenance purchasing with approval', dept:'Procurement', industry:'Transport', status:'Active', lastRun:'1h ago', createdBy:'Oliver Braun', nodes:[
     {type:'trigger', label:'Maintenance request created', sub:'Trigger', detail:'Fires when a fleet maintenance request is submitted (fuel, spare parts, service).', owner:'System', config:'Source: Fleet Portal · Event: Maintenance.created'},
     {type:'agent', label:'Purchase Agent', sub:'Create PO for fuel/spares', detail:'Creates purchase orders for fuel, spare parts and fleet maintenance per approval rules.', owner:'Purchase Agent', config:'Policy: Fleet-P01 · Budget check: yes'},
     {type:'condition', label:'Value over approval threshold?', sub:'Condition', detail:'Branches on whether the PO value exceeds the auto-approval threshold.', config:'Expression: PO.amount > 5000', branches:{
@@ -2705,9 +2705,11 @@ function renderWorkflowsBody(subview){
   const s = (window.wfFilters.search||'').toLowerCase().trim();
   if(s) filtered = filtered.filter(w=> w.name.toLowerCase().includes(s) || w.dept.toLowerCase().includes(s) || w.createdBy.toLowerCase().includes(s));
   if(window.wfFilters.dept && window.wfFilters.dept!=='all') filtered = filtered.filter(w=>w.dept===window.wfFilters.dept);
+  if(window.wfFilters.industry && window.wfFilters.industry!=='all') filtered = filtered.filter(w=>(w.industry||'General')===window.wfFilters.industry);
   if(window.wfFilters.creator && window.wfFilters.creator!=='all') filtered = filtered.filter(w=>w.createdBy===window.wfFilters.creator);
   const myCount = workflows.filter(w=>w.createdBy==='You').length;
   const depts = [...new Set(workflows.map(w=>w.dept))];
+  const industries = [...new Set(workflows.map(w=>w.industry||'General'))];
   const creators = [...new Set(workflows.map(w=>w.createdBy))];
   body.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:12px;">
@@ -2720,17 +2722,22 @@ function renderWorkflowsBody(subview){
         <option value="all" ${window.wfFilters.dept==='all'?'selected':''}>All Departments</option>
         ${depts.map(d=>`<option value="${d}" ${window.wfFilters.dept===d?'selected':''}>${d}</option>`).join('')}
       </select>
+      <select class="filter-select" id="wfIndustryFilter" onchange="window.wfFilters.industry=this.value; renderWorkflowsBody(window.lastWorkflowSubview)" style="min-width:150px;">
+        <option value="all" ${window.wfFilters.industry==='all'?'selected':''}>All Industries</option>
+        ${industries.map(d=>`<option value="${d}" ${window.wfFilters.industry===d?'selected':''}>${d}</option>`).join('')}
+      </select>
       <select class="filter-select" id="wfCreatorFilter" onchange="window.wfFilters.creator=this.value; renderWorkflowsBody(window.lastWorkflowSubview)" style="min-width:150px;">
         <option value="all" ${window.wfFilters.creator==='all'?'selected':''}>All Creators</option>
         ${creators.map(c=>`<option value="${c}" ${window.wfFilters.creator===c?'selected':''}>${c}</option>`).join('')}
       </select>
-      ${(window.wfFilters.search||window.wfFilters.dept!=='all'||window.wfFilters.creator!=='all') ? `<button class="btn btn-ghost" style="padding:6px 10px; font-size:12px;" onclick="window.wfFilters={search:'',dept:'all',creator:'all'}; renderWorkflowsBody(window.lastWorkflowSubview)">Clear</button>` : ''}
+      ${(window.wfFilters.search||window.wfFilters.dept!=='all'||window.wfFilters.industry!=='all'||window.wfFilters.creator!=='all') ? `<button class="btn btn-ghost" style="padding:6px 10px; font-size:12px;" onclick="window.wfFilters={search:'',dept:'all',industry:'all',creator:'all'}; renderWorkflowsBody(window.lastWorkflowSubview)">Clear</button>` : ''}
     </div>
-    <table><thead><tr><th>ID</th><th>Workflow</th><th>Department</th><th>Status</th><th>Created by</th><th>Last run</th><th>Success rate</th><th>Actions</th></tr></thead>
+    <table><thead><tr><th>ID</th><th>Workflow</th><th>Department</th><th>Industry</th><th>Status</th><th>Created by</th><th>Last run</th><th>Success rate</th><th>Actions</th></tr></thead>
     <tbody>${filtered.map(w=>`<tr>
       <td style="color:var(--text-muted); font-size:12px; white-space:nowrap;">${w.id||'—'}</td>
       <td style="cursor:pointer;" onclick="openWorkflowTemplate('${w.name.replace(/'/g,"\\'")}')">${w.name}</td>
       <td>${w.dept}</td>
+      <td>${w.industry}</td>
       <td><span class="tag ${w.status==='Active'?'tag-active':w.status==='Failed'?'tag-expired':'tag-normal'}">${w.status}</span></td>
       <td><span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:22px; height:22px; border-radius:50%; background:${w.createdBy==='You'?'var(--headline)':'var(--bg)'}; border:1px solid var(--border); display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:${w.createdBy==='You'?'#fff':'var(--subhead)'};">${w.createdBy==='You'?'YO':w.createdBy.split(' ').map(s=>s[0]).join('').slice(0,2)}</span><span style="font-size:13px; color:var(--subhead);">${w.createdBy}</span></span></td>
       <td style="color:var(--text-muted);">${w.lastRun}</td>
@@ -2753,7 +2760,7 @@ function shareWorkflow(name){
   const wf = workflows.find(w=>w.name===name);
   if(!wf) return;
   const url = location.href.split('#')[0] + '#workflow=' + encodeURIComponent(wf.name);
-  const data = {title: wf.name, text: `Workflow: ${wf.name} (${wf.dept}) — ${wf.status}`, url};
+  const data = {title: wf.name, text: `Workflow: ${wf.name} (${wf.dept} / ${wf.industry||'General'}) — ${wf.status}`, url};
   if(navigator.share){
     navigator.share(data).catch(()=>{});
   } else if(navigator.clipboard && window.isSecureContext){
@@ -2766,7 +2773,7 @@ function createNewWorkflow(){
   const name = prompt('Name your new workflow:');
   if(!name || !name.trim()) return;
   if(workflows.some(w=>w.name===name.trim())){ alert('A workflow with that name already exists.'); return; }
-  const newWf = {id:nextWorkflowId(), name:name.trim(), dept:'Custom', status:'Draft', lastRun:'—', createdBy:'You', nodes:[
+  const newWf = {id:nextWorkflowId(), name:name.trim(), dept:'Custom', industry:'General', status:'Draft', lastRun:'-', createdBy:'You', nodes:[
     {type:'trigger', label:'Set a trigger', sub:'Trigger'},
   ]};
   workflows.push(newWf);
@@ -4212,7 +4219,7 @@ function openWorkflowTemplate(name, editMode){
   wfView = {x:0, y:0, zoom:1};
   window.wfSelectedId = null;
   document.getElementById('wfModalTitle').textContent = wf.name;
-  document.getElementById('wfModalDept').textContent = (wf.id ? wf.id + ' • ' : '') + wf.dept + ' • ' + wf.status + ' • ' + (workflowStats[wf.name] ? workflowStats[wf.name].successRate + '% success · ' + workflowStats[wf.name].runs + ' runs · avg ' + workflowStats[wf.name].avgTime : 'no runs yet');
+  document.getElementById('wfModalDept').textContent = (wf.id ? wf.id + ' • ' : '') + wf.dept + ' • ' + (wf.industry||'General') + ' • ' + wf.status + ' • ' + (workflowStats[wf.name] ? workflowStats[wf.name].successRate + '% success · ' + workflowStats[wf.name].runs + ' runs · avg ' + workflowStats[wf.name].avgTime : 'no runs yet');
   renderWfModalHead();
   renderWfCanvas();
   document.getElementById('wfOverlay').classList.add('show');
