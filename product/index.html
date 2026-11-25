@@ -2654,6 +2654,14 @@ const workflows = [
     {type:'action', label:'Award subcontract', sub:'Action', detail:'Awards the subcontract, notifies the chosen subcontractor and losers.', owner:'System', config:'ERP: Subcontract.award · Notify: all bidders'},
     {type:'action', label:'Record decision in Knowledge', sub:'Action', detail:'Stores the comparison and decision rationale in the Knowledge graph.', owner:'System', config:'Knowledge: Decision lineage · Audit trail'},
   ]},
+  {id:'WF-015', name:'Supplier price spike response', dept:'Manufacturing', status:'Active', lastRun:'20m ago', createdBy:'Priya Patel', nodes:[
+    {type:'trigger', label:'Supplier price increase received', sub:'Trigger', detail:'Fires when a key supplier raises the price of a component (e.g. +8% steel).', owner:'System', config:'Source: ERP/Email · Event: PriceChange'},
+    {type:'agent', label:'Sourcing Agent', sub:'Find alternative suppliers', detail:'Finds alternative suppliers for the component using supplier base, past orders and current prices.', owner:'Sourcing Agent', config:'Sources: Supplier Arena, PO history, market prices'},
+    {type:'agent', label:'Procurement Analytics Agent', sub:'Show budget impact', detail:'Computes budget impact per scenario for each alternative supplier.', owner:'Procurement Analytics Agent', config:'Model: Analytics-v2 · Scenarios: price, lead time'},
+    {type:'action', label:'Build ranked shortlist', sub:'Action', detail:'Ranks alternatives by price and delivery time with budget impact per scenario.', owner:'System', config:'Output: Shortlist table · Sort: price asc'},
+    {type:'human', label:'Buyer', sub:'Reviews & decides', detail:'Buyer reviews the shortlist and decides whether to switch suppliers.', owner:'Buyer · Manufacturing', config:'SLA: 24h · Decision required'},
+    {type:'action', label:'Notify requester', sub:'Action', detail:'Sends the decision outcome and next steps to the requester.', owner:'System', config:'Channel: Email + Teams · Template: PriceSpike_Decision'},
+  ]},
 ];
 if(!window.wfFilters) window.wfFilters = {search:'', dept:'all', creator:'all'};
 if(!window.taskFilters) window.taskFilters = {search:'', type:'all', agent:'all', creator:'all', status:'all'};
@@ -3262,7 +3270,6 @@ function renderTasksBody(subview){
     {id:'TSK-018', name:'Backfill batch genealogy L2', agent:'Quality Domain Agent', status:'Completed', type:'Data', createdBy:'Anish', createdAt:'1d ago', date:'24 Sep 2026', priority:'Low', desc:'Backfill genealogy links for production line L2.'},
     {id:'TSK-019', name:'Calibrate stability chambers', agent:'Quality Domain Agent', status:'Waiting for data', type:'Maintenance', createdBy:'Krishna', createdAt:'2d ago', date:'23 Sep 2026', priority:'Medium', desc:'Annual calibration due for chambers SC-01 and SC-02.'},
     {id:'TSK-020', name:'Source carriers for new route', agent:'Sourcing Agent', status:'Running', type:'Sourcing', createdBy:'You', createdAt:'1h ago', date:'25 Nov 2026', priority:'High', desc:'Find and compare carriers for the new route, based on cost, reliability and past performance.'},
-    {id:'TSK-021', name:'Find alternatives for steel component price spike', agent:'Sourcing Agent', status:'Running', type:'Research', createdBy:'Priya Patel', createdAt:'30m ago', date:'25 Nov 2026', priority:'High', desc:'Find alternative suppliers for the steel component after 8% price increase; show budget impact per scenario.'},
   ];
   const tasks = window.tasksList;
   // preserve toolbar values
