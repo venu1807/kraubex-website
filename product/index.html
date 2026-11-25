@@ -2590,6 +2590,21 @@ const workflows = [
     }},
     {type:'action', label:'Notify regulatory', sub:'Action', detail:'Sends the approval pack to regulatory affairs.', owner:'System', config:'Channel: Email • Pack: Approval_Pack'},
   ]},
+  {id:'WF-011', name:'Medical supplies ordering with audit trail', dept:'Healthcare', status:'Active', lastRun:'2h ago', createdBy:'Aisha Rahman', nodes:[
+    {type:'trigger', label:'Medical supply request submitted', sub:'Trigger', detail:'Clinical unit submits a medical-supply requisition (items, quantities, urgency).', owner:'System', config:'Source: Requisition Portal · Form: MedSupply_v1'},
+    {type:'agent', label:'Purchase Agent', sub:'Prepare order from request', detail:'Agent drafts the order from the request: matches items to approved suppliers, quantities and pricing.', owner:'Purchase Agent', config:'Policy: MedSupply-P01 · Catalog: Medical'},
+    {type:'human', label:'Department head', sub:'Approves order', detail:'Department head reviews and approves the prepared medical-supply order.', owner:'Department head · Healthcare', config:'SLA: 24h · Approval required'},
+    {type:'condition', label:'Critical item?', sub:'Condition', detail:'Branches on whether the order contains critical/controlled medical items.', config:'Expression: order.hasCriticalItem == true', branches:{
+      yes: [
+        {type:'human', label:'Quality / Compliance', sub:'Second approval for critical items', detail:'Second approver signs off on controlled/critical medical items for traceability.', owner:'Quality · Compliance', config:'SLA: 12h · Dual approval'},
+        {type:'action', label:'Place order', sub:'Action', detail:'Releases the order to the approved supplier and posts to ERP.', owner:'System', config:'ERP API: PO.create · Notify: requester'}
+      ],
+      no: [
+        {type:'action', label:'Place order', sub:'Action', detail:'Releases the order to the approved supplier and posts to ERP.', owner:'System', config:'ERP API: PO.create · Notify: requester'}
+      ]
+    }},
+    {type:'action', label:'Record audit trail in Knowledge', sub:'Action', detail:'Writes which data/documents were used and who decided what to the Knowledge graph for traceability.', owner:'System', config:'Knowledge: AuditTrail · Graph: Decision lineage'},
+  ]},
 ];
 if(!window.wfFilters) window.wfFilters = {search:'', dept:'all', creator:'all'};
 if(!window.taskFilters) window.taskFilters = {search:'', type:'all', agent:'all', creator:'all', status:'all'};
