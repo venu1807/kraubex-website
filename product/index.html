@@ -2563,7 +2563,7 @@ const workflows = [
       no: [{type:'action', label:'Update risk dashboard', sub:'Action', detail:'Updates dashboard with latest scores, no alert.', owner:'System', config:'Dashboard: Risk_Overview'}]
     }},
   ]},
-  {id:'WF-008', name:'Pharma batch quality release', dept:'Quality', industry:'Healthcare', status:'Active', lastRun:'1h ago', createdBy:'Krishna', nodes:[
+  {id:'WF-008', name:'Pharma batch quality release', dept:'Quality', industry:'Pharmaceuticals', status:'Active', lastRun:'1h ago', createdBy:'Krishna', nodes:[
     {type:'trigger', label:'Batch ready for release', sub:'Trigger', detail:'Fires when MES posts finished batch B-2026-0841.', owner:'System', config:'Event MES.batch_ready • Plant = Bielefeld'},
     {type:'agent', label:'QA Agent', sub:'Review CoA and records', detail:'Checks certificate of analysis and batch record completeness.', owner:'QA Agent', config:'Spec: PH-Q-011 • CoA required'},
     {type:'condition', label:'CoA within spec?', sub:'Condition', detail:'Branches on certificate results vs registered spec.', config:'Rule: all params within spec', branches:{
@@ -2572,7 +2572,7 @@ const workflows = [
     }},
     {type:'action', label:'Notify warehouse', sub:'Action', detail:'Sends release/hold outcome to the warehouse team.', owner:'System', config:'Channel: Email • Template: Batch_Outcome'},
   ]},
-  {id:'WF-009', name:'Cold chain excursion review', dept:'Supply Chain', industry:'Healthcare', status:'Active', lastRun:'3h ago', createdBy:'Anish', nodes:[
+  {id:'WF-009', name:'Cold chain excursion review', dept:'Supply Chain', industry:'Pharmaceuticals', status:'Active', lastRun:'3h ago', createdBy:'Anish', nodes:[
     {type:'trigger', label:'Logger excursion alert', sub:'Trigger', detail:'Fires when a shipment logger breaches the 2–8°C band.', owner:'System', config:'Source: Logger API • Band: 2-8C'},
     {type:'agent', label:'Supply Chain Agent', sub:'Pull logger data', detail:'Downloads time-series logger data for shipment SH-2210.', owner:'Supply Chain Agent', config:'Window: shipment duration'},
     {type:'condition', label:'Excursion > 30 min?', sub:'Condition', detail:'Branches on cumulative out-of-band duration.', config:'Threshold: 30 min', branches:{
@@ -2581,7 +2581,7 @@ const workflows = [
     }},
     {type:'action', label:'Notify QA', sub:'Action', detail:'Sends the excursion outcome to QA on-call.', owner:'System', config:'Channel: Teams • Template: Excursion_Outcome'},
   ]},
-  {id:'WF-010', name:'Pharma artwork approval', dept:'Quality', industry:'Healthcare', status:'Active', lastRun:'5h ago', createdBy:'Krishna', nodes:[
+  {id:'WF-010', name:'Pharma artwork approval', dept:'Quality', industry:'Pharmaceuticals', status:'Active', lastRun:'5h ago', createdBy:'Krishna', nodes:[
     {type:'trigger', label:'Artwork proof uploaded', sub:'Trigger', detail:'Fires when the agency uploads the SKU-412 artwork proof.', owner:'System', config:'Source: DAM • SKU-412'},
     {type:'agent', label:'Compliance Agent', sub:'Check regulatory text', detail:'Validates SmPC text, fonts and warning symbols.', owner:'Compliance Agent', config:'Rules: EU-QRD v10'},
     {type:'condition', label:'Proof compliant?', sub:'Condition', detail:'Branches on the automated compliance score.', config:'Threshold: score >= 95', branches:{
@@ -2590,7 +2590,7 @@ const workflows = [
     }},
     {type:'action', label:'Notify regulatory', sub:'Action', detail:'Sends the approval pack to regulatory affairs.', owner:'System', config:'Channel: Email • Pack: Approval_Pack'},
   ]},
-  {id:'WF-011', name:'Medical supplies ordering with audit trail', dept:'Procurement', industry:'Healthcare', status:'Active', lastRun:'2h ago', createdBy:'Marcus Weber', nodes:[
+  {id:'WF-011', name:'Medical supplies ordering with audit trail', dept:'Procurement', industry:'Pharmaceuticals', status:'Active', lastRun:'2h ago', createdBy:'Marcus Weber', nodes:[
     {type:'trigger', label:'Medical supply request submitted', sub:'Trigger', detail:'Clinical unit submits a medical-supply requisition (items, quantities, urgency).', owner:'System', config:'Source: Requisition Portal · Form: MedSupply_v1'},
     {type:'agent', label:'Purchase Agent', sub:'Prepare order from request', detail:'Agent drafts the order from the request: matches items to approved suppliers, quantities and pricing.', owner:'Purchase Agent', config:'Policy: MedSupply-P01 · Catalog: Medical'},
     {type:'human', label:'Department head', sub:'Approves order', detail:'Department head reviews and approves the prepared medical-supply order.', owner:'Department head · Healthcare', config:'SLA: 24h · Approval required'},
@@ -2605,7 +2605,7 @@ const workflows = [
     }},
     {type:'action', label:'Record audit trail in Knowledge', sub:'Action', detail:'Writes which data/documents were used and who decided what to the Knowledge graph for traceability.', owner:'System', config:'Knowledge: AuditTrail · Graph: Decision lineage'},
   ]},
-  {id:'WF-012', name:'Supplier certificate expiry monitoring', dept:'Procurement', industry:'Healthcare', status:'Active', lastRun:'1h ago', createdBy:'Elena Fischer', nodes:[
+  {id:'WF-012', name:'Supplier certificate expiry monitoring', dept:'Procurement', industry:'Pharmaceuticals', status:'Active', lastRun:'1h ago', createdBy:'Elena Fischer', nodes:[
     {type:'trigger', label:'Daily document scan', sub:'Scheduled trigger', detail:'Daily 06:00 scan over the supplier base: certificates, audit reports, quality agreements.', owner:'System', config:'Cron: 0 6 * * * · Scope: All suppliers'},
     {type:'agent', label:'Supplier Risk Agent', sub:'Monitor documents', detail:'Checks every supplier document for expiry; flags any expiring within 30 days.', owner:'Supplier Risk Agent', config:'Rule: expiry <= 30d · Sources: Supplier Arena'},
     {type:'action', label:'Notify QA + Procurement lead', sub:'Action', detail:'Notifies QA and procurement lead of flagged expiring certificates.', owner:'System', config:'Channel: Teams + Email · Template: CertExpiry_Alert'},
@@ -2683,6 +2683,50 @@ const workflows = [
       ]
     }},
     {type:'action', label:'Notify requester', sub:'Action', detail:'Sends confirmation with approved items and expected delivery.', owner:'System', config:'Channel: Email + Teams · Template: Fleet_PO_Confirm'},
+  ]},
+  {id:'WF-018', name:'Supplier/material approval chain with QA sign-off', dept:'Quality', industry:'Pharmaceuticals', status:'Active', lastRun:'3h ago', createdBy:'Marcus Weber', nodes:[
+    {type:'trigger', label:'New material/supplier submitted for release', sub:'Trigger', detail:'Fires when a new material or supplier is submitted for release in pharma.', owner:'System', config:'Source: ERP/Intake - Event: Material.submitted'},
+    {type:'agent', label:'Supplier Risk Agent', sub:'Check documents & compliance', detail:'Checks certificates, audit reports, quality agreements and regulatory filings.', owner:'Supplier Risk Agent', config:'Sources: Supplier Arena - Rules: GMP/ISO'},
+    {type:'condition', label:'Documents complete & valid?', sub:'Condition', detail:'Branches on whether all required documents are present and valid.', config:'Expression: docs.complete && docs.valid', branches:{
+      yes: [
+        {type:'human', label:'Quality Assurance', sub:'QA sign-off', detail:'Quality assurance reviews and signs off on the material/supplier.', owner:'Quality Assurance - Pharma', config:'SLA: 48h - Approval required'},
+        {type:'condition', label:'QA approved?', sub:'Condition', detail:'Branches on the QA decision.', config:'Expression: qa.decision == approved', branches:{
+          yes: [
+            {type:'action', label:'Release material/supplier', sub:'Action', detail:'Releases the material/supplier for use in production.', owner:'System', config:'ERP: Material.release - Notify: stakeholders'},
+            {type:'action', label:'Notify stakeholders', sub:'Action', detail:'Notifies procurement, QA and production of the release.', owner:'System', config:'Channel: Email + Teams - Template: Release_Notify'},
+            {type:'action', label:'Record audit trail in Knowledge', sub:'Action', detail:'Writes the full decision lineage to the Knowledge graph for traceability.', owner:'System', config:'Knowledge: AuditTrail - Graph: Decision lineage'}
+          ],
+          no: [
+            {type:'action', label:'Reject + notify supplier', sub:'Action', detail:'Rejects the submission and notifies the supplier with reasons.', owner:'System', config:'Channel: Email - Template: Reject_Material'},
+            {type:'action', label:'Audit log (rejected)', sub:'Action', detail:'Records the rejection and reasons in the audit trail.', owner:'System', config:'Audit: MaterialRejected'}
+          ]
+        }}
+      ],
+      no: [
+        {type:'action', label:'Request missing documents', sub:'Action', detail:'Requests the missing/invalid documents from the supplier.', owner:'System', config:'Channel: Email - Template: MissingDocs_Request'},
+        {type:'human', label:'Supplier coordinator', sub:'Follows up', detail:'Supplier coordinator follows up until documents are complete.', owner:'Supplier coordinator - Procurement', config:'SLA: 10d - Follow-up'},
+        {type:'action', label:'Audit log (incomplete)', sub:'Action', detail:'Records the incomplete submission in the audit trail.', owner:'System', config:'Audit: MaterialIncomplete'}
+      ]
+    }},
+  ]},
+  {id:'WF-019', name:'Lab consumables & CMO/CDMO quote comparison', dept:'Procurement', industry:'Pharmaceuticals', status:'Active', lastRun:'2h ago', createdBy:'Elena Fischer', nodes:[
+    {type:'trigger', label:'RFQ created for lab consumables/packaging/CMO', sub:'Trigger', detail:'Fires when an RFQ is created for lab consumables, packaging or CMO/CDMO services.', owner:'System', config:'Source: RFQ module - Event: RFQ.created'},
+    {type:'agent', label:'RFQ/RFP Agent', sub:'Send to qualified suppliers', detail:'Sends RFQs to qualified suppliers filtered by CMO/CDMO capability and GMP status.', owner:'RFQ/RFP Agent', config:'Filter: CMO/CDMO + GMP - Channel: Email/Portal'},
+    {type:'condition', label:'Responses received within SLA?', sub:'Condition', detail:'Checks whether supplier responses arrived within the SLA.', config:'Expression: responses.received && responses.days <= SLA', branches:{
+      yes: [
+        {type:'agent', label:'Quote Evaluation Agent', sub:'Collect & compare', detail:'Collects and compares quotes on price, lead time, quality, capacity and GMP compliance.', owner:'Quote Evaluation Agent', config:'Model: Eval-v2 - Criteria: price, lead time, quality, capacity, GMP'},
+        {type:'action', label:'Build comparison matrix', sub:'Action', detail:'Builds a side-by-side comparison matrix of all quotes.', owner:'System', config:'Output: Comparison matrix - Sort: price asc'},
+        {type:'human', label:'Procurement', sub:'Reviews & approves', detail:'Procurement reviews the comparison and approves the final choice.', owner:'Procurement - Pharma', config:'SLA: 5d - Approval required'},
+        {type:'action', label:'Award contract', sub:'Action', detail:'Awards the contract to the chosen supplier.', owner:'System', config:'ERP: Contract.award - Notify: all bidders'},
+        {type:'action', label:'Notify all bidders', sub:'Action', detail:'Notifies all bidders of the outcome.', owner:'System', config:'Channel: Email - Template: Award_Notify'},
+        {type:'action', label:'Record decision in Knowledge', sub:'Action', detail:'Records the comparison and decision rationale in the Knowledge graph.', owner:'System', config:'Knowledge: Decision lineage - Audit trail'}
+      ],
+      no: [
+        {type:'action', label:'Send reminder to non-responding suppliers', sub:'Action', detail:'Sends reminders to suppliers who have not responded.', owner:'System', config:'Channel: Email - Template: RFQ_Reminder'},
+        {type:'human', label:'Procurement lead', sub:'Escalates', detail:'Procurement lead escalates and decides next steps.', owner:'Procurement lead - Pharma', config:'SLA: 3d - Escalation'},
+        {type:'action', label:'Audit log (escalated)', sub:'Action', detail:'Records the escalation in the audit trail.', owner:'System', config:'Audit: RFQ_Escalated'}
+      ]
+    }},
   ]},
 ];
 if(!window.wfFilters) window.wfFilters = {search:'', dept:'all', creator:'all'};
@@ -3261,6 +3305,8 @@ const workflowStats = {
   'Reorder with approval':{runs:18, successRate:92, avgTime:'45m'},
   'Subcontractor quotes collection':{runs:11, successRate:85, avgTime:'2d 3h'},
   'Supplier price spike response':{runs:6, successRate:100, avgTime:'2m 30s'},
+  'Supplier/material approval chain with QA sign-off':{runs:14, successRate:96, avgTime:'2d 4h'},
+  'Lab consumables & CMO/CDMO quote comparison':{runs:9, successRate:91, avgTime:'3d 2h'},
 };
 function nextWorkflowId(){
   const nums = workflows.map(w=>parseInt(String(w.id||'').slice(3),10)).filter(n=>!isNaN(n));
