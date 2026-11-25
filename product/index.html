@@ -2646,6 +2646,14 @@ const workflows = [
       ]
     }},
   ]},
+  {id:'WF-014', name:'Subcontractor quotes collection', dept:'Construction', status:'Active', lastRun:'45m ago', createdBy:'Priya Patel', nodes:[
+    {type:'trigger', label:'New project quote request', sub:'Trigger', detail:'Fires when a new project is created and subcontractor quotes are needed.', owner:'System', config:'Source: Project Portal · Event: Project.created'},
+    {type:'agent', label:'Sourcing Agent', sub:'Send quote requests', detail:'Sends the quote request to all approved subcontractors for the trade.', owner:'Sourcing Agent', config:'Template: RFQ_Subcontractor · Channel: Email'},
+    {type:'agent', label:'Quote Evaluation Agent', sub:'Collect & compare quotes', detail:'Collects responses and builds a side-by-side comparison: price, timeline, terms.', owner:'Quote Evaluation Agent', config:'Model: Eval-v2 · Parse: PDF/Email'},
+    {type:'human', label:'Project manager', sub:'Approves final choice', detail:'Project manager reviews the comparison and approves the chosen subcontractor.', owner:'Project manager · Construction', config:'SLA: 48h · Approval required'},
+    {type:'action', label:'Award subcontract', sub:'Action', detail:'Awards the subcontract, notifies the chosen subcontractor and losers.', owner:'System', config:'ERP: Subcontract.award · Notify: all bidders'},
+    {type:'action', label:'Record decision in Knowledge', sub:'Action', detail:'Stores the comparison and decision rationale in the Knowledge graph.', owner:'System', config:'Knowledge: Decision lineage · Audit trail'},
+  ]},
 ];
 if(!window.wfFilters) window.wfFilters = {search:'', dept:'all', creator:'all'};
 if(!window.taskFilters) window.taskFilters = {search:'', type:'all', agent:'all', creator:'all', status:'all'};
