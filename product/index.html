@@ -2662,6 +2662,28 @@ const workflows = [
     {type:'human', label:'Buyer', sub:'Reviews & decides', detail:'Buyer reviews the shortlist and decides whether to switch suppliers.', owner:'Buyer · Manufacturing', config:'SLA: 24h · Decision required'},
     {type:'action', label:'Notify requester', sub:'Action', detail:'Sends the decision outcome and next steps to the requester.', owner:'System', config:'Channel: Email + Teams · Template: PriceSpike_Decision'},
   ]},
+  {id:'WF-016', name:'Automatic RFQ for recurring parts', dept:'Manufacturing', status:'Active', lastRun:'15m ago', createdBy:'Marcus Weber', nodes:[
+    {type:'trigger', label:'Recurring part reorder due', sub:'Scheduled trigger', detail:'Fires on schedule for parts flagged as recurring in the catalog.', owner:'System', config:'Cron: 0 7 * * 1 · Scope: Recurring parts'},
+    {type:'agent', label:'Sourcing Agent', sub:'Send RFQs to approved suppliers', detail:'Sends quote requests (RFQs) to all approved suppliers for the recurring parts.', owner:'Sourcing Agent', config:'Template: RFQ_Recurring · Channel: Email/Portal'},
+    {type:'agent', label:'Quote Evaluation Agent', sub:'Collect & compare offers', detail:'Collects responses and builds a comparison of price, terms and delivery.', owner:'Quote Evaluation Agent', config:'Model: Eval-v2 · Parse: PDF/Email'},
+    {type:'human', label:'Buyer', sub:'Approves final choice', detail:'Buyer reviews the comparison and approves the chosen supplier/offer.', owner:'Buyer · Manufacturing', config:'SLA: 48h · One-click approve'},
+    {type:'action', label:'Place order', sub:'Action', detail:'Releases the approved order to the chosen supplier and posts to ERP.', owner:'System', config:'ERP API: PO.create · Notify: requester'},
+    {type:'action', label:'Record decision in Knowledge', sub:'Action', detail:'Stores the comparison and decision rationale in the Knowledge graph.', owner:'System', config:'Knowledge: Decision lineage · Audit trail'},
+  ]},
+  {id:'WF-017', name:'Fleet maintenance purchasing with approval', dept:'Transport', status:'Active', lastRun:'1h ago', createdBy:'Oliver Braun', nodes:[
+    {type:'trigger', label:'Maintenance request created', sub:'Trigger', detail:'Fires when a fleet maintenance request is submitted (fuel, spare parts, service).', owner:'System', config:'Source: Fleet Portal · Event: Maintenance.created'},
+    {type:'agent', label:'Purchase Agent', sub:'Create PO for fuel/spares', detail:'Creates purchase orders for fuel, spare parts and fleet maintenance per approval rules.', owner:'Purchase Agent', config:'Policy: Fleet-P01 · Budget check: yes'},
+    {type:'condition', label:'Value over approval threshold?', sub:'Condition', detail:'Branches on whether the PO value exceeds the auto-approval threshold.', config:'Expression: PO.amount > 5000', branches:{
+      yes: [
+        {type:'human', label:'Fleet manager', sub:'Approves high-value PO', detail:'Fleet manager reviews and approves POs above the threshold.', owner:'Fleet manager · Transport', config:'SLA: 24h · Approval required'},
+        {type:'action', label:'Place order', sub:'Action', detail:'Releases the approved order to the supplier and posts to ERP.', owner:'System', config:'ERP API: PO.create · Notify: requester'}
+      ],
+      no: [
+        {type:'action', label:'Auto-approve PO', sub:'Action', detail:'Auto-approves POs under threshold and releases for fulfillment.', owner:'System', config:'ERP: PO.approve · Notify: requester'}
+      ]
+    }},
+    {type:'action', label:'Notify requester', sub:'Action', detail:'Sends confirmation with approved items and expected delivery.', owner:'System', config:'Channel: Email + Teams · Template: Fleet_PO_Confirm'},
+  ]},
 ];
 if(!window.wfFilters) window.wfFilters = {search:'', dept:'all', creator:'all'};
 if(!window.taskFilters) window.taskFilters = {search:'', type:'all', agent:'all', creator:'all', status:'all'};
@@ -3275,6 +3297,11 @@ function renderTasksBody(subview){
     {id:'TSK-018', name:'Backfill batch genealogy L2', agent:'Quality Domain Agent', status:'Completed', type:'Data', createdBy:'Anish', createdAt:'1d ago', date:'24 Sep 2026', priority:'Low', desc:'Backfill genealogy links for production line L2.'},
     {id:'TSK-019', name:'Calibrate stability chambers', agent:'Quality Domain Agent', status:'Waiting for data', type:'Maintenance', createdBy:'Krishna', createdAt:'2d ago', date:'23 Sep 2026', priority:'Medium', desc:'Annual calibration due for chambers SC-01 and SC-02.'},
     {id:'TSK-020', name:'Source carriers for new route', agent:'Sourcing Agent', status:'Running', type:'Sourcing', createdBy:'You', createdAt:'1h ago', date:'25 Nov 2026', priority:'High', desc:'Find and compare carriers for the new route, based on cost, reliability and past performance.'},
+    {id:'TSK-022', name:'Track material price changes', agent:'Sourcing Agent', status:'Running', type:'Monitoring', createdBy:'Sarah Chen', createdAt:'2h ago', date:'25 Nov 2026', priority:'High', desc:'Track material price changes (steel, cement, timber) and warn when a project budget is at risk.'},
+    {id:'TSK-023', name:'Compare supplier terms across articles', agent:'Sourcing Agent', status:'Running', type:'Research', createdBy:'Priya Patel', createdAt:'3h ago', date:'25 Nov 2026', priority:'Medium', desc:'Compare supplier terms and prices across thousands of articles.'},
+    {id:'TSK-024', name:'Find alternatives on supplier shortage', agent:'Sourcing Agent', status:'Running', type:'Research', createdBy:'Anish', createdAt:'4h ago', date:'25 Nov 2026', priority:'High', desc:'Find alternatives quickly when a supplier has a shortage.'},
+    {id:'TSK-025', name:'Monitor supplier delivery performance', agent:'Supplier Performance Agent', status:'Running', type:'Monitoring', createdBy:'Krishna', createdAt:'5h ago', date:'25 Nov 2026', priority:'Medium', desc:'Monitor supplier delivery performance and flag late or at-risk deliveries before production stops.'},
+    {id:'TSK-026', name:'Match delivery notes, orders and invoices', agent:'Finance Domain Agent', status:'Running', type:'Reconciliation', createdBy:'James Okoye', createdAt:'6h ago', date:'25 Nov 2026', priority:'Medium', desc:'Match delivery notes, orders and invoices to catch discrepancies.'},
   ];
   const tasks = window.tasksList;
   // preserve toolbar values
