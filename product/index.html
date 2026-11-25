@@ -2631,6 +2631,21 @@ const workflows = [
       ]
     }},
   ]},
+  {id:'WF-013', name:'Reorder with approval', dept:'Wholesale', status:'Active', lastRun:'30m ago', createdBy:'Priya Patel', nodes:[
+    {type:'trigger', label:'Daily stock check', sub:'Scheduled trigger', detail:'Daily scan of inventory against demand thresholds across thousands of articles.', owner:'System', config:'Cron: 0 5 * * * · Scope: All SKUs'},
+    {type:'agent', label:'Procurement Analytics Agent', sub:'Check stock vs demand', detail:'Compares current stock levels against demand forecasts and creates reorder suggestions.', owner:'Procurement Analytics Agent', config:'Model: Analytics-v2 · Lookahead: 14d'},
+    {type:'agent', label:'Sourcing Agent', sub:'Compare supplier terms', detail:'Compares available suppliers on price, lead time and MOQ for each suggested reorder.', owner:'Sourcing Agent', config:'Sources: Supplier Arena · Criteria: cost, lead time, MOQ'},
+    {type:'condition', label:'Reorder needed?', sub:'Condition', detail:'Branches on whether any reorder suggestions were generated.', config:'Expression: suggestions.length > 0', branches:{
+      yes: [
+        {type:'human', label:'Buyer', sub:'Reviews & approves suggestions', detail:'Buyer sees every suggestion with reasons and approves with one click.', owner:'Buyer · Wholesale', config:'SLA: 24h · One-click approve'},
+        {type:'action', label:'Place order', sub:'Action', detail:'Releases approved reorders to suppliers and posts to ERP.', owner:'System', config:'ERP API: PO.create · Notify: requester'},
+        {type:'action', label:'Notify requester', sub:'Action', detail:'Sends confirmation with approved items, quantities and expected delivery.', owner:'System', config:'Channel: Email + Teams · Template: Reorder_Confirm'}
+      ],
+      no: [
+        {type:'action', label:'Log - no reorder needed', sub:'Action', detail:'Records that stock levels are sufficient; no reorder required.', owner:'System', config:'Audit: Reorder_None'}
+      ]
+    }},
+  ]},
 ];
 if(!window.wfFilters) window.wfFilters = {search:'', dept:'all', creator:'all'};
 if(!window.taskFilters) window.taskFilters = {search:'', type:'all', agent:'all', creator:'all', status:'all'};
