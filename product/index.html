@@ -1307,14 +1307,6 @@
     <div class="wf-modal-body">
       <aside class="wf-palette-side wf-palette-wrap" id="wfPaletteWrap" style="display:none;">
         <p class="wf-palette-hint">Drag a component directly onto the canvas to add it there.</p>
-        <div style="display:flex; gap:6px; margin-bottom:10px;">
-          <select id="wfPaletteDomain" onchange="window.wfPaletteDomain=this.value; renderWfPalette();" style="flex:1; padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:12px; background:var(--card); color:var(--subhead);">
-            <option value="all">All domains</option>
-          </select>
-          <select id="wfPalettePerson" onchange="window.wfPalettePerson=this.value; renderWfPalette();" style="flex:1; padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:12px; background:var(--card); color:var(--subhead);">
-            <option value="all">All people</option>
-          </select>
-        </div>
         <div class="wf-palette" id="wfPalette"></div>
       </aside>
       <div class="wf-canvas" id="wfCanvas"></div>
@@ -5021,13 +5013,18 @@ function renderWfPalette(){
   // People (filtered by selected person)
   const peopleList = (selPerson === 'all') ? (companyDirectory||[]) : (companyDirectory||[]).filter(p=>p.name===selPerson);
   const peopleChips = peopleList.map(p=>wfPaletteChip('human', p.name, p.role)).join('');
+  // domain dropdown (inside Agents section)
+  const domOpts = `<option value="all">All domains</option>` + (departments||[]).map(d=>`<option value="${d.name}" ${selDomain===d.name?'selected':''}>${d.name}</option>`).join('');
+  const domSelect = `<select id="wfPaletteDomain" onchange="window.wfPaletteDomain=this.value; renderWfPalette();" style="width:100%; padding:4px 6px; border:1px solid var(--border); border-radius:5px; font-size:11px; background:var(--card); color:var(--subhead); margin-bottom:6px;">${domOpts}</select>`;
+  // people dropdown (inside People section)
+  const perOpts = `<option value="all">All people</option>` + (companyDirectory||[]).map(p=>`<option value="${p.name}" ${selPerson===p.name?'selected':''}>${p.name}</option>`).join('');
+  const perSelect = `<select id="wfPalettePerson" onchange="window.wfPalettePerson=this.value; renderWfPalette();" style="width:100%; padding:4px 6px; border:1px solid var(--border); border-radius:5px; font-size:11px; background:var(--card); color:var(--subhead); margin-bottom:6px;">${perOpts}</select>`;
   el.innerHTML = `
     <div><p class="wf-pal-group-title">Triggers</p><div class="wf-pal-row">${triggerChips}</div></div>
-    ${domainGroups}
-    ${standaloneGroup}
+    <div><p class="wf-pal-group-title">Agents</p>${domSelect}${domainGroups}${standaloneGroup}</div>
     <div><p class="wf-pal-group-title">Conditions</p><div class="wf-pal-row">${conditionChips}</div></div>
     <div><p class="wf-pal-group-title">Actions</p><div class="wf-pal-row">${actionChips}</div></div>
-    <div><p class="wf-pal-group-title">People</p><div class="wf-pal-row">${peopleChips}</div></div>
+    <div><p class="wf-pal-group-title">People</p>${perSelect}<div class="wf-pal-row">${peopleChips}</div></div>
   `;
 }
 
