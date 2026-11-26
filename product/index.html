@@ -5645,14 +5645,49 @@ function buildAssignAgentChoices(){
   return list;
 }
 /* old modal agent-dropdown retired with the slim assign card */
-function renderAssignInstructions(a){
+function instrStorageKey(name){ return 'kx_instr_' + (name||'').replace(/[^a-z0-9]/gi,'_'); }
+function generateInstrHtml(a){
   const instr = generateAgentInstructions(a);
-  document.getElementById('agentInstructions').innerHTML = `
-    <h4>Instructions</h4>
+  return `
     <p class="instr-label">Describe</p>
     <ul>${instr.describe.map(d=>`<li>${d}</li>`).join('')}</ul>
     <p class="instr-label">Example</p>
     <div class="instr-example">${instr.example}</div>`;
+}
+function renderAssignInstructions(a){
+  const saved = (function(){ try { return window.localStorage.getItem(instrStorageKey(a.name)); } catch(e){ return null; } })();
+  const body = saved !== null ? saved : generateInstrHtml(a);
+  const el = document.getElementById('agentInstructions');
+  if(!el) return;
+  el.innerHTML = `
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+      <h4 style="margin:0;">Instructions</h4>
+      <span data-instrbtns="1"><button class="icon-btn" title="Edit instructions" onclick="toggleAssignInstrEdit(this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button></span>
+    </div>
+    <div class="instr-body" id="instrBody" style="font-size:13px; line-height:1.5;">${body}</div>`;
+  const ib = document.getElementById('instrBody');
+  if(ib){ ib.contentEditable = 'false'; ib.style.outline = ''; }
+}
+function toggleAssignInstrEdit(btn){
+  const ib = document.getElementById('instrBody'); if(!ib) return;
+  ib.contentEditable = 'true'; ib.focus();
+  ib.style.outline = '2px dashed var(--headline)'; ib.style.outlineOffset = '4px'; ib.style.borderRadius = '8px';
+  const holder = document.querySelector('[data-instrbtns="1"]');
+  if(holder) holder.innerHTML = '<button class="btn btn-primary" style="padding:4px 10px; font-size:12px;" onclick="saveAssignInstr()">Save</button> <button class="btn btn-ghost" style="padding:4px 10px; font-size:12px;" onclick="cancelAssignInstr()">Cancel</button>';
+}
+function saveAssignInstr(){
+  const ib = document.getElementById('instrBody'); if(!ib || !pendingAgent) return;
+  try { window.localStorage.setItem(instrStorageKey(pendingAgent.name), ib.innerHTML); } catch(e){}
+  ib.contentEditable = 'false'; ib.style.outline = ''; ib.style.outlineOffset = '';
+  const holder = document.querySelector('[data-instrbtns="1"]');
+  if(holder) holder.innerHTML = '<button class="icon-btn" title="Edit instructions" onclick="toggleAssignInstrEdit(this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>';
+}
+function cancelAssignInstr(){
+  const ib = document.getElementById('instrBody'); if(!ib || !pendingAgent) return;
+  ib.innerHTML = generateInstrHtml(pendingAgent);
+  ib.contentEditable = 'false'; ib.style.outline = ''; ib.style.outlineOffset = '';
+  const holder = document.querySelector('[data-instrbtns="1"]');
+  if(holder) holder.innerHTML = '<button class="icon-btn" title="Edit instructions" onclick="toggleAssignInstrEdit(this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>';
 }
 /* old modal agent-dropdown handler retired with the slim assign card */
 function openAssignPicker(contextText){
