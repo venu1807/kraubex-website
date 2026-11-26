@@ -4968,8 +4968,11 @@ const wfPaletteTemplates = {
     {label:'Send email', sub:'Action'},
   ],
 };
+function palAgentName(n){ return /agent$/i.test(n) ? n : (n + ' Agent'); }
 function wfPaletteChip(type, label, sub, color){
-  const dot = color ? `<span class="wf-pal-dot" style="background:${color};">${wfNodeIcon(type)}</span>` : `<span class="wf-pal-dot" style="background:${ {trigger:'#1D9E75',condition:'#EF9F27',action:'#378ADD',human:'#D4537E'}[type] };">${wfNodeIcon(type)}</span>`;
+  const isAgent = type === 'agent';
+  const tileColor = isAgent ? '#F5F3EB' : (color || null);
+  const dot = tileColor ? `<span class="wf-pal-dot" style="background:${tileColor};">${wfNodeIcon(type)}</span>` : `<span class="wf-pal-dot" style="background:${ {trigger:'#1D9E75',condition:'#EF9F27',action:'#378ADD',human:'#D4537E'}[type] };">${wfNodeIcon(type)}</span>`;
   const safeLabel = label.replace(/'/g,"\\'");
   const safeSub = sub.replace(/'/g,"\\'");
   return `<div class="wf-pal-chip" draggable="true" ondragstart="wfPaletteDragStart('${type}','${safeLabel}','${safeSub}')">${dot}${label}</div>`;
@@ -5008,7 +5011,7 @@ function renderWfPalette(){
     } else {
       try { skills = buildDeptSkillAgents(dept) || []; } catch(e){ skills = []; }
     }
-    const chips = skills.map(s=>wfPaletteChip('agent', s.name, s.tag||dept.name, s.color||color)).join('');
+    const chips = skills.map(s=>wfPaletteChip('agent', palAgentName(s.name), s.tag||dept.name, s.color||color)).join('');
     domainGroups += `<div><p class="wf-pal-group-title">${domainAgentName}</p><div class="wf-pal-row">${chips}</div></div>`;
   });
   const standaloneGroup = '';
