@@ -5021,7 +5021,8 @@ function renderWfPalette(){
   const perSelect = `<select id="wfPalettePerson" onchange="window.wfPalettePerson=this.value; renderWfPalette();" style="width:100%; padding:4px 6px; border:1px solid var(--border); border-radius:5px; font-size:11px; background:var(--card); color:var(--subhead); margin-bottom:6px;">${perOpts}</select>`;
   el.innerHTML = `
     <div><p class="wf-pal-group-title">Triggers</p><div class="wf-pal-row">${triggerChips}</div></div>
-    <div><p class="wf-pal-group-title">Agents</p>${domSelect}${domainGroups}${standaloneGroup}</div>
+    <div style="margin:6px 0;">${domSelect}</div>
+    <div><p class="wf-pal-group-title">Agents</p>${domainGroups}${standaloneGroup}</div>
     <div><p class="wf-pal-group-title">Conditions</p><div class="wf-pal-row">${conditionChips}</div></div>
     <div><p class="wf-pal-group-title">Actions</p><div class="wf-pal-row">${actionChips}</div></div>
     <div><p class="wf-pal-group-title">People</p>${perSelect}<div class="wf-pal-row">${peopleChips}</div></div>
