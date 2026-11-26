@@ -5597,6 +5597,7 @@ function resolveEntityRef(q){
 function assignRowEntity(id){
   const found = resolveEntityRef(id);
   if(!found){ alert('Reference not found: '+id); return; }
+  window.reassignTaskId = (found.kind === 'Task') ? found.id : null;
   openAssignPicker(`${found.kind} ${found.id} — ${found.title}`);
 }
 if(!window.agentPublishes) window.agentPublishes = {};
@@ -5733,12 +5734,21 @@ function openAssignModal(i){
 function closeAssignModal(){
   document.getElementById('assignOverlay').classList.remove('show');
   pendingAgent = null;
+  window.reassignTaskId = null;
 }
 function confirmAssignTask(){
   if(!pendingAgent){ alert('Select an agent first.'); return; }
   const task = document.getElementById('assignTaskInput').value.trim();
   if(!task){ alert('Write a prompt for the agent first.'); return; }
   const idx = selectedIndexes();
+  // If reassigning a task, move it to the new agent's section
+  const rid = window.reassignTaskId;
+  if(rid){
+    const t = (window.tasksList||[]).find(x => (x.id||x.name) === rid);
+    if(t){ t.agent = pendingAgent.name; if(task) t.desc = task; }
+    window.reassignTaskId = null;
+    if(typeof renderTasksBody === 'function') renderTasksBody(window.lastTasksSubview || 'all');
+  }
   alert(`${pendingAgent.name} assigned: "${task}"` + (window.assignContextText ? `\n${window.assignContextText}` : '') + (idx.length ? `\nContracts: ${idx.map(n=>contracts[n].id).join(', ')}` : ''));
   closeAssignModal();
 }
@@ -6034,6 +6044,7 @@ function downloadSelectedRfqs(){
   download('rfqs_selected.json', JSON.stringify(rfqs.filter(r=>ids.includes(r.id)), null, 2));
 }
 function assignSelectedRfqs(){
+  window.reassignTaskId = null;
   const ids = rfqSelectedIds();
   if(!ids.length){ alert('Select at least one RFQ first.'); return; }
   if(ids.length===1){ assignRowEntity(ids[0]); return; }
@@ -6067,6 +6078,7 @@ function downloadSelectedPos(){
   download('pos_selected.json', JSON.stringify(purchaseOrders.filter(p=>ids.includes(p.id)), null, 2));
 }
 function assignSelectedPos(){
+  window.reassignTaskId = null;
   const ids = poSelectedIds();
   if(!ids.length){ alert('Select at least one purchase order first.'); return; }
   if(ids.length===1){ assignRowEntity(ids[0]); return; }
