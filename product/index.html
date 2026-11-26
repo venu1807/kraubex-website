@@ -4977,7 +4977,7 @@ function wfPaletteChip(type, label, sub, color){
 function renderWfPalette(){
   const el = document.getElementById('wfPalette');
   if(!el) return;
-  if(window.wfPaletteDomain === undefined) window.wfPaletteDomain = 'all';
+  if(window.wfPaletteDomain === undefined) window.wfPaletteDomain = 'Procurement';
   if(window.wfPalettePerson === undefined) window.wfPalettePerson = 'all';
   // populate dropdowns
   const domSel = document.getElementById('wfPaletteDomain');
@@ -5000,16 +5000,18 @@ function renderWfPalette(){
   const deptsToShow = selDomain === 'all' ? (departments||[]) : (departments||[]).filter(d=>d.name===selDomain);
   deptsToShow.forEach(dept=>{
     const color = deptColors[hashStr(dept.name) % deptColors.length];
-    const domainAgent = {name: `${dept.name} Domain Agent`, tag: dept.name, color: color};
-    const skills = (function(){ try { return buildDeptSkillAgents(dept); } catch(e){ return []; } })();
-    const chips = [wfPaletteChip('agent', domainAgent.name, domainAgent.tag, domainAgent.color)]
-      .concat(skills.map(s=>wfPaletteChip('agent', s.name, s.tag||dept.name, s.color||color)))
-      .join('');
-    domainGroups += `<div><p class="wf-pal-group-title">${dept.name} (domain + skills)</p><div class="wf-pal-row">${chips}</div></div>`;
+    const domainAgentName = `${dept.name} Domain Agent`;
+    // Procurement is builtin with no skills array -> use standalone skill agents
+    let skills = [];
+    if(dept.name === 'Procurement'){
+      skills = (agents||[]).filter(a=>a.group==='skill');
+    } else {
+      try { skills = buildDeptSkillAgents(dept) || []; } catch(e){ skills = []; }
+    }
+    const chips = skills.map(s=>wfPaletteChip('agent', s.name, s.tag||dept.name, s.color||color)).join('');
+    domainGroups += `<div><p class="wf-pal-group-title">${domainAgentName}</p><div class="wf-pal-row">${chips}</div></div>`;
   });
-  // Standalone skill agents (only when all domains selected)
-  const standaloneChips = (selDomain === 'all') ? (agents||[]).filter(a=>a.group==='skill').map(a=>wfPaletteChip('agent', a.name, a.tag, a.color)).join('') : '';
-  const standaloneGroup = standaloneChips ? `<div><p class="wf-pal-group-title">Procurement skill agents</p><div class="wf-pal-row">${standaloneChips}</div></div>` : '';
+  const standaloneGroup = '';
   // People (filtered by selected person)
   const peopleList = (selPerson === 'all') ? (companyDirectory||[]) : (companyDirectory||[]).filter(p=>p.name===selPerson);
   const peopleChips = peopleList.map(p=>wfPaletteChip('human', p.name, p.role)).join('');
