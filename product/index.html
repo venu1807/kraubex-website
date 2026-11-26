@@ -4245,10 +4245,12 @@ function startDMWith(name){
 }
 
 function wfNodeIcon(type){
+  if(type === 'agent'){
+    return `<img src="../assets/kraubex-bot-cowboy-512.png" alt="" style="width:100%;height:100%;object-fit:contain;" />`;
+  }
   const icons = {
     trigger: '<path d="M13 2L3 14h7l-1 8 10-12h-7z"/>',
     condition: '<path d="M12 2l9 4.5v11L12 22l-9-4.5v-11z"/><path d="M9 12l2 2 4-4"/>',
-    agent: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 9h.01M15 9h.01M8 15c1 1 2.5 1.5 4 1.5s3-.5 4-1.5"/>',
     action: '<path d="M5 12h14M13 6l6 6-6 6"/>',
     human: '<circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/>',
   };
@@ -4974,14 +4976,28 @@ function wfPaletteChip(type, label, sub, color){
 }
 function renderWfPalette(){
   const el = document.getElementById('wfPalette');
-  const agentChips = agents.filter(a=>a.group==='skill').map(a=>wfPaletteChip('agent', a.name, a.tag, a.color)).join('');
-  const peopleChips = companyDirectory.map(p=>wfPaletteChip('human', p.name, p.role)).join('');
   const triggerChips = wfPaletteTemplates.trigger.map(t=>wfPaletteChip('trigger', t.label, t.sub)).join('');
   const conditionChips = wfPaletteTemplates.condition.map(t=>wfPaletteChip('condition', t.label, t.sub)).join('');
   const actionChips = wfPaletteTemplates.action.map(t=>wfPaletteChip('action', t.label, t.sub)).join('');
+  const peopleChips = companyDirectory.map(p=>wfPaletteChip('human', p.name, p.role)).join('');
+  // Domain agents + their skill agents
+  let domainGroups = '';
+  (departments||[]).forEach(dept=>{
+    const color = deptColors[hashStr(dept.name) % deptColors.length];
+    const domainAgent = {name: `${dept.name} Domain Agent`, tag: dept.name, color: color};
+    const skills = (function(){ try { return buildDeptSkillAgents(dept); } catch(e){ return []; } })();
+    const chips = [wfPaletteChip('agent', domainAgent.name, domainAgent.tag, domainAgent.color)]
+      .concat(skills.map(s=>wfPaletteChip('agent', s.name, s.tag||dept.name, s.color||color)))
+      .join('');
+    domainGroups += `<div><p class="wf-pal-group-title">${dept.name} (domain + skills)</p><div class="wf-pal-row">${chips}</div></div>`;
+  });
+  // Standalone skill agents (Procurement workforce)
+  const standaloneChips = (agents||[]).filter(a=>a.group==='skill').map(a=>wfPaletteChip('agent', a.name, a.tag, a.color)).join('');
+  const standaloneGroup = standaloneChips ? `<div><p class="wf-pal-group-title">Procurement skill agents</p><div class="wf-pal-row">${standaloneChips}</div></div>` : '';
   el.innerHTML = `
     <div><p class="wf-pal-group-title">Triggers</p><div class="wf-pal-row">${triggerChips}</div></div>
-    <div><p class="wf-pal-group-title">Agents (Procurement)</p><div class="wf-pal-row">${agentChips}</div></div>
+    ${domainGroups}
+    ${standaloneGroup}
     <div><p class="wf-pal-group-title">Conditions</p><div class="wf-pal-row">${conditionChips}</div></div>
     <div><p class="wf-pal-group-title">Actions</p><div class="wf-pal-row">${actionChips}</div></div>
     <div><p class="wf-pal-group-title">People</p><div class="wf-pal-row">${peopleChips}</div></div>
