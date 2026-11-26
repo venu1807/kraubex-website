@@ -494,6 +494,14 @@
   .dept-card h5{font-size:14px; font-weight:700; margin:0 0 3px; color:var(--subhead);}
   .dept-card p{font-size:12px; color:var(--text-muted); margin:0;}
   .dept-card .dept-count{font-size:11px; color:var(--headline); font-weight:600; margin-top:6px;}
+  .agent-map-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(320px,1fr)); gap:16px;}
+  .agent-map-domain{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; display:flex; flex-direction:column; gap:8px;}
+  .agent-map-domain-head{display:flex; align-items:center; gap:10px; cursor:pointer; padding:6px 8px; border-radius:8px; transition:background .15s;}
+  .agent-map-domain-head:hover{background:var(--bg);}
+  .agent-map-connector{width:2px; height:14px; background:var(--border); margin-left:17px; border-radius:1px;}
+  .agent-map-skills{display:flex; flex-wrap:wrap; gap:6px; padding-left:4px;}
+  .agent-map-skill{display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:8px; background:var(--bg); border:1px solid var(--border); font-size:12px; color:var(--subhead); cursor:pointer; transition:border-color .15s, background .15s;}
+  .agent-map-skill:hover{border-color:var(--headline); background:#FCEBEB;}
   .usage-bar{width:80px; height:7px; border-radius:4px; background:var(--bg); overflow:hidden; margin:0 auto;}
   .usage-bar-fill{height:100%; background:#27500A; border-radius:4px;}
   .usage-bar-fill.near{background:#EF9F27;}
@@ -2341,6 +2349,10 @@ function renderAIWorkforceBody(subview){
       <div class="dept-list" style="margin-top:14px;">${agents.map((a,i)=>({a,i})).slice(1,7).map(({a,i})=>agentCardHTML(a,i)).join('')}</div>`;
     return;
   }
+  if(subview === 'agent-map'){
+    renderAgentMapBody(body);
+    return;
+  }
   if(subview.startsWith('dept-')){
     const slug = subview.replace('dept-','');
     const dept = departments.find(d=>deptSlug(d.name)===slug);
@@ -2358,6 +2370,49 @@ function renderAIWorkforceBody(subview){
   }
 }
 
+function renderAgentMapBody(body){
+  const search = (window.agentMapSearch || '').toLowerCase().trim();
+  const depts = (departments||[]).filter(d => !search || d.name.toLowerCase().includes(search));
+  const cards = depts.map(dept => {
+    const color = deptColors[hashStr(dept.name) % deptColors.length];
+    const domainName = `${dept.name} Domain Agent`;
+    let skills = [];
+    if(dept.name === 'Procurement'){
+      skills = (agents||[]).filter(a=>a.group==='skill');
+    } else {
+      try { skills = buildDeptSkillAgents(dept) || []; } catch(e){ skills = []; }
+    }
+    const skillChips = skills.map(s => {
+      const agentObj = {name: s.name, desc: s.desc, tag: s.tag||dept.name, color: s.color||color};
+      return `<div class="agent-map-skill" onclick="openAssignModalObj(${JSON.stringify(agentObj).replace(/"/g,'&quot;')})">
+        <img src="../assets/kraubex-bot-cowboy-512.png" alt="" style="width:16px;height:16px;object-fit:contain;background:#F5F3EB;border-radius:4px;padding:1px;" />
+        <span>${s.name}</span>
+      </div>`;
+    }).join('');
+    const domainAgentObj = {name: domainName, desc: dept.desc, tag: dept.name, color: color};
+    return `
+      <div class="agent-map-domain">
+        <div class="agent-map-domain-head" onclick="openAssignModalObj(${JSON.stringify(domainAgentObj).replace(/"/g,'&quot;')})">
+          ${domainIconFor(dept.name, color)}
+          <div>
+            <div style="font-size:14px; font-weight:700; color:var(--subhead);">${domainName}</div>
+            <div style="font-size:11px; color:var(--text-muted);">${dept.desc || ''}</div>
+          </div>
+        </div>
+        <div class="agent-map-connector"></div>
+        <div class="agent-map-skills">${skillChips || '<span style="font-size:12px; color:var(--text-muted);">No skill agents</span>'}</div>
+      </div>`;
+  }).join('');
+  body.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:12px; flex-wrap:wrap;">
+      <div>
+        <h2 style="font-size:18px; font-weight:700; color:var(--headline); margin:0 0 2px;">Agent Map</h2>
+        <p style="font-size:13px; color:var(--text-muted); margin:0;">Family tree of domain agents and their skill agents. Click any node to assign a task.</p>
+      </div>
+      <input class="search" placeholder="Filter domains or agents..." value="${window.agentMapSearch||''}" oninput="window.agentMapSearch=this.value; renderAgentMapBody(document.getElementById('secBody-ai-workforce'));" style="min-width:220px; max-width:320px;" />
+    </div>
+    <div class="agent-map-grid">${cards || '<p style="font-size:13px; color:var(--text-muted);">No domains match.</p>'}</div>`;
+}
 const agentTokenLimits = {};
 function getAgentCostData(a){
   const h = hashStr(a.name);
@@ -5109,6 +5164,7 @@ const sectionConfig = {
       {items:[{id:'overview', label:'Overview'}]},
       {title:'USAGE & COST', items:[{id:'usage', label:'Usage & Cost'}]},
       {title:'OBSERVABILITY', items:[{id:'observability', label:'Agent Health & Performance'}]},
+      {title:'VISUALIZATION', items:[{id:'agent-map', label:'Agent Map'}]},
       {title:'MY WORKFORCE', items:[{id:'active',label:'Active Agents'},{id:'running',label:'Running'},{id:'attention',label:'Needs Attention'},{id:'completed',label:'Completed'}]},
       {title:'DEPARTMENTS', items: departments.map(d=>({id:'dept-'+deptSlug(d.name), label:d.name}))},
     ],
