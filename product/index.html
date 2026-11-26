@@ -1307,6 +1307,14 @@
     <div class="wf-modal-body">
       <aside class="wf-palette-side wf-palette-wrap" id="wfPaletteWrap" style="display:none;">
         <p class="wf-palette-hint">Drag a component directly onto the canvas to add it there.</p>
+        <div style="display:flex; gap:6px; margin-bottom:10px;">
+          <select id="wfPaletteDomain" onchange="window.wfPaletteDomain=this.value; renderWfPalette();" style="flex:1; padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:12px; background:var(--card); color:var(--subhead);">
+            <option value="all">All domains</option>
+          </select>
+          <select id="wfPalettePerson" onchange="window.wfPalettePerson=this.value; renderWfPalette();" style="flex:1; padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:12px; background:var(--card); color:var(--subhead);">
+            <option value="all">All people</option>
+          </select>
+        </div>
         <div class="wf-palette" id="wfPalette"></div>
       </aside>
       <div class="wf-canvas" id="wfCanvas"></div>
@@ -4976,13 +4984,29 @@ function wfPaletteChip(type, label, sub, color){
 }
 function renderWfPalette(){
   const el = document.getElementById('wfPalette');
+  if(!el) return;
+  if(window.wfPaletteDomain === undefined) window.wfPaletteDomain = 'all';
+  if(window.wfPalettePerson === undefined) window.wfPalettePerson = 'all';
+  // populate dropdowns
+  const domSel = document.getElementById('wfPaletteDomain');
+  if(domSel && domSel.options.length <= 1){
+    (departments||[]).forEach(d=>{ const o=document.createElement('option'); o.value=d.name; o.textContent=d.name; domSel.appendChild(o); });
+    domSel.value = window.wfPaletteDomain;
+  }
+  const perSel = document.getElementById('wfPalettePerson');
+  if(perSel && perSel.options.length <= 1){
+    (companyDirectory||[]).forEach(p=>{ const o=document.createElement('option'); o.value=p.name; o.textContent=p.name; perSel.appendChild(o); });
+    perSel.value = window.wfPalettePerson;
+  }
+  const selDomain = window.wfPaletteDomain || 'all';
+  const selPerson = window.wfPalettePerson || 'all';
   const triggerChips = wfPaletteTemplates.trigger.map(t=>wfPaletteChip('trigger', t.label, t.sub)).join('');
   const conditionChips = wfPaletteTemplates.condition.map(t=>wfPaletteChip('condition', t.label, t.sub)).join('');
   const actionChips = wfPaletteTemplates.action.map(t=>wfPaletteChip('action', t.label, t.sub)).join('');
-  const peopleChips = companyDirectory.map(p=>wfPaletteChip('human', p.name, p.role)).join('');
-  // Domain agents + their skill agents
+  // Domain agents + skill agents (filtered by selected domain)
   let domainGroups = '';
-  (departments||[]).forEach(dept=>{
+  const deptsToShow = selDomain === 'all' ? (departments||[]) : (departments||[]).filter(d=>d.name===selDomain);
+  deptsToShow.forEach(dept=>{
     const color = deptColors[hashStr(dept.name) % deptColors.length];
     const domainAgent = {name: `${dept.name} Domain Agent`, tag: dept.name, color: color};
     const skills = (function(){ try { return buildDeptSkillAgents(dept); } catch(e){ return []; } })();
@@ -4991,9 +5015,12 @@ function renderWfPalette(){
       .join('');
     domainGroups += `<div><p class="wf-pal-group-title">${dept.name} (domain + skills)</p><div class="wf-pal-row">${chips}</div></div>`;
   });
-  // Standalone skill agents (Procurement workforce)
-  const standaloneChips = (agents||[]).filter(a=>a.group==='skill').map(a=>wfPaletteChip('agent', a.name, a.tag, a.color)).join('');
+  // Standalone skill agents (only when all domains selected)
+  const standaloneChips = (selDomain === 'all') ? (agents||[]).filter(a=>a.group==='skill').map(a=>wfPaletteChip('agent', a.name, a.tag, a.color)).join('') : '';
   const standaloneGroup = standaloneChips ? `<div><p class="wf-pal-group-title">Procurement skill agents</p><div class="wf-pal-row">${standaloneChips}</div></div>` : '';
+  // People (filtered by selected person)
+  const peopleList = (selPerson === 'all') ? (companyDirectory||[]) : (companyDirectory||[]).filter(p=>p.name===selPerson);
+  const peopleChips = peopleList.map(p=>wfPaletteChip('human', p.name, p.role)).join('');
   el.innerHTML = `
     <div><p class="wf-pal-group-title">Triggers</p><div class="wf-pal-row">${triggerChips}</div></div>
     ${domainGroups}
