@@ -1904,7 +1904,9 @@ document.addEventListener('click', (e)=>{
   }
 });
 function iconFor(a, color){
-  return `<div class="agent-icon" style="background:${color || a.color};">
+  const bg = (color || a.color);
+  const tileBg = (bg && bg.toLowerCase() === '#b83e01') ? '#F5F3EB' : bg;
+  return `<div class="agent-icon" style="background:${tileBg};">
     <img src="../assets/kraubex-bot-cowboy-512.png" alt="" style="width:18px;height:18px;object-fit:contain;" />
   </div>`;
 }
