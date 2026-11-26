@@ -1907,9 +1907,7 @@ document.addEventListener('click', (e)=>{
   }
 });
 function iconFor(a, color){
-  const bg = (color || a.color);
-  const tileBg = (bg && bg.toLowerCase() === '#b83e01') ? '#F5F3EB' : bg;
-  return `<div class="agent-icon" style="background:${tileBg};">
+  return `<div class="agent-icon" style="background:#F5F3EB;">
     <img src="../assets/kraubex-bot-cowboy-512.png" alt="" style="width:18px;height:18px;object-fit:contain;" />
   </div>`;
 }
@@ -5685,8 +5683,7 @@ function openAssignModalObj(agentObj){
   document.getElementById('assignTitle').textContent = `Assign task to ${agentObj.name}`;
   const iconEl = document.getElementById('assignIcon');
   if(iconEl){
-    const bg = (agentObj.color || '').toLowerCase() === '#b83e01' ? '#F5F3EB' : (agentObj.color || 'var(--bg)');
-    iconEl.style.background = bg;
+    iconEl.style.background = '#F5F3EB';
   }
   document.getElementById('assignTaskInput').value = agentObj.task || '';
   const idx = selectedIndexes();
